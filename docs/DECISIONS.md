@@ -11,7 +11,7 @@ Related: [PLAN.md](PLAN.md)
 |---|---|---|
 | 0. Discovery and safety baseline | 🟡 In progress | ✅ Repo created (StarStackCo/klipper-ui, private). ✅ Local project at Documents\klipper-ui. ✅ SSH key authorised. ✅ **Backup done** (`backups/2026-10-04_1234`, 91 MB, archive verified, SHA256SUMS). ✅ Inventory: CB1 image (Debian 12), Klipper v0.13.0-501, Moonraker v0.10.0, Mainsail v2.17.0, KlipperScreen v0.4.6. ✅ Moonraker access fixed (D-014 applied). ✅ Bench config installed, **Klipper Ready**. ✅ Baseline screenshots (`design/baseline/`). ✅ Regression checklist + Run 0 (`docs/test-checklist.md`). ✅ Remote TFT screenshots working (`scripts/ks-screenshot.sh`). **Phase 0 approved by user 2026-10-04** |
 | 1. UX requirements (detail) | ✅ Complete | Answers received. **Requirements v2.1** at `docs/requirements.md`, ✅ **approved by user 2026-10-04**. ✅ KlipperScreen private fork created. ✅ Star mark downloaded Brand sheet received (`design/brand/`) |
-| 2. Design | 🟡 In progress | Style directions A/B/C + logo-on-dark options on the design canvas (https://claude.ai/artifact/9P1px8ypq2aYb39NX1BjQc), source in `design/phase2-directions/`. User picked → D-028. **Clickable prototype of all screens** published (artboard "Chosen design"). TFT design **approved** (D-029/D-030). Next: Mainsail theme |
+| 2. Design | 🟡 In progress | Style directions A/B/C + logo-on-dark options on the design canvas (https://claude.ai/artifact/9P1px8ypq2aYb39NX1BjQc), source in `design/phase2-directions/`. User picked → D-028. **Clickable prototype of all screens** published (artboard "Chosen design"). TFT design **approved** (D-029/D-030). Mainsail theme **built** (`mainsail-theme/`), waiting for deploy approval + Pi back online |
 | 3. Build increments (bench) | ⏳ Not started | |
 | 3.5 Safety review + move to full printer | ⏳ Not started | |
 | 4. Polish and handover | ⏳ Not started | |
@@ -22,6 +22,8 @@ Related: [PLAN.md](PLAN.md)
 
 | ID | Date | Question | Why it matters | Status |
 |---|---|---|---|---|
+| Q-037 | 2026-10-04 | Pi went offline mid-session (no ping/SSH/HTTP from this PC). Possibly USB power from the PC dropped (sleep?) | Can't deploy or verify until it's back | Open: user to check |
+| Q-036 | 2026-10-04 | Approve deploying the Mainsail theme (`.theme` folder) and the 6 Mainsail settings in `mainsail-theme/settings.json`? | Changes on the Pi | Open |
 | Q-035 | 2026-10-04 | Design choices in the prototype that change requirements v2.1: (a) Advanced tools (extrude, macros, console, limits, updates, restart firmware) live in **Settings › Advanced** instead of Controls, so Controls never scrolls. (b) Print page shows **6 files per page with ‹ › buttons** instead of a scrolling list. (c) Flow dialog has **±1 and ±5** (asked: ±1). (d) Jog uses a fixed **10 mm** step. (e) Pop-ups never cover the left rail, so **STOP is always reachable**, even in dialogs | Needs approval before building | Answered: user approved the whole prototype ("love it all") → D-029 |
 | Q-034 | 2026-10-04 | Pick a style direction: A Soft Cards · B Bold Tiles · C Hairline (or a mix), and a logo-on-dark option (1 white plate · 2 pale sky plate · 3 white circle) | Drives every screen design | Answered: **Claude's recommendation** → D-028 |
 | Q-033 | 2026-10-04 | Real bed size (X × Y) and max Z height? Bench v2 uses a placeholder 220 × 220 × 250 | The cancel-object bed map should match the real bed | Answered: **180 × 180 × 180 mm** |
@@ -64,6 +66,7 @@ Related: [PLAN.md](PLAN.md)
 
 | ID | Date | Decision | Options considered | Rationale | Decided by | Status |
 |---|---|---|---|---|---|---|
+| D-031 | 2026-10-04 | Mainsail theme = Layer A only: `.theme/custom.css` (brand colours, Public Sans, 10px radius, solid red E-stop, no hidden/moved features), `sidebar-logo.png` + favicons (star mark on a white plate). Plus 6 Mainsail DB settings: primary #00ACC7, logo #88D8F2, **confirm on E-stop**, **confirm on cancel**, **show Cancel print while printing**, dark mode. One-command deploy/rollback scripts | CSS-only vs fork | Survives Mainsail updates (D-005). Safety settings match the TFT | Claude (proposed) | Waiting for approval (Q-036) |
 | D-030 | 2026-10-04 | Prototype feedback applied: (1) small buttons kept ≥14–16 px from screen edges, minimum 44 px tall; (2) **loaded filament is remembered**, Unload starts immediately for it, Load warns to unload first; (3) **gear icon** for Settings (Bootstrap Icons); (4) Print page **sort button**: Newest → Oldest → Recently printed | n/a | User feedback | User | Accepted, in prototype |
 | D-029 | 2026-10-04 | TFT prototype approved, including: Advanced tools in Settings › Advanced, 6 files per page, flow ±1/±5 (40–120%), 10 mm jog, pop-ups never cover the rail/STOP | n/a | User approval | User | Accepted |
 | D-028 | 2026-10-04 | Visual direction: **A · Soft Cards** base + **3 recent prints** on idle Home (from C) + labelled **STOP** E-stop (from B). Logo option **1, white plate** | A / B / C / mix | Bambu-like, best fit for reprinting, clearest E-stop. Follows the brand's light-background rule | User | Accepted |

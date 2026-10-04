@@ -1,0 +1,138 @@
+/* =====================================================================
+   StarStack theme for Mainsail (v2.17.x)
+   Source: github.com/StarStackCo/klipper-ui  ·  mainsail-theme/.theme/
+   Brand: StarStack Brand Sheet v1.0 (dark tokens, Public Sans, 10px radius)
+
+   Layer A only: colours, type, shape. Nothing is hidden or moved, so no
+   Mainsail function can be lost. Remove this folder to undo.
+   ===================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;800;900&display=swap');
+
+:root {
+    --ss-bg: #0A0A0A;
+    --ss-surface: #161616;
+    --ss-surface-2: #1F1F1F;
+    --ss-rail: #111111;
+    --ss-border: #282828;
+    --ss-text: #FAFAFA;
+    --ss-muted: #A1A1A1;
+    --ss-primary: #0D3C96;      /* button fills */
+    --ss-accent: #00ACC7;       /* highlights, focus */
+    --ss-sky: #88D8F2;          /* selected / emphasis */
+    --ss-success: #5CA300;
+    --ss-warning: #FF8904;      /* hot */
+    --ss-error: #FF6467;        /* error text on dark */
+    --ss-stop: #E7000B;         /* E-stop fill (white text passes contrast) */
+    --ss-radius: 10px;
+}
+
+/* ---------- Type ---------- */
+.v-application,
+.v-application .text-h1, .v-application .text-h2, .v-application .text-h3,
+.v-application .text-h4, .v-application .text-h5, .v-application .text-h6,
+.v-application .subtitle-1, .v-application .subtitle-2,
+.v-application .body-1, .v-application .body-2,
+.v-application .caption, .v-application .overline,
+.v-application .v-btn, .v-application input, .v-application textarea {
+    font-family: 'Public Sans', system-ui, -apple-system, 'Segoe UI', sans-serif !important;
+}
+/* Console and code editor keep a monospace font */
+.v-application .console, .v-application .cm-editor, .v-application code, .v-application pre {
+    font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace !important;
+}
+
+/* ---------- Surfaces ---------- */
+.theme--dark.v-application,
+.theme--dark.v-application #content { background-color: var(--ss-bg) !important; }
+
+.theme--dark.v-app-bar.v-toolbar.v-sheet.topbar {
+    background-color: var(--ss-rail) !important;
+    border-bottom: 1px solid var(--ss-border);
+}
+.theme--dark.v-navigation-drawer {
+    background-color: var(--ss-rail) !important;
+    border-right: 1px solid var(--ss-border);
+}
+
+.theme--dark.v-card.panel {
+    background-color: var(--ss-surface) !important;
+    border-radius: var(--ss-radius) !important;
+    border: 1px solid var(--ss-border);
+    overflow: hidden;
+    box-shadow: none !important;
+}
+.theme--dark.v-card.panel > .panel-toolbar,
+.theme--dark.v-card.panel > .panel-toolbar.v-sheet {
+    background-color: var(--ss-surface) !important;
+    border-bottom: 1px solid var(--ss-border);
+}
+.panel-toolbar .v-toolbar__title .subheading {
+    font-weight: 800;
+    letter-spacing: 0;
+}
+.theme--dark.v-card { border-radius: var(--ss-radius); }
+.theme--dark.v-dialog > .v-card,
+.theme--dark.v-menu__content .v-card,
+.theme--dark.v-menu__content .v-list {
+    background-color: var(--ss-surface) !important;
+    border: 1px solid var(--ss-border);
+}
+
+/* Tables (files, history) */
+.theme--dark.v-data-table { background-color: transparent !important; }
+.theme--dark.v-data-table > .v-data-table__wrapper > table > tbody > tr:not(:last-child) > td:not(.v-data-table__mobile-row),
+.theme--dark.v-data-table > .v-data-table__wrapper > table > thead > tr:last-child > th {
+    border-bottom-color: var(--ss-border) !important;
+}
+.theme--dark.v-data-table > .v-data-table__wrapper > table > tbody > tr:hover:not(.v-data-table__expanded__content):not(.v-data-table__empty-wrapper) {
+    background-color: var(--ss-surface-2) !important;
+}
+
+/* ---------- Shape ---------- */
+.v-application .v-btn:not(.v-btn--round):not(.v-btn--fab):not(.v-btn--icon) { border-radius: var(--ss-radius) !important; }
+.v-application .v-text-field--outlined fieldset,
+.v-application .v-text-field--solo .v-input__slot { border-radius: var(--ss-radius) !important; }
+.v-application .v-progress-linear { border-radius: 4px; }
+
+/* ---------- Buttons ---------- */
+/* Filled primary buttons use brand Site Primary with white text,
+   while the Mainsail "primary" colour (set to Accent) drives highlights. */
+.v-application .v-btn.primary:not(.v-btn--text):not(.v-btn--outlined) {
+    background-color: var(--ss-primary) !important;
+    color: var(--ss-text) !important;
+}
+.v-application .v-btn { font-weight: 800; letter-spacing: 0.02em; }
+
+/* E-stop: solid red, always obvious (topbar) */
+.topbar .emergency-button.v-btn {
+    background-color: var(--ss-stop) !important;
+    color: #FFFFFF !important;
+    margin-left: 8px;
+}
+.topbar .emergency-button.v-btn .v-icon { color: #FFFFFF !important; }
+
+/* ---------- Sidebar navigation ---------- */
+.theme--dark.v-navigation-drawer .v-list-item--active {
+    color: var(--ss-sky) !important;
+}
+.theme--dark.v-navigation-drawer .v-list-item--active::before {
+    background-color: var(--ss-primary) !important;
+    opacity: 0.55 !important;
+    border-radius: var(--ss-radius);
+}
+.theme--dark.v-navigation-drawer .v-list-item { border-radius: var(--ss-radius); }
+
+/* Logo on its white plate (sidebar-logo.png) */
+.nav-logo { border-radius: 8px; }
+
+/* ---------- Status colours ---------- */
+.v-application .success--text { color: var(--ss-success) !important; }
+.v-application .warning--text { color: var(--ss-warning) !important; }
+.v-application .error--text { color: var(--ss-error) !important; }
+
+/* ---------- Scrollbars ---------- */
+.os-theme-dark > .os-scrollbar > .os-scrollbar-track > .os-scrollbar-handle,
+.os-theme-light > .os-scrollbar > .os-scrollbar-track > .os-scrollbar-handle {
+    background: var(--ss-border) !important;
+}

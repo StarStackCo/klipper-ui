@@ -75,3 +75,24 @@ Screenshots: `design/mainsail/theme-v1-*`
 | F6 | ✅ | Temperatures panel now shows Extruder + Heater Bed live (bench v2). Q-020 resolved |
 | F11 | ✅ ready | `deploy-mainsail-theme.sh --rollback` and `mainsail-settings.sh --rollback` exist (not exercised) |
 | F12 | ⚠️ | No under-voltage logged, but the Pi **lost power** once (hard reboot, PC USB power). Config intact |
+
+## Run 2: Macros v1 + bench v2.2, 2026-10-04 (user present, heating/motion tests approved)
+
+Automated: `scripts/bench_test_macros.py` (run on the Pi) → **34/34 PASS** (run 3; full log in local `logs/bench-test-run3.txt`).
+
+| ID | Result | Notes |
+|---|---|---|
+| S4 | ✅ (bench) | Preheat targets exact (210/60, 225/40). Unknown material → no heat |
+| S5 | ✅ | Static scan: no safety-limit commands in macros. See `docs/macro-safety-review.md` |
+| S6 | ✅ (bench) | Load/Purge/Unload refuse when cold (heat + ask to rerun). Klipper min_extrude_temp underneath |
+| S3-macros | ✅ | During a real (bench) print: preheat, cool-down, load, unload, purge all **refused**. Speed preset allowed |
+| Paused flow | ✅ | Load allowed while paused. FILAMENT_DONE keeps the heater on for resume |
+| Timeout | ✅ | Abandoned filament heater turns off (tested with 3 s) |
+| Cancel | ✅ | CANCEL_PRINT → state cancelled, heaters off |
+| Memory | ✅ | `loaded_material` saved/used/reset via save_variables |
+| Flow limits | ✅ | 200 → 120 %, 10 → 40 % with warnings |
+| UI → macro | ✅ | Clicking SPEED SILENT in Mainsail (localhost) → speed_factor 0.5, reset to 1.0 |
+| Z-offset hidden | ✅ | `view.toolhead.showZOffset=false` applied. Toolhead panel goes from jog to Speed factor |
+
+**Finding:** in runs 1–2 the **runout sensor triggered falsely** on the bench (pin floating, shared with driver DIAG), causing a phantom PAUSE. Fixed for the bench by disabling the sensor at startup (bench v2.2). The real printer must verify its sensor reads stable (Phase 3.5).
+**Note:** Mainsail's own PAUSE/CANCEL macros log `"extruder" not hot enough` on the bench (they retract; fake nozzle is cold). Expected.

@@ -11,3 +11,6 @@ moonraker.secrets
 Thumbs.db
 .DS_Store
 .vscode/
+
+# Local dev copy of Mainsail served on localhost (not ours to commit)
+dev/

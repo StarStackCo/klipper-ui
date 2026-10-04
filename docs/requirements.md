@@ -1,6 +1,6 @@
 # Phase 1: UX Requirements
 
-**Status:** DRAFT v2.1, 2026-10-04. Waiting for user approval. No open items.
+**Status:** ✅ APPROVED v2.1, 2026-10-04.
 **Changes from v1:** answers to round 2 applied (see the change list at the bottom).
 
 ## 1. Who and how

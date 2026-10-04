@@ -10,8 +10,8 @@ Related: [PLAN.md](PLAN.md)
 | Phase | Status | Notes |
 |---|---|---|
 | 0. Discovery and safety baseline | 🟡 In progress | ✅ Repo created (StarStackCo/klipper-ui, private). ✅ Local project at Documents\klipper-ui. ✅ SSH key authorised. ✅ **Backup done** (`backups/2026-10-04_1234`, 91 MB, archive verified, SHA256SUMS). ✅ Inventory: CB1 image (Debian 12), Klipper v0.13.0-501, Moonraker v0.10.0, Mainsail v2.17.0, KlipperScreen v0.4.6. ✅ Moonraker access fixed (D-014 applied). ✅ Bench config installed, **Klipper Ready**. ✅ Baseline screenshots (`design/baseline/`). ✅ Regression checklist + Run 0 (`docs/test-checklist.md`). ✅ Remote TFT screenshots working (`scripts/ks-screenshot.sh`). **Phase 0 approved by user 2026-10-04** |
-| 1. UX requirements (detail) | 🟡 In progress | Answers received. **Requirements v2.1** at `docs/requirements.md`, waiting for approval. ✅ KlipperScreen private fork created. ✅ Star mark downloaded Brand sheet received (`design/brand/`) |
-| 2. Design | ⏳ Not started | |
+| 1. UX requirements (detail) | ✅ Complete | Answers received. **Requirements v2.1** at `docs/requirements.md`, ✅ **approved by user 2026-10-04**. ✅ KlipperScreen private fork created. ✅ Star mark downloaded Brand sheet received (`design/brand/`) |
+| 2. Design | ⏳ Next | Waiting for go-ahead |
 | 3. Build increments (bench) | ⏳ Not started | |
 | 3.5 Safety review + move to full printer | ⏳ Not started | |
 | 4. Polish and handover | ⏳ Not started | |
@@ -22,7 +22,7 @@ Related: [PLAN.md](PLAN.md)
 
 | ID | Date | Question | Why it matters | Status |
 |---|---|---|---|---|
-| Q-033 | 2026-10-04 | Real bed size (X × Y) and max Z height? Bench v2 uses a placeholder 220 × 220 × 250 | The cancel-object bed map should match the real bed | Open |
+| Q-033 | 2026-10-04 | Real bed size (X × Y) and max Z height? Bench v2 uses a placeholder 220 × 220 × 250 | The cancel-object bed map should match the real bed | Answered: **180 × 180 × 180 mm** |
 | Q-032 | 2026-10-04 | Logo/star mark on a dark background: the charcoal star `#2E2E2E` disappears on `#0A0A0A` | Brand sheet says light backgrounds only | Open, Phase 2 design options |
 | Q-031 | 2026-10-04 | Is there a true vector (SVG paths) version of the star mark? | Sharp icons at any size | Open, nice-to-have |
 | Q-030 | 2026-10-04 | Should the KlipperScreen fork be **public** (GitHub forks of public repos are always public) or a **private copy** with KlipperScreen as an upstream remote? | Visibility of the StarStack theme/code | Answered: **(b) private copy**. Created `StarStackCo/KlipperScreen-starstack` |
@@ -62,7 +62,7 @@ Related: [PLAN.md](PLAN.md)
 
 | ID | Date | Decision | Options considered | Rationale | Decided by | Status |
 |---|---|---|---|---|---|---|
-| D-027 | 2026-10-04 | Bench config v2 safety design: real heater pins gpio20/gpio21 never referenced. Fake heaters on logic-only pins gpio19 (servo) / gpio11 (RGB). Pi CPU as the fake sensor. verify_heater relaxed only for the fake heaters. Instant fake homing. Startup BENCH warning. Pins from Mellow FLY-Micro4 docs | Real heater pins + relaxed checks / logic pins | If the bench file ever reaches the real printer, nothing can heat | Claude (proposed) | Waiting for approval |
+| D-027 | 2026-10-04 | Bench config v2 safety design: real heater pins gpio20/gpio21 never referenced. Fake heaters on logic-only pins gpio19 (servo) / gpio11 (RGB). Pi CPU as the fake sensor. verify_heater relaxed only for the fake heaters. Instant fake homing. Startup BENCH warning. Pins from Mellow FLY-Micro4 docs | Real heater pins + relaxed checks / logic pins | If the bench file ever reaches the real printer, nothing can heat | User | Accepted, **applied 2026-10-04** |
 | D-026 | 2026-10-04 | KlipperScreen fork = **private copy** `StarStackCo/KlipperScreen-starstack`. Branch `starstack` based on `f580242e` (the Pi's version). `master` mirrors upstream. Upstream push disabled. LF line endings. Changes tracked in `FORK_CHANGES.md` | Public fork / private copy | User choice | User | Accepted, created |
 | D-025 | 2026-10-04 | Advanced mode: no PIN. A "proceed at your own risk" confirmation when enabling | PIN / confirm | User | User | Accepted |
 | D-024 | 2026-10-04 | Flow control: ±1% buttons, hard cap 40–120% | | User | User | Accepted |
@@ -108,4 +108,5 @@ Related: [PLAN.md](PLAN.md)
 | Date | Increment | Branch/PR | Deployed? | Regression result | Notes |
 |---|---|---|---|---|---|
 | 2026-10-04 | Moonraker trusted_clients → 192.168.0.0/24 | main (config/pi/moonraker.conf) | ✅ Pi (on-Pi undo copy: moonraker.conf.pre-klipper-ui) | Moonraker restart OK, no warnings. PC → HTTP 200 | Fixes Mainsail access |
+| 2026-10-04 | Bench printer.cfg v2 (cartesian, fake heaters) | main (config/bench/printer.cfg) | ✅ Pi (on-Pi undo copy: printer.cfg.bench-v1) | Klipper **ready**. Fake heaters read 41 °C. All endstops TRIGGERED. Runout = present. TFT shows Extruder/Bed/Extrude/Print | Fixed after first deploy: X endstop + runout pins inverted (pins read low on this board, shared with driver DIAG) |
 | 2026-10-04 | Bench printer.cfg v1 | main (config/bench/printer.cfg) | ✅ Pi (on-Pi undo copy: printer.cfg.old-machine) | Klipper **ready**. 0 under-voltage events | MCU temp reads wrong (Q-018) |

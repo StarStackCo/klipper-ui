@@ -1,11 +1,47 @@
 {
   "_comment": "Mainsail UI settings written to Moonraker's database (namespace 'mainsail'). Keys from Mainsail v2.17.0 src/store/gui/index.ts. 'was' = Mainsail default, for rollback.",
   "settings": [
-    { "key": "uiSettings.mode",                  "value": "dark",    "was": "dark",    "why": "Single dark theme (D-021)" },
-    { "key": "uiSettings.primary",               "value": "#00ACC7", "was": "#2196f3", "why": "Brand Accent for highlights. Filled buttons get Site Primary via custom.css" },
-    { "key": "uiSettings.logo",                  "value": "#88D8F2", "was": "#D41216", "why": "Brand Star Sky (only used where the image logo isn't)" },
-    { "key": "uiSettings.confirmOnEmergencyStop", "value": true,     "was": false,     "why": "Safety: E-stop is tap, then confirm (Q-025)" },
-    { "key": "uiSettings.confirmOnCancelJob",    "value": true,      "was": false,     "why": "Safety: cancel print needs confirmation (requirements)" },
-    { "key": "uiSettings.displayCancelPrint",    "value": true,      "was": false,     "why": "Cancel print visible while printing, not only when paused (matches TFT)" }
+    {
+      "key": "uiSettings.mode",
+      "value": "dark",
+      "was": "dark",
+      "why": "Single dark theme (D-021)"
+    },
+    {
+      "key": "uiSettings.primary",
+      "value": "#00ACC7",
+      "was": "#2196f3",
+      "why": "Brand Accent for highlights. Filled buttons get Site Primary via custom.css"
+    },
+    {
+      "key": "uiSettings.logo",
+      "value": "#88D8F2",
+      "was": "#D41216",
+      "why": "Brand Star Sky (only used where the image logo isn't)"
+    },
+    {
+      "key": "uiSettings.confirmOnEmergencyStop",
+      "value": true,
+      "was": false,
+      "why": "Safety: E-stop is tap, then confirm (Q-025)"
+    },
+    {
+      "key": "uiSettings.confirmOnCancelJob",
+      "value": true,
+      "was": false,
+      "why": "Safety: cancel print needs confirmation (requirements)"
+    },
+    {
+      "key": "uiSettings.displayCancelPrint",
+      "value": true,
+      "was": false,
+      "why": "Cancel print visible while printing, not only when paused (matches TFT)"
+    },
+    {
+      "key": "view.toolhead.showZOffset",
+      "value": false,
+      "was": true,
+      "why": "No Z-offset babystep in the UI (D-023, Q-038 answer b)"
+    }
   ]
 }

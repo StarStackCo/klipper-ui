@@ -1,0 +1,31 @@
+{
+  "_comment": "Mainsail v2.17.0 macro groups (expert mode). Written to Moonraker DB namespace 'mainsail', keys 'macros.mode' and 'macros.macrogroups.<id>'. Fixed ids so re-applying updates instead of duplicating. Macros not listed here are not shown as buttons (still available in the console).",
+  "mode": "expert",
+  "groups": [
+    {
+      "id": "5f1e0a01-5a5a-4c00-9000-000000000001", "name": "Speed", "color": "primary",
+      "showInStandby": true, "showInPrinting": true, "showInPause": true,
+      "macros": ["SPEED_SILENT", "SPEED_NORMAL", "SPEED_FAST", "SPEED_DRAFT"]
+    },
+    {
+      "id": "5f1e0a01-5a5a-4c00-9000-000000000002", "name": "Flow", "color": "primary",
+      "showInStandby": false, "showInPrinting": true, "showInPause": true,
+      "macros": ["FLOW_ADJUST", "SET_FLOW"]
+    },
+    {
+      "id": "5f1e0a01-5a5a-4c00-9000-000000000003", "name": "Preheat", "color": "primary",
+      "showInStandby": true, "showInPrinting": false, "showInPause": true,
+      "macros": ["PREHEAT_PLA", "PREHEAT_PETG", "PREHEAT_TPU", {"name": "COOL_DOWN", "color": "secondary"}]
+    },
+    {
+      "id": "5f1e0a01-5a5a-4c00-9000-000000000004", "name": "Filament", "color": "primary",
+      "showInStandby": true, "showInPrinting": false, "showInPause": true,
+      "macros": ["LOAD_FILAMENT", "PURGE_MORE", "UNLOAD_FILAMENT", {"name": "FILAMENT_DONE", "color": "secondary"}]
+    },
+    {
+      "id": "5f1e0a01-5a5a-4c00-9000-000000000005", "name": "Advanced", "color": "warning",
+      "showInStandby": true, "showInPrinting": true, "showInPause": true,
+      "macros": ["SET_PAUSE_AT_LAYER", "SET_PAUSE_NEXT_LAYER", "PREHEAT"]
+    }
+  ]
+}

@@ -22,6 +22,7 @@ Related: [PLAN.md](PLAN.md)
 
 | ID | Date | Question | Why it matters | Status |
 |---|---|---|---|---|
+| Q-042 | 2026-10-04 | Mainsail macro panels appear alphabetically (Advanced, Filament, Preheat, Speed). Reorder to Speed, Preheat, Filament, Advanced? (dashboard layout DB keys, or drag in Settings › Dashboard) | Polish | Open, low priority |
 | Q-041 | 2026-10-04 | Does the localhost Mainsail (http://localhost:8090) still ask for approval on every click in the browser pane? | Whether D-034 fixes the approval friction | Open: user to confirm |
 | Q-040 | 2026-10-04 | Real printer: verify the runout sensor pin reads stable (bench pin floated and triggered a phantom pause) | False pauses mid-print | Open, Phase 3.5 checklist item |
 | Q-039 | 2026-10-04 | Approve deploying macros v1 + bench config v2.1 + the showZOffset setting to the bench Pi? | Changes on the Pi | Answered: **yes**. User present, approved heating/filament/motion tests |
@@ -70,6 +71,7 @@ Related: [PLAN.md](PLAN.md)
 
 | ID | Date | Decision | Options considered | Rationale | Decided by | Status |
 |---|---|---|---|---|---|---|
+| D-035 | 2026-10-04 | Mainsail macro groups (expert mode): **Speed** (always), **Flow** (printing/paused), **Preheat** + **Filament** (idle/paused, Cool down/Done grey), **Advanced** (orange: pause-at-layer, generic PREHEAT). Fixed ids in `mainsail-theme/macrogroups.json`, `scripts/mainsail-macrogroups.sh` (--show/--rollback) | Flat list / groups | Clear one-click buttons by task. Hides buttons that would be refused anyway | User | **Applied 2026-10-04**. Panel order is alphabetical (Advanced first), reorder later |
 | D-034 | 2026-10-04 | **Local dev Mainsail on localhost** (user's plan): exact Pi build (v2.17.0) copied read-only to `dev/mainsail/` (git-ignored), `config.json` → 192.168.0.102:7125, served on http://localhost:8090 (python http.server bound to 127.0.0.1, `.claude/launch.json` "mainsail-local"). No Moonraker change needed: cors_domains already has `*://localhost:*`, trusted_clients has 192.168.0.0/24 (the plan's 192.168.1.0/24 was the wrong subnet). Theme + settings load from the printer | Printer IP / localhost | Avoids per-click approval on the printer IP | User | Accepted, working |
 | D-033 | 2026-10-04 | Bench config v2.2: runout sensor kept but **disabled at startup** (floating pin caused a phantom pause) | Remove sensor / disable / keep | UI still shows the sensor. Bench only | Claude (fix within the approved test step) | Applied |
 | D-032 | 2026-10-04 | Macros v1 (`macros/starstack_macros.cfg`): speed presets, SET_FLOW/FLOW_ADJUST (40–120), PREHEAT(+PLA/PETG/TPU), COOL_DOWN, LOAD/PURGE_MORE/UNLOAD/FILAMENT_DONE with `save_variables` memory, 300 s abandoned-heater timeout, _SS_RUNOUT. **Non-blocking heat** (no M109). Safety review in `docs/macro-safety-review.md` | Blocking M109 flows / non-blocking | A stuck G-code queue can't be cancelled from the UI. Testable on the bench | User | Accepted, **applied 2026-10-04**. 34/34 bench tests |
@@ -123,6 +125,7 @@ Related: [PLAN.md](PLAN.md)
 | Date | Increment | Branch/PR | Deployed? | Regression result | Notes |
 |---|---|---|---|---|---|
 | 2026-10-04 | Moonraker trusted_clients → 192.168.0.0/24 | main (config/pi/moonraker.conf) | ✅ Pi (on-Pi undo copy: moonraker.conf.pre-klipper-ui) | Moonraker restart OK, no warnings. PC → HTTP 200 | Fixes Mainsail access |
+| 2026-10-04 | Mainsail macro groups | main (mainsail-theme/macrogroups.json) | ✅ Pi DB (undo: --rollback) | Visual check ✅ | Flow hidden in standby by design |
 | 2026-10-04 | Macros v1 + bench v2.1→v2.2 + showZOffset | main (macros/, config/bench/) | ✅ Pi (undo: printer.cfg.bench-v2) | Run 2: 34/34 | Phantom runout found and fixed (v2.2) |
 | 2026-10-04 | Mainsail theme v1 (.theme) + 6 UI settings | main (mainsail-theme/) | ✅ Pi (no previous .theme. Undo: --rollback scripts) | Run 1: E-stop confirm ✅, mobile ✅, Klipper ready ✅ | Pi had a hard power loss before deploy. Verified config intact first |
 | 2026-10-04 | Bench printer.cfg v2 (cartesian, fake heaters) | main (config/bench/printer.cfg) | ✅ Pi (on-Pi undo copy: printer.cfg.bench-v1) | Klipper **ready**. Fake heaters read 41 °C. All endstops TRIGGERED. Runout = present. TFT shows Extruder/Bed/Extrude/Print | Fixed after first deploy: X endstop + runout pins inverted (pins read low on this board, shared with driver DIAG) |

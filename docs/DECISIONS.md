@@ -9,7 +9,7 @@ Related: [PLAN.md](PLAN.md)
 
 | Phase | Status | Notes |
 |---|---|---|
-| 0. Discovery and safety baseline | 🟡 In progress | ✅ Repo created (StarStackCo/klipper-ui, private). ✅ Local project at Documents\klipper-ui. ✅ SSH key authorised. ✅ **Backup done** (`backups/2026-10-04_1234`, 91 MB, archive verified, SHA256SUMS). ✅ Inventory: CB1 image (Debian 12), Klipper v0.13.0-501, Moonraker v0.10.0, Mainsail v2.17.0, KlipperScreen v0.4.6. ✅ Moonraker access fixed (D-014 applied). ✅ Bench config installed, **Klipper Ready**. Next: baseline screenshots + regression checklist, then Phase 1 |
+| 0. Discovery and safety baseline | 🟡 In progress | ✅ Repo created (StarStackCo/klipper-ui, private). ✅ Local project at Documents\klipper-ui. ✅ SSH key authorised. ✅ **Backup done** (`backups/2026-10-04_1234`, 91 MB, archive verified, SHA256SUMS). ✅ Inventory: CB1 image (Debian 12), Klipper v0.13.0-501, Moonraker v0.10.0, Mainsail v2.17.0, KlipperScreen v0.4.6. ✅ Moonraker access fixed (D-014 applied). ✅ Bench config installed, **Klipper Ready**. ✅ Baseline screenshots (`design/baseline/`). ✅ Regression checklist + Run 0 (`docs/test-checklist.md`). ✅ Remote TFT screenshots working (`scripts/ks-screenshot.sh`). **Phase 0 complete, waiting for sign-off** |
 | 1. UX requirements | ⏳ Not started | |
 | 2. Design | ⏳ Not started | |
 | 3. Build increments (bench) | ⏳ Not started | |
@@ -22,6 +22,8 @@ Related: [PLAN.md](PLAN.md)
 
 | ID | Date | Question | Why it matters | Status |
 |---|---|---|---|---|
+| Q-020 | 2026-10-04 | Mainsail Temperatures panel is empty, though KlipperScreen shows both sensors | Live data must show in the new UI | Open, investigate during the Mainsail theme work |
+| Q-019 | 2026-10-04 | Browser pane asks for approval on every action for `http://192.168.0.102` ("site-level permissions disabled") | Slows down visual checks | Open. Workaround: navigate by URL instead of clicking. User may check the desktop app's settings |
 | Q-018 | 2026-10-04 | The Micro4's MCU temperature reads **-22.9 °C**, which is clearly wrong (Pi reads 39.8 °C) | Display-only sensor, no safety role. Either fix (possibly via a firmware update) or remove it from the UI | Open, low priority |
 | Q-017 | 2026-10-04 | Micro4 firmware is **v0.12.0-401**, host Klipper is **v0.13.0-501**. It connects and works, but versions should match before the full printer | Mismatches can cause subtle bugs. Reflashing means touching the board (D-001 covers config, not firmware updates) | Open, decide before Phase 3.5 |
 | Q-016 | 2026-10-04 | Is the connected RP2040 `E6647C7403679636` the FLY Micro4? (The old config pointed at a different RP2040 toolboard, `E660D051131C442C`) | The bench config must point at the right board | Answered: **yes, it's the FLY Micro4** (also RP2040). The old config was for a different board |
@@ -47,6 +49,7 @@ Related: [PLAN.md](PLAN.md)
 
 | ID | Date | Decision | Options considered | Rationale | Decided by | Status |
 |---|---|---|---|---|---|---|
+| D-016 | 2026-10-04 | Baseline finding: KlipperScreen has **no visible E-stop on the idle home screen**. The new design must show E-stop on every screen (checklist S1) | n/a | Safety | Claude (finding) | For design phase |
 | D-015 | 2026-10-04 | Bench config v1 (`config/bench/printer.cfg`): Micro4 only, `kinematics: none`, no heaters/steppers/fans/pins. Read-only MCU + Pi temperature sensors. Old printer.cfg/toolboard.cfg/macros.cfg not included | Reuse old cfg / minimal bench cfg | Nothing wired = nothing to drive. Avoids false thermal shutdowns | User | Accepted, **applied 2026-10-04** |
 | D-014 | 2026-10-04 | Moonraker `trusted_clients`: localhost + `192.168.0.0/24` + IPv6 link-local only. Remove the old entries, including `192.168.1.0/24` (wrong subnet, the actual reason Mainsail was refusing the PC) and `128.113.138.0/24` (a public internet range) | Allow all / home only | User choice. Least exposure | User | Accepted, **applied 2026-10-04** (PC gets HTTP 200) |
 | D-013 | 2026-10-04 | Printer backups stay on this PC only (`backups/` is git-ignored). Only reviewed, cleaned config goes to GitHub | Push everything / local only | Configs can contain network details and keys | Claude (safety default) | Accepted |

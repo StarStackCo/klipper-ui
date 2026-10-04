@@ -58,3 +58,20 @@ Screenshots: `design/baseline/`
 | F7–F10 | ➖ | Need hardware → Phase 3.5 |
 | F11 | ⚠️ | On-Pi undo copies exist (`*.pre-klipper-ui`, `printer.cfg.old-machine`). Rollback script not written yet |
 | F12 | ✅ | 0 under-voltage events |
+
+## Run 1: Mainsail theme v1 + settings, 2026-10-04 (bench v2)
+
+Screenshots: `design/mainsail/theme-v1-*`
+
+| ID | Result | Notes |
+|---|---|---|
+| S1 | ✅ Mainsail | E-stop solid red in the topbar on desktop (text) and mobile (icon). TFT not changed yet |
+| S2 | ⚠️ | **E-stop now asks "Are you sure?"** ✅ (dismissed with NO/Escape, Klipper stayed `ready`). Cancel-print confirmation set (`confirmOnCancelJob`), needs a print to test → bench print test later |
+| S5 | ✅ | No macros changed |
+| S8 | ✅ | No secrets in the theme or settings |
+| F1 | ✅ | `ready` (also after the power loss and reboot; config hashes match the repo) |
+| F3 | ✅ | Loads with the theme. Logo, font and colours applied |
+| F4 | ✅ | Mobile stacks in one column after a reload. Resizing without reloading shows a squeezed layout (Mainsail behaviour, not the theme) |
+| F6 | ✅ | Temperatures panel now shows Extruder + Heater Bed live (bench v2). Q-020 resolved |
+| F11 | ✅ ready | `deploy-mainsail-theme.sh --rollback` and `mainsail-settings.sh --rollback` exist (not exercised) |
+| F12 | ⚠️ | No under-voltage logged, but the Pi **lost power** once (hard reboot, PC USB power). Config intact |

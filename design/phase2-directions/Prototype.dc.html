@@ -1,0 +1,529 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>StarStack TFT prototype</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;800;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#00ACC7}a:hover{color:#88D8F2}
+button{font-family:inherit;cursor:pointer}
+button:disabled{cursor:not-allowed}
+.ss-scroll::-webkit-scrollbar{width:4px}.ss-scroll::-webkit-scrollbar-thumb{background:#282828;border-radius:2px}
+</style>
+</helmet>
+<div style="width: 760px; height: 320px; display: flex; gap: 0; background: #1A1A1A; font-family: 'Public Sans', system-ui, sans-serif">
+<div style="position: relative; width: 480px; height: 320px; display: flex; background: #0A0A0A; color: #FAFAFA; overflow: hidden; flex-shrink: 0">
+
+  <nav aria-label="Main" style="width: 64px; flex-shrink: 0; background: #111111; display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 8px 0; box-sizing: border-box">
+    <div style="width: 36px; height: 36px; border-radius: 10px; background: #FAFAFA; display: flex; align-items: center; justify-content: center; margin-bottom: 3px">
+      <img src="/_blob/8f67a68a359635a2ccecc7b98ea7e1c9" alt="StarStack" style="width: 24px; height: 27px; object-fit: contain">
+    </div>
+    <button aria-label="Home" onClick="{{ goHome }}" disabled="{{ railOff }}" style="{{ nav.home }}">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg>
+    </button>
+    <button aria-label="Print" onClick="{{ goPrint }}" disabled="{{ railOff }}" style="{{ nav.print }}">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>
+    </button>
+    <button aria-label="Controls" onClick="{{ goControls }}" disabled="{{ railOff }}" style="{{ nav.controls }}">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>
+    </button>
+    <button aria-label="Settings" onClick="{{ goSettings }}" disabled="{{ railOff }}" style="{{ nav.settings }}">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9L7 7M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg>
+    </button>
+    <div style="flex-grow: 1"></div>
+    <button aria-label="Emergency stop" onClick="{{ askEstop }}" style="width: 52px; height: 52px; border: 0; border-radius: 10px; background: #E7000B; color: #FFFFFF; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3h8l5 5v8l-5 5H8l-5-5V8z"/><path d="M12 8v5M12 16.5v.01"/></svg><span style="font-size: 10px; font-weight: 900; letter-spacing: 0.04em">STOP</span>
+    </button>
+  </nav>
+
+  <main style="flex-grow: 1; min-width: 0; position: relative">
+
+    <sc-if value="{{ show.error }}" hint-placeholder-val="{{ false }}">
+      <section style="position: absolute; inset: 0; padding: 20px; box-sizing: border-box; background: #1A0607; display: flex; flex-direction: column; gap: 10px">
+        <div style="display: flex; align-items: center; gap: 10px; color: #FF6467">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3h8l5 5v8l-5 5H8l-5-5V8z"/><path d="M12 8v5M12 16.5v.01"/></svg>
+          <h1 style="margin: 0; font-size: 22px; font-weight: 900">Printer stopped</h1>
+        </div>
+        <p style="margin: 0; font-size: 14px; line-height: 1.45; color: #FAFAFA">{{ errorMsg }}</p>
+        <p style="margin: 0; font-size: 13px; line-height: 1.45; color: #A1A1A1">Heaters and motors are off. Check the printer is safe before restarting.</p>
+        <div style="flex-grow: 1"></div>
+        <button onClick="{{ askRestart }}" style="height: 52px; border: 0; border-radius: 10px; background: #FAFAFA; color: #0A0A0A; font-size: 16px; font-weight: 900">Restart printer</button>
+      </section>
+    </sc-if>
+
+    <sc-if value="{{ show.homeIdle }}" hint-placeholder-val="{{ true }}">
+      <section style="padding: 12px; box-sizing: border-box; height: 320px; display: flex; flex-direction: column; gap: 8px">
+        <div style="display: flex; align-items: center; gap: 8px; height: 28px">
+          <div style="display: flex; align-items: center; gap: 6px; background: #161616; border-radius: 999px; padding: 4px 10px; font-size: 12px; font-weight: 600"><span style="{{ statusDot }}"></span>{{ statusText }}</div>
+          <div style="flex-grow: 1"></div>
+          <span style="font-size: 13px; color: #A1A1A1">Nozzle <b style="{{ nozzleColor }}">{{ nozzleText }}</b></span>
+          <span style="font-size: 13px; color: #A1A1A1; margin-left: 6px">Bed <b style="{{ bedColor }}">{{ bedText }}</b></span>
+        </div>
+        <div style="font-size: 11px; font-weight: 600; color: #A1A1A1; text-transform: uppercase; letter-spacing: 0.06em">Print again</div>
+        <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+          <sc-for list="{{ recent }}" as="f" hint-placeholder-count="3">
+            <button onClick="{{ f.pick }}" style="{{ f.tileStyle }}">
+              <div style="height: 58px; border-radius: 8px; background: #1F1F1F; display: flex; align-items: center; justify-content: center; align-self: stretch">
+                <svg width="44" height="44" viewBox="0 0 80 80" fill="none" stroke="#00ACC7" stroke-width="2.5" stroke-linejoin="round"><path d="M10 50l40-22 20 10-40 22z" fill="#00ACC7" fill-opacity="0.18"/><path d="M10 50v6l20 10v-6"/><path d="M30 66l40-22v-6"/></svg>
+              </div>
+              <span style="font-size: 12px; font-weight: 800; line-height: 1.2; text-align: left">{{ f.name }}</span>
+              <span style="font-size: 11px; color: #A1A1A1">{{ f.meta }}</span>
+            </button>
+          </sc-for>
+        </div>
+        <div style="font-size: 11px; font-weight: 600; color: #A1A1A1; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 2px">Preheat</div>
+        <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px">
+          <sc-for list="{{ mats }}" as="m" hint-placeholder-count="3">
+            <button onClick="{{ m.preheat }}" style="height: 56px; border: 0; border-radius: 10px; background: #161616; color: #FAFAFA; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px"><span style="font-size: 15px; font-weight: 800">{{ m.name }}</span><span style="font-size: 11px; color: #A1A1A1">{{ m.temps }}</span></button>
+          </sc-for>
+          <button onClick="{{ coolDown }}" style="height: 56px; border: 1px solid #282828; border-radius: 10px; background: transparent; color: #88D8F2; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 2v20M4 7l16 10M20 7L4 17"/></svg><span style="font-size: 11px; font-weight: 600">Cool down</span></button>
+        </div>
+      </section>
+    </sc-if>
+
+    <sc-if value="{{ show.homeDone }}" hint-placeholder-val="{{ false }}">
+      <section style="padding: 12px; box-sizing: border-box; height: 320px; display: flex; flex-direction: column; gap: 10px">
+        <div style="flex-grow: 1; background: #161616; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; text-align: center">
+          <div style="width: 52px; height: 52px; border-radius: 50%; background: #5CA300; color: #0A0A0A; display: flex; align-items: center; justify-content: center"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg></div>
+          <h1 style="margin: 0; font-size: 22px; font-weight: 900">Print complete</h1>
+          <div style="font-size: 14px; color: #A1A1A1">{{ job.name }} · {{ job.duration }}</div>
+          <div style="font-size: 12px; color: #A1A1A1">Wait for the bed to cool before removing the print.</div>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+          <button onClick="{{ dismissDone }}" style="height: 52px; border: 1px solid #282828; border-radius: 10px; background: transparent; color: #FAFAFA; font-size: 15px; font-weight: 800">Done</button>
+          <button onClick="{{ askReprintJob }}" style="height: 52px; border: 0; border-radius: 10px; background: #0D3C96; color: #FAFAFA; font-size: 15px; font-weight: 800">Print again</button>
+        </div>
+      </section>
+    </sc-if>
+
+    <sc-if value="{{ show.homePrinting }}" hint-placeholder-val="{{ false }}">
+      <section style="padding: 12px; box-sizing: border-box; height: 320px; display: flex; flex-direction: column; gap: 8px">
+        <div style="background: #161616; border-radius: 10px; padding: 10px; display: flex; gap: 10px; align-items: center">
+          <div style="width: 60px; height: 60px; border-radius: 10px; background: #1F1F1F; display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+            <svg width="44" height="44" viewBox="0 0 80 80" fill="none" stroke="#00ACC7" stroke-width="2.5" stroke-linejoin="round"><path d="M10 50l40-22 20 10-40 22z" fill="#00ACC7" fill-opacity="0.18"/><path d="M10 50v6l20 10v-6"/><path d="M30 66l40-22v-6"/></svg>
+          </div>
+          <div style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+            <div style="font-size: 15px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{ job.name }}</div>
+            <div style="font-size: 12px; color: #A1A1A1">{{ jobLine }}</div>
+            <div style="height: 6px; border-radius: 3px; background: #282828; margin-top: 6px; overflow: hidden"><div style="{{ progressStyle }}"></div></div>
+          </div>
+          <div style="{{ pctStyle }}">{{ pctText }}</div>
+        </div>
+        <div role="group" aria-label="Print speed" style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px">
+          <sc-for list="{{ speeds }}" as="sp" hint-placeholder-count="4">
+            <button onClick="{{ sp.pick }}" aria-pressed="{{ sp.on }}" style="{{ sp.style }}"><span style="font-size: 12px; font-weight: 800">{{ sp.name }}</span><span style="{{ sp.pctStyle }}">{{ sp.pct }}</span></button>
+          </sc-for>
+        </div>
+        <div style="{{ tileGrid }}">
+          <sc-for list="{{ tiles }}" as="t" hint-placeholder-count="4">
+            <button onClick="{{ t.open }}" style="height: 52px; border: 0; border-radius: 10px; background: #161616; color: #FAFAFA; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; padding: 0"><span style="font-size: 10px; color: #A1A1A1">{{ t.label }}</span><span style="{{ t.valStyle }}">{{ t.val }}</span><span style="font-size: 10px; color: #A1A1A1">{{ t.sub }}</span></button>
+          </sc-for>
+        </div>
+        <div style="flex-grow: 1"></div>
+        <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px">
+          <button onClick="{{ togglePause }}" style="height: 48px; border: 0; border-radius: 10px; background: #0D3C96; color: #FAFAFA; font-size: 14px; font-weight: 800">{{ pauseLabel }}</button>
+          <button onClick="{{ openCancelObj }}" style="height: 48px; border: 1px solid #282828; border-radius: 10px; background: #161616; color: #FAFAFA; font-size: 13px; font-weight: 800">Cancel object</button>
+          <button onClick="{{ askCancel }}" style="height: 48px; border: 1px solid #FF6467; border-radius: 10px; background: transparent; color: #FF6467; font-size: 13px; font-weight: 800">Cancel print</button>
+        </div>
+      </section>
+    </sc-if>
+
+    <sc-if value="{{ show.print }}" hint-placeholder-val="{{ false }}">
+      <section style="padding: 12px; box-sizing: border-box; height: 320px; display: flex; flex-direction: column; gap: 8px">
+        <div style="display: flex; align-items: center; height: 28px; gap: 8px">
+          <h1 style="margin: 0; font-size: 17px; font-weight: 800">Print a file</h1>
+          <div style="flex-grow: 1"></div>
+          <span style="font-size: 12px; color: #A1A1A1">Newest first · {{ pageText }}</span>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, 1fr)); gap: 8px; flex-grow: 1; min-height: 0">
+          <sc-for list="{{ pageFiles }}" as="f" hint-placeholder-count="6">
+            <button onClick="{{ f.pick }}" disabled="{{ busy }}" style="{{ f.gridStyle }}">
+              <div style="height: 50px; border-radius: 8px; background: #1F1F1F; display: flex; align-items: center; justify-content: center; align-self: stretch">
+                <svg width="36" height="36" viewBox="0 0 80 80" fill="none" stroke="#00ACC7" stroke-width="2.5" stroke-linejoin="round"><path d="M10 50l40-22 20 10-40 22z" fill="#00ACC7" fill-opacity="0.18"/><path d="M10 50v6l20 10v-6"/><path d="M30 66l40-22v-6"/></svg>
+              </div>
+              <span style="font-size: 11px; font-weight: 800; line-height: 1.2; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; align-self: stretch">{{ f.name }}</span>
+              <span style="font-size: 10px; color: #A1A1A1">{{ f.meta }}</span>
+            </button>
+          </sc-for>
+        </div>
+        <div style="display: flex; gap: 8px">
+          <button onClick="{{ prevPage }}" aria-label="Previous page" style="width: 64px; height: 40px; border: 1px solid #282828; border-radius: 10px; background: transparent; color: #FAFAFA; font-size: 18px">‹</button>
+          <div style="flex-grow: 1; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #A1A1A1">{{ busyNote }}</div>
+          <button onClick="{{ nextPage }}" aria-label="Next page" style="width: 64px; height: 40px; border: 1px solid #282828; border-radius: 10px; background: transparent; color: #FAFAFA; font-size: 18px">›</button>
+        </div>
+      </section>
+    </sc-if>
+
+    <sc-if value="{{ show.controls }}" hint-placeholder-val="{{ false }}">
+      <section style="padding: 12px; box-sizing: border-box; height: 320px; display: flex; flex-direction: column; gap: 7px">
+        <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+          <button onClick="{{ editNozzle }}" style="height: 62px; border: 0; border-radius: 10px; background: #161616; color: #FAFAFA; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px"><span style="font-size: 11px; color: #A1A1A1">Nozzle</span><span style="{{ nozzleBig }}">{{ nozzleText }}</span><span style="font-size: 10px; color: #A1A1A1">{{ nozzleTargetText }}</span></button>
+          <button onClick="{{ editBed }}" style="height: 62px; border: 0; border-radius: 10px; background: #161616; color: #FAFAFA; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px"><span style="font-size: 11px; color: #A1A1A1">Bed</span><span style="{{ bedBig }}">{{ bedText }}</span><span style="font-size: 10px; color: #A1A1A1">{{ bedTargetText }}</span></button>
+          <button onClick="{{ editFan }}" style="height: 62px; border: 0; border-radius: 10px; background: #161616; color: #FAFAFA; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px"><span style="font-size: 11px; color: #A1A1A1">Part fan</span><span style="font-size: 20px; font-weight: 800">{{ fanText }}</span><span style="font-size: 10px; color: #A1A1A1">tap to change</span></button>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: #A1A1A1; text-transform: uppercase; letter-spacing: 0.06em">Filament<sc-if value="{{ locked }}" hint-placeholder-val="{{ false }}"><span style="text-transform: none; letter-spacing: 0; color: #FF8904">· locked while printing</span></sc-if></div>
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+          <button onClick="{{ startLoad }}" disabled="{{ locked }}" style="{{ lockBtn }}">Load filament</button>
+          <button onClick="{{ startUnload }}" disabled="{{ locked }}" style="{{ lockBtn }}">Unload filament</button>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: #A1A1A1; text-transform: uppercase; letter-spacing: 0.06em">Move · 10 mm<sc-if value="{{ locked }}" hint-placeholder-val="{{ false }}"><span style="text-transform: none; letter-spacing: 0; color: #FF8904">· locked while printing</span></sc-if></div>
+        <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px">
+          <button disabled="{{ locked }}" onClick="{{ jog }}" style="{{ lockBtnSm }}">X −</button>
+          <button disabled="{{ locked }}" onClick="{{ jog }}" style="{{ lockBtnSm }}">Y −</button>
+          <button disabled="{{ locked }}" onClick="{{ jog }}" style="{{ lockBtnSm }}">Z −</button>
+          <button disabled="{{ locked }}" onClick="{{ jog }}" style="{{ lockBtnSm }}">Home all</button>
+          <button disabled="{{ locked }}" onClick="{{ jog }}" style="{{ lockBtnSm }}">X +</button>
+          <button disabled="{{ locked }}" onClick="{{ jog }}" style="{{ lockBtnSm }}">Y +</button>
+          <button disabled="{{ locked }}" onClick="{{ jog }}" style="{{ lockBtnSm }}">Z +</button>
+          <button disabled="{{ locked }}" onClick="{{ jog }}" style="{{ lockBtnSm }}">Motors off</button>
+        </div>
+      </section>
+    </sc-if>
+
+    <sc-if value="{{ show.settings }}" hint-placeholder-val="{{ false }}">
+      <section class="ss-scroll" style="padding: 12px; box-sizing: border-box; height: 320px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px">
+        <h1 style="margin: 0 0 4px; font-size: 17px; font-weight: 800">Settings</h1>
+        <button onClick="{{ toggleAdv }}" role="switch" aria-checked="{{ adv }}" style="min-height: 56px; flex-shrink: 0; border: 0; border-radius: 10px; background: #161616; color: #FAFAFA; display: flex; align-items: center; gap: 10px; padding: 0 12px; text-align: left">
+          <span style="flex-grow: 1; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 14px; font-weight: 800">Advanced mode</span><span style="font-size: 11px; color: #A1A1A1">Pressure advance, extrude, macros, console, limits</span></span>
+          <span style="{{ switchTrack }}"><span style="{{ switchKnob }}"></span></span>
+        </button>
+        <sc-if value="{{ adv }}" hint-placeholder-val="{{ false }}">
+          <div style="font-size: 11px; font-weight: 600; color: #FF8904; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 4px">Advanced</div>
+          <sc-for list="{{ advItems }}" as="it" hint-placeholder-count="5">
+            <button onClick="{{ it.open }}" style="min-height: 46px; flex-shrink: 0; border: 0; border-radius: 10px; background: #161616; color: #FAFAFA; display: flex; align-items: center; padding: 0 12px; font-size: 14px; font-weight: 600; text-align: left"><span style="flex-grow: 1">{{ it.name }}</span><span style="font-size: 12px; color: #A1A1A1">{{ it.note }}</span></button>
+          </sc-for>
+        </sc-if>
+        <div style="font-size: 11px; font-weight: 600; color: #A1A1A1; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 4px">Printer</div>
+        <sc-for list="{{ setItems }}" as="it" hint-placeholder-count="5">
+          <button onClick="{{ it.open }}" disabled="{{ it.disabled }}" style="{{ it.style }}"><span style="flex-grow: 1">{{ it.name }}</span><span style="font-size: 12px; color: #A1A1A1">{{ it.note }}</span></button>
+        </sc-for>
+      </section>
+    </sc-if>
+  </main>
+
+  <sc-if value="{{ show.modal }}" hint-placeholder-val="{{ false }}">
+    <div style="position: absolute; top: 0; right: 0; bottom: 0; left: 64px; background: rgba(0,0,0,0.72); display: flex; align-items: center; justify-content: center; padding: 14px; box-sizing: border-box">
+      <div role="dialog" aria-modal="true" aria-label="{{ modal.title }}" style="width: 100%; max-width: 380px; background: #161616; border: 1px solid #282828; border-radius: 10px; padding: 16px; box-sizing: border-box; display: flex; flex-direction: column; gap: 10px">
+        <div style="{{ modal.titleStyle }}">{{ modal.title }}</div>
+        <p style="margin: 0; font-size: 13px; line-height: 1.45; color: #C8C8C8; white-space: pre-line">{{ modal.body }}</p>
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 4px">
+          <button onClick="{{ closeModal }}" style="height: 48px; border: 1px solid #282828; border-radius: 10px; background: transparent; color: #FAFAFA; font-size: 14px; font-weight: 800">{{ modal.no }}</button>
+          <button onClick="{{ modal.yes }}" style="{{ modal.yesStyle }}">{{ modal.yesLabel }}</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ show.adjust }}" hint-placeholder-val="{{ false }}">
+    <div style="position: absolute; top: 0; right: 0; bottom: 0; left: 64px; background: rgba(0,0,0,0.72); display: flex; align-items: center; justify-content: center; padding: 14px; box-sizing: border-box">
+      <div role="dialog" aria-modal="true" aria-label="{{ adj.title }}" style="width: 100%; max-width: 400px; background: #161616; border: 1px solid #282828; border-radius: 10px; padding: 14px; box-sizing: border-box; display: flex; flex-direction: column; gap: 10px">
+        <div style="display: flex; align-items: baseline; gap: 8px"><span style="font-size: 15px; font-weight: 800">{{ adj.title }}</span><span style="font-size: 11px; color: #A1A1A1">{{ adj.range }}</span></div>
+        <div style="text-align: center; font-size: 44px; font-weight: 900; color: #88D8F2; line-height: 1">{{ adj.valText }}</div>
+        <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px">
+          <sc-for list="{{ adj.steps }}" as="st" hint-placeholder-count="4">
+            <button onClick="{{ st.go }}" style="height: 48px; border: 0; border-radius: 10px; background: #1F1F1F; color: #FAFAFA; font-size: 15px; font-weight: 800">{{ st.label }}</button>
+          </sc-for>
+        </div>
+        <sc-if value="{{ adj.hasPresets }}" hint-placeholder-val="{{ false }}">
+          <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px">
+            <sc-for list="{{ adj.presets }}" as="pr" hint-placeholder-count="4">
+              <button onClick="{{ pr.go }}" style="height: 36px; border: 1px solid #282828; border-radius: 10px; background: transparent; color: #A1A1A1; font-size: 12px; font-weight: 600">{{ pr.label }}</button>
+            </sc-for>
+          </div>
+        </sc-if>
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+          <button onClick="{{ closeModal }}" style="height: 44px; border: 1px solid #282828; border-radius: 10px; background: transparent; color: #FAFAFA; font-size: 14px; font-weight: 800">Cancel</button>
+          <button onClick="{{ applyAdj }}" style="height: 44px; border: 0; border-radius: 10px; background: #0D3C96; color: #FAFAFA; font-size: 14px; font-weight: 800">Set</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ show.cancelObj }}" hint-placeholder-val="{{ false }}">
+    <div role="dialog" aria-modal="true" aria-label="Cancel an object" style="position: absolute; top: 0; right: 0; bottom: 0; left: 64px; background: #0A0A0A; padding: 12px; box-sizing: border-box; display: flex; gap: 12px">
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <div style="font-size: 11px; font-weight: 600; color: #A1A1A1; text-transform: uppercase; letter-spacing: 0.06em">Bed · 180 × 180 mm</div>
+        <div style="position: relative; width: 252px; height: 252px; border-radius: 10px; background: #161616; border: 1px solid #282828; box-sizing: border-box; overflow: hidden">
+          <sc-for list="{{ objects }}" as="o" hint-placeholder-count="4">
+            <button onClick="{{ o.pick }}" disabled="{{ o.gone }}" aria-label="{{ o.name }}" style="{{ o.mapStyle }}">{{ o.short }}</button>
+          </sc-for>
+        </div>
+      </div>
+      <div style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px">
+        <div style="font-size: 15px; font-weight: 800">Cancel an object</div>
+        <div style="font-size: 11px; color: #A1A1A1; line-height: 1.35">Tap a part on the bed or in the list. The rest keep printing.</div>
+        <sc-for list="{{ objects }}" as="o" hint-placeholder-count="4">
+          <button onClick="{{ o.pick }}" disabled="{{ o.gone }}" style="{{ o.listStyle }}"><span style="{{ o.badgeStyle }}">{{ o.short }}</span><span style="flex-grow: 1; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{ o.name }}</span><span style="font-size: 10px; color: #A1A1A1">{{ o.state }}</span></button>
+        </sc-for>
+        <div style="flex-grow: 1"></div>
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px">
+          <button onClick="{{ closeModal }}" style="height: 46px; border: 1px solid #282828; border-radius: 10px; background: transparent; color: #FAFAFA; font-size: 13px; font-weight: 800">Back</button>
+          <button onClick="{{ askCancelObj }}" disabled="{{ noObjSel }}" style="{{ cancelObjBtn }}">Cancel part</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ show.filament }}" hint-placeholder-val="{{ false }}">
+    <div role="dialog" aria-modal="true" aria-label="{{ fil.title }}" style="position: absolute; top: 0; right: 0; bottom: 0; left: 64px; background: #0A0A0A; padding: 16px; box-sizing: border-box; display: flex; flex-direction: column; gap: 12px">
+      <div style="display: flex; align-items: center; gap: 10px">
+        <span style="font-size: 18px; font-weight: 900">{{ fil.title }}</span>
+        <div style="flex-grow: 1"></div>
+        <sc-for list="{{ fil.dots }}" as="d" hint-placeholder-count="4"><span style="{{ d.style }}"></span></sc-for>
+      </div>
+      <div style="font-size: 14px; line-height: 1.45; color: #C8C8C8; white-space: pre-line">{{ fil.body }}</div>
+      <sc-if value="{{ fil.pickMat }}" hint-placeholder-val="{{ true }}">
+        <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+          <sc-for list="{{ mats }}" as="m" hint-placeholder-count="3">
+            <button onClick="{{ m.pickFil }}" style="height: 84px; border: 0; border-radius: 10px; background: #161616; color: #FAFAFA; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px"><span style="font-size: 20px; font-weight: 900">{{ m.name }}</span><span style="font-size: 12px; color: #A1A1A1">{{ m.nozzle }}</span></button>
+          </sc-for>
+        </div>
+      </sc-if>
+      <sc-if value="{{ fil.showBar }}" hint-placeholder-val="{{ false }}">
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <div style="display: flex; font-size: 13px"><span style="color: #A1A1A1">Nozzle</span><div style="flex-grow: 1"></div><b style="color: #FF8904">{{ fil.temp }}</b></div>
+          <div style="height: 8px; border-radius: 4px; background: #282828; overflow: hidden"><div style="{{ fil.barStyle }}"></div></div>
+        </div>
+      </sc-if>
+      <div style="flex-grow: 1"></div>
+      <div style="display: flex; gap: 8px">
+        <button onClick="{{ fil.back }}" style="flex: 1; height: 50px; border: 1px solid #282828; border-radius: 10px; background: transparent; color: #FAFAFA; font-size: 14px; font-weight: 800">{{ fil.backLabel }}</button>
+        <sc-if value="{{ fil.hasAlt }}" hint-placeholder-val="{{ false }}">
+          <button onClick="{{ fil.alt }}" style="flex: 1; height: 50px; border: 1px solid #00ACC7; border-radius: 10px; background: transparent; color: #88D8F2; font-size: 14px; font-weight: 800">{{ fil.altLabel }}</button>
+        </sc-if>
+        <sc-if value="{{ fil.hasNext }}" hint-placeholder-val="{{ false }}">
+          <button onClick="{{ fil.next }}" style="flex: 1.3; height: 50px; border: 0; border-radius: 10px; background: #0D3C96; color: #FAFAFA; font-size: 14px; font-weight: 800">{{ fil.nextLabel }}</button>
+        </sc-if>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ show.runout }}" hint-placeholder-val="{{ false }}">
+    <div role="dialog" aria-modal="true" aria-label="Filament ran out" style="position: absolute; top: 0; right: 0; bottom: 0; left: 64px; background: #0A0A0A; padding: 18px; box-sizing: border-box; display: flex; flex-direction: column; gap: 10px">
+      <div style="display: flex; align-items: center; gap: 10px; color: #FF8904">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18v.01"/></svg>
+        <span style="font-size: 20px; font-weight: 900">Filament ran out</span>
+      </div>
+      <p style="margin: 0; font-size: 14px; line-height: 1.45">The print is paused and safe. Load new filament, then resume.</p>
+      <p style="margin: 0; font-size: 12px; color: #A1A1A1">{{ job.name }} · {{ pctText }} done</p>
+      <div style="flex-grow: 1"></div>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+        <button onClick="{{ askCancel }}" style="height: 52px; border: 1px solid #FF6467; border-radius: 10px; background: transparent; color: #FF6467; font-size: 14px; font-weight: 800">Cancel print</button>
+        <button onClick="{{ runoutLoad }}" style="height: 52px; border: 0; border-radius: 10px; background: #0D3C96; color: #FAFAFA; font-size: 14px; font-weight: 800">Load new filament</button>
+      </div>
+    </div>
+  </sc-if>
+</div>
+
+<aside aria-label="Prototype controls" style="flex-grow: 1; padding: 14px; box-sizing: border-box; display: flex; flex-direction: column; gap: 8px; color: #A1A1A1">
+  <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em">Prototype controls</div>
+  <div style="font-size: 11px; line-height: 1.4">Not on the printer. These simulate events so every screen can be tried.</div>
+  <button onClick="{{ simStart }}" style="height: 34px; border: 1px solid #333; border-radius: 8px; background: #222; color: #FAFAFA; font-size: 12px; font-weight: 600">Start demo print (4 parts)</button>
+  <button onClick="{{ simRunout }}" style="height: 34px; border: 1px solid #333; border-radius: 8px; background: #222; color: #FAFAFA; font-size: 12px; font-weight: 600">Filament runs out</button>
+  <button onClick="{{ simFinish }}" style="height: 34px; border: 1px solid #333; border-radius: 8px; background: #222; color: #FAFAFA; font-size: 12px; font-weight: 600">Print finishes</button>
+  <button onClick="{{ simReset }}" style="height: 34px; border: 1px solid #333; border-radius: 8px; background: #222; color: #FAFAFA; font-size: 12px; font-weight: 600">Reset to idle</button>
+  <div style="flex-grow: 1"></div>
+  <div style="font-size: 11px; line-height: 1.4">State: <b style="color: #FAFAFA">{{ debugState }}</b></div>
+</aside>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":760,"height":320}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = this.fresh();
+  }
+  fresh() {
+    return { page: 'home', job: 'idle', modal: null, adj: null, speed: 100, flow: 100, fan: 60, pa: 0.04,
+      nozzle: 24, bed: 23, nozzleT: 0, bedT: 0, adv: false, error: false, errorMsg: '', objSel: null, gone: [],
+      fil: null, filPage: 0, jobName: 'Tire Monkey straight handle', jobDur: '40 min', pct: 0, runout: false };
+  }
+  renderVals() {
+    const s = this.state;
+    const set = (o) => () => this.setState(o);
+    const printing = s.job === 'printing' || s.job === 'paused';
+    const files = [
+      { name: 'Tire Monkey straight handle', mat: 'PETG', time: '40 min' },
+      { name: 'Collapsing lightsaber', mat: 'PETG', time: '5 h 8 min' },
+      { name: 'NASA chainmail hex', mat: 'PLA', time: '1 h 59 min' },
+      { name: 'Speed test structure', mat: 'TPU', time: '57 min' },
+      { name: 'Retraction tower', mat: 'TPU', time: '14 min' },
+      { name: 'Temperature tower', mat: 'TPU', time: '1 h 30 min' },
+      { name: 'PA pattern', mat: 'TPU', time: '13 min' },
+      { name: 'Ditto face', mat: 'TPU', time: '43 min' }
+    ];
+    const MATS = { PLA: [210, 60], PETG: [240, 80], TPU: [225, 40] };
+    const startJob = (f) => () => this.setState({ modal: null, job: 'printing', page: 'home', jobName: f.name, jobDur: f.time, pct: 12,
+      nozzle: MATS[f.mat][0], nozzleT: MATS[f.mat][0], bed: MATS[f.mat][1], bedT: MATS[f.mat][1], gone: [], objSel: null, speed: 100, flow: 100 });
+    const askBed = (f) => () => this.setState({ modal: { kind: 'bed', f } });
+    const tile = 'border: 0; border-radius: 10px; background: #161616; color: #FAFAFA; padding: 8px; display: flex; flex-direction: column; align-items: flex-start; gap: 4px;';
+    const recent = files.slice(0, 3).map((f, i) => ({ name: f.name, meta: f.mat + ' · ' + f.time, pick: askBed(f),
+      tileStyle: tile + (i === 0 ? 'outline: 1px solid #00ACC7;' : '') }));
+    const pageFiles = files.slice(s.filPage * 6, s.filPage * 6 + 6).map((f) => ({ name: f.name, meta: f.mat + ' · ' + f.time, pick: askBed(f),
+      gridStyle: tile + 'opacity:' + (printing ? '0.4' : '1') + '; min-height: 0;' }));
+    const mats = Object.keys(MATS).map((k) => ({ name: k, temps: MATS[k][0] + '° / ' + MATS[k][1] + '°', nozzle: MATS[k][0] + '°C nozzle',
+      preheat: set({ nozzleT: MATS[k][0], bedT: MATS[k][1] }),
+      pickFil: () => this.setState({ fil: { ...s.fil, mat: k, step: 1 }, nozzleT: MATS[k][0] }) }));
+    const heating = !printing && (s.nozzleT > 0 || s.bedT > 0);
+    const navBase = 'width: 48px; height: 44px; border: 0; border-radius: 10px; display: flex; align-items: center; justify-content: center;';
+    const navOn = navBase + 'background: #0D3C96; color: #FAFAFA;';
+    const navOff = navBase + 'background: transparent; color: #A1A1A1;' + (s.error ? 'opacity: 0.3;' : '');
+    const nav = { home: s.page === 'home' && !s.error ? navOn : navOff, print: s.page === 'print' && !s.error ? navOn : navOff,
+      controls: s.page === 'controls' && !s.error ? navOn : navOff, settings: s.page === 'settings' && !s.error ? navOn : navOff };
+    const hot = 'color: #FF8904;', cool = 'color: #FAFAFA;';
+    const speeds = [['Silent', 50], ['Normal', 100], ['Fast', 125], ['Draft', 150]].map(([n, p]) => {
+      const on = s.speed === p;
+      return { name: n, pct: p + '%', on: on, pick: set({ speed: p }),
+        style: 'height: 40px; border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1; color: #FAFAFA; padding: 0;' + (on ? 'border: 1px solid #00ACC7; background: #0D3C96;' : 'border: 1px solid #282828; background: transparent;'),
+        pctStyle: 'font-size: 10px; color: ' + (on ? '#88D8F2' : '#A1A1A1') };
+    });
+    const adjOpen = (cfg) => () => this.setState({ adj: { ...cfg, val: cfg.cur } });
+    const nozzleCfg = { key: 'nozzleT', title: 'Nozzle target', unit: '°C', min: 0, max: 300, cur: s.nozzleT, steps: [-10, -1, 1, 10], presets: [['Off', 0], ['PLA', 210], ['PETG', 240], ['TPU', 225]] };
+    const bedCfg = { key: 'bedT', title: 'Bed target', unit: '°C', min: 0, max: 110, cur: s.bedT, steps: [-10, -1, 1, 10], presets: [['Off', 0], ['PLA', 60], ['PETG', 80], ['TPU', 40]] };
+    const fanCfg = { key: 'fan', title: 'Part fan', unit: '%', min: 0, max: 100, cur: s.fan, steps: [-10, -1, 1, 10], presets: [['Off', 0], ['50%', 50], ['80%', 80], ['100%', 100]] };
+    const flowCfg = { key: 'flow', title: 'Flow', unit: '%', min: 40, max: 120, cur: s.flow, steps: [-5, -1, 1, 5], presets: [] };
+    const paCfg = { key: 'pa', title: 'Pressure advance', unit: '', min: 0, max: 1, cur: s.pa, steps: [-0.01, -0.001, 0.001, 0.01], presets: [], dec: 3 };
+    const tiles = [
+      { label: 'Nozzle', val: s.nozzle + '°', sub: '/ ' + s.nozzleT + '°', valStyle: 'font-size: 15px; font-weight: 800;' + hot, open: adjOpen(nozzleCfg) },
+      { label: 'Bed', val: s.bed + '°', sub: '/ ' + s.bedT + '°', valStyle: 'font-size: 15px; font-weight: 800;' + hot, open: adjOpen(bedCfg) },
+      { label: 'Fan', val: s.fan + '%', sub: 'part', valStyle: 'font-size: 15px; font-weight: 800;', open: adjOpen(fanCfg) },
+      { label: 'Flow', val: s.flow + '%', sub: '40–120', valStyle: 'font-size: 15px; font-weight: 800;', open: adjOpen(flowCfg) }
+    ];
+    if (s.adv) tiles.push({ label: 'PA', val: s.pa.toFixed(3), sub: 'advanced', valStyle: 'font-size: 14px; font-weight: 800; color: #88D8F2;', open: adjOpen(paCfg) });
+    let adj = null;
+    if (s.adj) {
+      const a = s.adj, fmt = (v) => (a.dec ? v.toFixed(a.dec) : String(v)) + a.unit;
+      const clamp = (v) => Math.min(a.max, Math.max(a.min, Math.round(v * 1000) / 1000));
+      adj = { title: a.title, range: 'Limit ' + fmt(a.min) + '–' + fmt(a.max), valText: fmt(a.val), hasPresets: a.presets.length > 0,
+        steps: a.steps.map((d) => ({ label: (d > 0 ? '+' : '−') + Math.abs(d), go: () => this.setState({ adj: { ...a, val: clamp(a.val + d) } }) })),
+        presets: a.presets.map(([l, v]) => ({ label: l, go: () => this.setState({ adj: { ...a, val: clamp(v) } }) })) };
+    }
+    const objs = [
+      { id: 1, name: 'Tire Monkey handle 1', short: '1', x: 15, y: 20, w: 70, h: 28 },
+      { id: 2, name: 'Tire Monkey handle 2', short: '2', x: 15, y: 70, w: 70, h: 28 },
+      { id: 3, name: 'Tire Monkey handle 3', short: '3', x: 15, y: 120, w: 70, h: 28 },
+      { id: 4, name: 'Cable clip', short: '4', x: 110, y: 70, w: 45, h: 45 }
+    ];
+    const k = 250 / 180;
+    const objects = objs.map((o) => {
+      const gone = s.gone.includes(o.id), sel = s.objSel === o.id;
+      const col = gone ? '#3A3A3A' : sel ? '#FF6467' : '#00ACC7';
+      return { name: o.name, short: o.short, gone: gone, state: gone ? 'cancelled' : sel ? 'selected' : 'printing',
+        pick: set({ objSel: o.id }),
+        mapStyle: 'position: absolute; left: ' + Math.round(o.x * k) + 'px; top: ' + Math.round(o.y * k) + 'px; width: ' + Math.round(o.w * k) + 'px; height: ' + Math.round(o.h * k) + 'px; border-radius: 6px; border: 2px solid ' + col + '; background: ' + (gone ? 'repeating-linear-gradient(45deg,#1F1F1F 0 6px,#2A2A2A 6px 12px)' : sel ? 'rgba(255,100,103,0.25)' : 'rgba(0,172,199,0.18)') + '; color: ' + (gone ? '#737373' : '#FAFAFA') + '; font-size: 14px; font-weight: 900; padding: 0;',
+        listStyle: 'height: 38px; border-radius: 10px; display: flex; align-items: center; gap: 8px; padding: 0 8px; font-size: 12px; font-weight: 600; color: ' + (gone ? '#737373' : '#FAFAFA') + '; background: #161616; border: 1px solid ' + (sel ? '#FF6467' : '#282828') + ';' + (gone ? 'text-decoration: line-through;' : ''),
+        badgeStyle: 'width: 22px; height: 22px; border-radius: 6px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; background: ' + col + '; color: #0A0A0A;' };
+    });
+    const selObj = objs.find((o) => o.id === s.objSel);
+    let modal = null;
+    const danger = 'height: 48px; border: 0; border-radius: 10px; background: #E7000B; color: #FFFFFF; font-size: 14px; font-weight: 800;';
+    const primary = 'height: 48px; border: 0; border-radius: 10px; background: #0D3C96; color: #FAFAFA; font-size: 14px; font-weight: 800;';
+    const warnT = 'font-size: 17px; font-weight: 900; color: #FF8904;', dangerT = 'font-size: 17px; font-weight: 900; color: #FF6467;', plainT = 'font-size: 17px; font-weight: 900;';
+    const m = s.modal;
+    if (m && m.kind === 'bed') modal = { title: 'Is the bed clear?', titleStyle: plainT, body: 'Remove any old print from the bed before starting ' + m.f.name + '. Printing on top of a part can damage the nozzle.', no: 'Not yet', yesLabel: 'Bed is clear, print', yesStyle: primary, yes: startJob(m.f) };
+    if (m && m.kind === 'cancel') modal = { title: 'Cancel this print?', titleStyle: dangerT, body: s.jobName + ' will stop and can’t be resumed.', no: 'Keep printing', yesLabel: 'Cancel print', yesStyle: danger, yes: set({ modal: null, job: 'idle', runout: false, nozzleT: 0, bedT: 0, page: 'home' }) };
+    if (m && m.kind === 'estop') modal = { title: 'Emergency stop?', titleStyle: dangerT, body: 'Stops everything immediately: heaters, motors and any print.\nThe print can’t be resumed. Use this only if something is wrong.', no: 'Go back', yesLabel: 'STOP NOW', yesStyle: danger, yes: set({ modal: null, adj: null, fil: null, runout: false, error: true, job: 'idle', nozzleT: 0, bedT: 0, errorMsg: 'Emergency stop was pressed.' }) };
+    if (m && m.kind === 'restart') modal = { title: 'Restart the printer?', titleStyle: plainT, body: 'Klipper restarts and the printer is ready again in about 10 seconds.', no: 'Not yet', yesLabel: 'Restart', yesStyle: primary, yes: () => this.setState({ ...this.fresh(), adv: s.adv }) };
+    if (m && m.kind === 'adv') modal = { title: 'Turn on Advanced mode?', titleStyle: warnT, body: 'Advanced settings can ruin prints or damage the printer if set wrong.\nProceed at your own risk.', no: 'Go back', yesLabel: 'I understand, turn on', yesStyle: 'height: 48px; border: 0; border-radius: 10px; background: #FF8904; color: #0A0A0A; font-size: 13px; font-weight: 900;', yes: set({ modal: null, adv: true }) };
+    if (m && m.kind === 'cancelObj' && selObj) modal = { title: 'Cancel ' + selObj.name + '?', titleStyle: dangerT, body: 'This part stops printing. The other parts carry on. This can’t be undone.', no: 'Go back', yesLabel: 'Cancel part', yesStyle: danger, yes: set({ modal: null, gone: s.gone.concat([selObj.id]), objSel: null, overlayObj: true }) };
+    if (m && m.kind === 'shutdown') modal = { title: 'Shut down?', titleStyle: plainT, body: 'Wait until the screen goes dark before switching off the power.', no: 'Go back', yesLabel: 'Shut down', yesStyle: primary, yes: set({ modal: null }) };
+    if (m && m.kind === 'info') modal = { title: m.title, titleStyle: plainT, body: m.body, no: 'Close', yesLabel: 'OK', yesStyle: primary, yes: set({ modal: null }) };
+    let fil = null;
+    if (s.fil) {
+      const f = s.fil, load = f.mode === 'load', tgt = f.mat ? MATS[f.mat][0] : 0, total = load ? 4 : 3;
+      const dots = Array.from({ length: total }, (_, i) => ({ style: 'width: 8px; height: 8px; border-radius: 50%; background: ' + (i <= f.step ? '#00ACC7' : '#282828') }));
+      const close = set({ fil: null, nozzleT: 0 });
+      const go = (st) => () => this.setState({ fil: { ...f, step: st } });
+      const done = () => this.setState({ fil: null, ...(s.runout ? { runout: false } : {}) });
+      const base = { dots, title: load ? 'Load filament' : 'Unload filament', pickMat: false, showBar: false, hasAlt: false, hasNext: true, back: close, backLabel: 'Cancel', temp: '', barStyle: '' };
+      if (f.step === 0) fil = { ...base, body: 'Which material are you loading?' + (load ? '' : '\nPick the one that is in the printer now.'), pickMat: true, hasNext: false };
+      else if (f.step === 1) fil = { ...base, body: 'Heating the nozzle for ' + f.mat + '. This takes about a minute.', showBar: true, temp: Math.round(tgt * 0.62) + '° / ' + tgt + '°', barStyle: 'width: 62%; height: 100%; background: #FF8904', nextLabel: 'Demo: skip ahead', next: go(2) };
+      else if (load && f.step === 2) fil = { ...base, body: 'Nozzle is hot.\nPush the filament into the extruder until you feel it grip, then tap Load.', nextLabel: 'Load', next: go(3) };
+      else if (load && f.step === 3) fil = { ...base, body: 'Filament is purging.\nIs the plastic coming out clean and the right colour?', hasAlt: true, altLabel: 'Purge more', alt: go(3), nextLabel: 'Done', next: done, backLabel: 'Cancel' };
+      else if (!load && f.step === 2) fil = { ...base, body: 'Unloading…\nWhen the filament is free, pull it out gently and tap Done.', nextLabel: 'Done', next: done };
+    }
+    const lockedBtnBase = 'border-radius: 10px; font-weight: 800; ';
+    const locked = printing;
+    const setRow = 'min-height: 46px; flex-shrink: 0; border: 0; border-radius: 10px; background: #161616; color: #FAFAFA; display: flex; align-items: center; padding: 0 12px; font-size: 14px; font-weight: 600; text-align: left;';
+    const info = (title, body) => set({ modal: { kind: 'info', title, body } });
+    const setItems = [
+      { name: 'Wi-Fi', note: 'Connected · 192.168.0.102', open: info('Wi-Fi', 'Network picker opens here.') },
+      { name: 'Screen', note: 'Brightness · sleep after 5 min', open: info('Screen', 'Brightness and sleep settings.') },
+      { name: 'Language & time', note: 'English · 24 h', open: info('Language & time', 'Language, units and clock format.') },
+      { name: 'About this printer', note: 'Klipper v0.13.0', open: info('About', 'StarStack printer\nKlipper v0.13.0 · Moonraker v0.10.0\nIP 192.168.0.102') },
+      { name: printing ? 'Shut down · locked while printing' : 'Shut down', note: '', open: set({ modal: { kind: 'shutdown' } }), disabled: printing, style: setRow + (printing ? 'opacity: 0.4;' : '') },
+      { name: printing ? 'Reboot · locked while printing' : 'Reboot', note: '', open: set({ modal: { kind: 'shutdown' } }), disabled: printing, style: setRow + (printing ? 'opacity: 0.4;' : '') }
+    ].map((i) => ({ disabled: false, style: setRow, ...i }));
+    const advItems = [
+      { name: 'Extrude / retract', note: 'blocked when cold', open: info('Extrude / retract', 'Extrude or retract by 5, 10 or 25 mm. Blocked below 170 °C.') },
+      { name: 'Macros', note: '', open: info('Macros', 'List of printer macros.') },
+      { name: 'Console', note: '', open: info('Console', 'G-code console.') },
+      { name: 'Speed & acceleration limits', note: '', open: info('Limits', 'Velocity, acceleration and square corner limits. Never above the printer config.') },
+      { name: 'Updates', note: '', open: info('Updates', 'Software updates.') },
+      { name: 'Restart firmware', note: '', open: set({ modal: { kind: 'restart' } }) }
+    ];
+    const pct = s.pct;
+    const show = {
+      error: s.error,
+      homeIdle: !s.error && s.page === 'home' && s.job === 'idle',
+      homeDone: !s.error && s.page === 'home' && s.job === 'done',
+      homePrinting: !s.error && s.page === 'home' && printing,
+      print: !s.error && s.page === 'print',
+      controls: !s.error && s.page === 'controls',
+      settings: !s.error && s.page === 'settings',
+      cancelObj: !!s.cancelObjOpen && printing && !s.error,
+      filament: !!fil && !s.error,
+      runout: s.runout && !s.fil && !s.error,
+      adjust: !!adj && !s.modal,
+      modal: !!modal
+    };
+    return {
+      show, nav, railOff: s.error, modal, adj, fil, mats, recent, pageFiles, speeds, tiles, objects, advItems, setItems, adv: s.adv,
+      job: { name: s.jobName, duration: s.jobDur },
+      goHome: set({ page: 'home', modal: null, adj: null, cancelObjOpen: false }), goPrint: set({ page: 'print', modal: null, adj: null, cancelObjOpen: false }), goControls: set({ page: 'controls', modal: null, adj: null, cancelObjOpen: false }), goSettings: set({ page: 'settings', modal: null, adj: null, cancelObjOpen: false }),
+      askEstop: set({ modal: { kind: 'estop' } }), askRestart: set({ modal: { kind: 'restart' } }),
+      askCancel: set({ modal: { kind: 'cancel' } }), askReprintJob: askBed(files.find((f) => f.name === s.jobName) || files[0]),
+      closeModal: () => this.setState(s.modal ? { modal: null } : s.adj ? { adj: null } : { cancelObjOpen: false, objSel: null }),
+      applyAdj: () => this.setState({ [s.adj.key]: s.adj.val, adj: null, ...(s.adj.key === 'nozzleT' && printing ? { nozzle: s.adj.val } : {}), ...(s.adj.key === 'bedT' && printing ? { bed: s.adj.val } : {}) }),
+      togglePause: set({ job: s.job === 'paused' ? 'printing' : 'paused' }), pauseLabel: s.job === 'paused' ? 'Resume' : 'Pause',
+      openCancelObj: set({ cancelObjOpen: true, objSel: null }), askCancelObj: set({ modal: { kind: 'cancelObj' } }), noObjSel: !selObj,
+      cancelObjBtn: 'height: 46px; border: 0; border-radius: 10px; font-size: 13px; font-weight: 800; ' + (selObj ? 'background: #E7000B; color: #FFFFFF;' : 'background: #282828; color: #737373;'),
+      dismissDone: set({ job: 'idle' }), coolDown: set({ nozzleT: 0, bedT: 0 }),
+      statusText: heating ? 'Heating' : 'Ready', statusDot: 'width: 8px; height: 8px; border-radius: 50%; background: ' + (heating ? '#FF8904' : '#5CA300'),
+      nozzleText: s.nozzle + '°', bedText: s.bed + '°', nozzleColor: s.nozzleT ? hot : cool, bedColor: s.bedT ? hot : cool,
+      nozzleBig: 'font-size: 20px; font-weight: 800;' + (s.nozzleT ? hot : ''), bedBig: 'font-size: 20px; font-weight: 800;' + (s.bedT ? hot : ''),
+      nozzleTargetText: s.nozzleT ? 'target ' + s.nozzleT + '°' : 'off · tap to set', bedTargetText: s.bedT ? 'target ' + s.bedT + '°' : 'off · tap to set', fanText: s.fan + '%',
+      editNozzle: adjOpen(nozzleCfg), editBed: adjOpen(bedCfg), editFan: adjOpen(fanCfg),
+      locked, lockBtn: lockedBtnBase + 'height: 48px; font-size: 14px; ' + (locked ? 'border: 1px dashed #282828; background: transparent; color: #737373;' : 'border: 0; background: #161616; color: #FAFAFA;'),
+      lockBtnSm: lockedBtnBase + 'height: 42px; font-size: 12px; ' + (locked ? 'border: 1px dashed #282828; background: transparent; color: #737373;' : 'border: 0; background: #161616; color: #FAFAFA;'),
+      jog: () => {},
+      startLoad: set({ fil: { mode: 'load', step: 0, mat: null } }), startUnload: set({ fil: { mode: 'unload', step: 0, mat: null } }),
+      runoutLoad: set({ fil: { mode: 'load', step: 0, mat: null } }),
+      toggleAdv: () => this.setState(s.adv ? { adv: false } : { modal: { kind: 'adv' } }),
+      switchTrack: 'width: 44px; height: 26px; border-radius: 13px; flex-shrink: 0; position: relative; background: ' + (s.adv ? '#FF8904' : '#282828'),
+      switchKnob: 'position: absolute; top: 3px; left: ' + (s.adv ? '21px' : '3px') + '; width: 20px; height: 20px; border-radius: 50%; background: #FAFAFA',
+      busy: printing, busyNote: printing ? 'A print is running' : 'Tap a file to print', pageText: 'Page ' + (s.filPage + 1) + ' of 2',
+      prevPage: set({ filPage: 0 }), nextPage: set({ filPage: 1 }),
+      jobLine: (s.job === 'paused' ? 'Paused · ' : '') + 'Layer ' + Math.round(pct * 1.25) + ' / 125 · ' + (s.speed === 100 ? '24 min left' : 'speed ' + s.speed + '%'),
+      progressStyle: 'width: ' + pct + '%; height: 100%; border-radius: 3px; background: ' + (s.job === 'paused' ? '#FF8904' : '#00ACC7'),
+      pctText: pct + '%', pctStyle: 'font-size: 28px; font-weight: 900; padding: 0 4px; color: ' + (s.job === 'paused' ? '#FF8904' : '#88D8F2'),
+      tileGrid: 'display: grid; grid-template-columns: repeat(' + tiles.length + ', minmax(0, 1fr)); gap: 6px',
+      errorMsg: s.errorMsg,
+      simStart: () => this.setState({ ...this.fresh(), adv: s.adv, job: 'printing', jobName: 'Tire Monkey handles + clip', jobDur: '1 h 12 min', pct: 39, nozzle: 240, nozzleT: 240, bed: 80, bedT: 80 }),
+      simRunout: () => this.setState(printing ? { runout: true, job: 'paused', page: 'home', modal: null, adj: null, cancelObjOpen: false } : { modal: { kind: 'info', title: 'Start a print first', body: 'Runout only happens during a print.' } }),
+      simFinish: () => this.setState(printing ? { job: 'done', page: 'home', pct: 100, runout: false, modal: null, cancelObjOpen: false, nozzleT: 0, bedT: 0 } : { modal: { kind: 'info', title: 'Start a print first', body: 'Use “Start demo print” first.' } }),
+      simReset: () => this.setState({ ...this.fresh(), adv: s.adv }),
+      debugState: (s.error ? 'error' : s.job) + (s.adv ? ' · advanced' : '')
+    };
+  }
+}
+</script>
+</body>
+</html>

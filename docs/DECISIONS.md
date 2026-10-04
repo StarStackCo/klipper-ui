@@ -22,6 +22,7 @@ Related: [PLAN.md](PLAN.md)
 
 | ID | Date | Question | Why it matters | Status |
 |---|---|---|---|---|
+| Q-033 | 2026-10-04 | Real bed size (X × Y) and max Z height? Bench v2 uses a placeholder 220 × 220 × 250 | The cancel-object bed map should match the real bed | Open |
 | Q-032 | 2026-10-04 | Logo/star mark on a dark background: the charcoal star `#2E2E2E` disappears on `#0A0A0A` | Brand sheet says light backgrounds only | Open, Phase 2 design options |
 | Q-031 | 2026-10-04 | Is there a true vector (SVG paths) version of the star mark? | Sharp icons at any size | Open, nice-to-have |
 | Q-030 | 2026-10-04 | Should the KlipperScreen fork be **public** (GitHub forks of public repos are always public) or a **private copy** with KlipperScreen as an upstream remote? | Visibility of the StarStack theme/code | Answered: **(b) private copy**. Created `StarStackCo/KlipperScreen-starstack` |
@@ -61,6 +62,7 @@ Related: [PLAN.md](PLAN.md)
 
 | ID | Date | Decision | Options considered | Rationale | Decided by | Status |
 |---|---|---|---|---|---|---|
+| D-027 | 2026-10-04 | Bench config v2 safety design: real heater pins gpio20/gpio21 never referenced. Fake heaters on logic-only pins gpio19 (servo) / gpio11 (RGB). Pi CPU as the fake sensor. verify_heater relaxed only for the fake heaters. Instant fake homing. Startup BENCH warning. Pins from Mellow FLY-Micro4 docs | Real heater pins + relaxed checks / logic pins | If the bench file ever reaches the real printer, nothing can heat | Claude (proposed) | Waiting for approval |
 | D-026 | 2026-10-04 | KlipperScreen fork = **private copy** `StarStackCo/KlipperScreen-starstack`. Branch `starstack` based on `f580242e` (the Pi's version). `master` mirrors upstream. Upstream push disabled. LF line endings. Changes tracked in `FORK_CHANGES.md` | Public fork / private copy | User choice | User | Accepted, created |
 | D-025 | 2026-10-04 | Advanced mode: no PIN. A "proceed at your own risk" confirmation when enabling | PIN / confirm | User | User | Accepted |
 | D-024 | 2026-10-04 | Flow control: ±1% buttons, hard cap 40–120% | | User | User | Accepted |

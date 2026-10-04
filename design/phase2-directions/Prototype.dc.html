@@ -21,7 +21,7 @@ button:disabled{cursor:not-allowed}
 <div style="width: 760px; height: 320px; display: flex; gap: 0; background: #1A1A1A; font-family: 'Public Sans', system-ui, sans-serif">
 <div style="position: relative; width: 480px; height: 320px; display: flex; background: #0A0A0A; color: #FAFAFA; overflow: hidden; flex-shrink: 0">
 
-  <nav aria-label="Main" style="width: 64px; flex-shrink: 0; background: #111111; display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 8px 0; box-sizing: border-box">
+  <nav aria-label="Main" style="width: 64px; flex-shrink: 0; background: #111111; display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 10px 0 14px; box-sizing: border-box">
     <div style="width: 36px; height: 36px; border-radius: 10px; background: #FAFAFA; display: flex; align-items: center; justify-content: center; margin-bottom: 3px">
       <img src="/_blob/8f67a68a359635a2ccecc7b98ea7e1c9" alt="StarStack" style="width: 24px; height: 27px; object-fit: contain">
     </div>
@@ -35,7 +35,7 @@ button:disabled{cursor:not-allowed}
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>
     </button>
     <button aria-label="Settings" onClick="{{ goSettings }}" disabled="{{ railOff }}" style="{{ nav.settings }}">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9L7 7M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg>
+      <svg width="22" height="22" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492M5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0"/><path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52zm-2.633.283c.246-.835 1.428-.835 1.674 0l.094.319a1.873 1.873 0 0 0 2.693 1.115l.291-.16c.764-.415 1.6.42 1.184 1.185l-.159.292a1.873 1.873 0 0 0 1.116 2.692l.318.094c.835.246.835 1.428 0 1.674l-.319.094a1.873 1.873 0 0 0-1.115 2.693l.16.291c.415.764-.42 1.6-1.185 1.184l-.291-.159a1.873 1.873 0 0 0-2.693 1.116l-.094.318c-.246.835-1.428.835-1.674 0l-.094-.319a1.873 1.873 0 0 0-2.692-1.115l-.292.16c-.764.415-1.6-.42-1.184-1.185l.159-.291A1.873 1.873 0 0 0 1.945 8.93l-.319-.094c-.835-.246-.835-1.428 0-1.674l.319-.094A1.873 1.873 0 0 0 3.06 4.377l-.16-.292c-.415-.764.42-1.6 1.185-1.184l.292.159a1.873 1.873 0 0 0 2.692-1.115z"/></svg>
     </button>
     <div style="flex-grow: 1"></div>
     <button aria-label="Emergency stop" onClick="{{ askEstop }}" style="width: 52px; height: 52px; border: 0; border-radius: 10px; background: #E7000B; color: #FFFFFF; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px">
@@ -59,7 +59,7 @@ button:disabled{cursor:not-allowed}
     </sc-if>
 
     <sc-if value="{{ show.homeIdle }}" hint-placeholder-val="{{ true }}">
-      <section style="padding: 12px; box-sizing: border-box; height: 320px; display: flex; flex-direction: column; gap: 8px">
+      <section style="padding: 14px 16px 16px 14px; box-sizing: border-box; height: 320px; display: flex; flex-direction: column; gap: 8px">
         <div style="display: flex; align-items: center; gap: 8px; height: 28px">
           <div style="display: flex; align-items: center; gap: 6px; background: #161616; border-radius: 999px; padding: 4px 10px; font-size: 12px; font-weight: 600"><span style="{{ statusDot }}"></span>{{ statusText }}</div>
           <div style="flex-grow: 1"></div>
@@ -89,7 +89,7 @@ button:disabled{cursor:not-allowed}
     </sc-if>
 
     <sc-if value="{{ show.homeDone }}" hint-placeholder-val="{{ false }}">
-      <section style="padding: 12px; box-sizing: border-box; height: 320px; display: flex; flex-direction: column; gap: 10px">
+      <section style="padding: 14px 16px 16px 14px; box-sizing: border-box; height: 320px; display: flex; flex-direction: column; gap: 10px">
         <div style="flex-grow: 1; background: #161616; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; text-align: center">
           <div style="width: 52px; height: 52px; border-radius: 50%; background: #5CA300; color: #0A0A0A; display: flex; align-items: center; justify-content: center"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg></div>
           <h1 style="margin: 0; font-size: 22px; font-weight: 900">Print complete</h1>
@@ -104,7 +104,7 @@ button:disabled{cursor:not-allowed}
     </sc-if>
 
     <sc-if value="{{ show.homePrinting }}" hint-placeholder-val="{{ false }}">
-      <section style="padding: 12px; box-sizing: border-box; height: 320px; display: flex; flex-direction: column; gap: 8px">
+      <section style="padding: 14px 16px 16px 14px; box-sizing: border-box; height: 320px; display: flex; flex-direction: column; gap: 8px">
         <div style="background: #161616; border-radius: 10px; padding: 10px; display: flex; gap: 10px; align-items: center">
           <div style="width: 60px; height: 60px; border-radius: 10px; background: #1F1F1F; display: flex; align-items: center; justify-content: center; flex-shrink: 0">
             <svg width="44" height="44" viewBox="0 0 80 80" fill="none" stroke="#00ACC7" stroke-width="2.5" stroke-linejoin="round"><path d="M10 50l40-22 20 10-40 22z" fill="#00ACC7" fill-opacity="0.18"/><path d="M10 50v6l20 10v-6"/><path d="M30 66l40-22v-6"/></svg>
@@ -136,11 +136,11 @@ button:disabled{cursor:not-allowed}
     </sc-if>
 
     <sc-if value="{{ show.print }}" hint-placeholder-val="{{ false }}">
-      <section style="padding: 12px; box-sizing: border-box; height: 320px; display: flex; flex-direction: column; gap: 8px">
-        <div style="display: flex; align-items: center; height: 28px; gap: 8px">
+      <section style="padding: 14px 16px 16px 14px; box-sizing: border-box; height: 320px; display: flex; flex-direction: column; gap: 8px">
+        <div style="display: flex; align-items: center; height: 40px; gap: 8px">
           <h1 style="margin: 0; font-size: 17px; font-weight: 800">Print a file</h1>
           <div style="flex-grow: 1"></div>
-          <span style="font-size: 12px; color: #A1A1A1">Newest first · {{ pageText }}</span>
+          <span style="font-size: 11px; color: #737373">{{ pageText }}</span><button onClick="{{ cycleSort }}" style="height: 40px; border: 1px solid #282828; border-radius: 10px; background: #161616; color: #FAFAFA; font-size: 12px; font-weight: 700; padding: 0 12px; display: flex; align-items: center; gap: 6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4v16M3 16l4 4 4-4M17 20V4M13 8l4-4 4 4"/></svg>{{ sortLabel }}</button>
         </div>
         <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, 1fr)); gap: 8px; flex-grow: 1; min-height: 0">
           <sc-for list="{{ pageFiles }}" as="f" hint-placeholder-count="6">
@@ -154,24 +154,24 @@ button:disabled{cursor:not-allowed}
           </sc-for>
         </div>
         <div style="display: flex; gap: 8px">
-          <button onClick="{{ prevPage }}" aria-label="Previous page" style="width: 64px; height: 40px; border: 1px solid #282828; border-radius: 10px; background: transparent; color: #FAFAFA; font-size: 18px">‹</button>
+          <button onClick="{{ prevPage }}" aria-label="Previous page" style="width: 72px; height: 44px; border: 1px solid #282828; border-radius: 10px; background: transparent; color: #FAFAFA; font-size: 18px">‹</button>
           <div style="flex-grow: 1; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #A1A1A1">{{ busyNote }}</div>
-          <button onClick="{{ nextPage }}" aria-label="Next page" style="width: 64px; height: 40px; border: 1px solid #282828; border-radius: 10px; background: transparent; color: #FAFAFA; font-size: 18px">›</button>
+          <button onClick="{{ nextPage }}" aria-label="Next page" style="width: 72px; height: 44px; border: 1px solid #282828; border-radius: 10px; background: transparent; color: #FAFAFA; font-size: 18px">›</button>
         </div>
       </section>
     </sc-if>
 
     <sc-if value="{{ show.controls }}" hint-placeholder-val="{{ false }}">
-      <section style="padding: 12px; box-sizing: border-box; height: 320px; display: flex; flex-direction: column; gap: 7px">
+      <section style="padding: 14px 16px 16px 14px; box-sizing: border-box; height: 320px; display: flex; flex-direction: column; gap: 7px">
         <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
           <button onClick="{{ editNozzle }}" style="height: 62px; border: 0; border-radius: 10px; background: #161616; color: #FAFAFA; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px"><span style="font-size: 11px; color: #A1A1A1">Nozzle</span><span style="{{ nozzleBig }}">{{ nozzleText }}</span><span style="font-size: 10px; color: #A1A1A1">{{ nozzleTargetText }}</span></button>
           <button onClick="{{ editBed }}" style="height: 62px; border: 0; border-radius: 10px; background: #161616; color: #FAFAFA; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px"><span style="font-size: 11px; color: #A1A1A1">Bed</span><span style="{{ bedBig }}">{{ bedText }}</span><span style="font-size: 10px; color: #A1A1A1">{{ bedTargetText }}</span></button>
           <button onClick="{{ editFan }}" style="height: 62px; border: 0; border-radius: 10px; background: #161616; color: #FAFAFA; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px"><span style="font-size: 11px; color: #A1A1A1">Part fan</span><span style="font-size: 20px; font-weight: 800">{{ fanText }}</span><span style="font-size: 10px; color: #A1A1A1">tap to change</span></button>
         </div>
-        <div style="display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: #A1A1A1; text-transform: uppercase; letter-spacing: 0.06em">Filament<sc-if value="{{ locked }}" hint-placeholder-val="{{ false }}"><span style="text-transform: none; letter-spacing: 0; color: #FF8904">· locked while printing</span></sc-if></div>
+        <div style="display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: #A1A1A1; text-transform: uppercase; letter-spacing: 0.06em">Filament<span style="text-transform: none; letter-spacing: 0; color: #88D8F2">· {{ loadedText }}</span><sc-if value="{{ locked }}" hint-placeholder-val="{{ false }}"><span style="text-transform: none; letter-spacing: 0; color: #FF8904">· locked while printing</span></sc-if></div>
         <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
           <button onClick="{{ startLoad }}" disabled="{{ locked }}" style="{{ lockBtn }}">Load filament</button>
-          <button onClick="{{ startUnload }}" disabled="{{ locked }}" style="{{ lockBtn }}">Unload filament</button>
+          <button onClick="{{ startUnload }}" disabled="{{ locked }}" style="{{ lockBtn }}">{{ unloadLabel }}</button>
         </div>
         <div style="display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: #A1A1A1; text-transform: uppercase; letter-spacing: 0.06em">Move · 10 mm<sc-if value="{{ locked }}" hint-placeholder-val="{{ false }}"><span style="text-transform: none; letter-spacing: 0; color: #FF8904">· locked while printing</span></sc-if></div>
         <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px">
@@ -188,7 +188,7 @@ button:disabled{cursor:not-allowed}
     </sc-if>
 
     <sc-if value="{{ show.settings }}" hint-placeholder-val="{{ false }}">
-      <section class="ss-scroll" style="padding: 12px; box-sizing: border-box; height: 320px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px">
+      <section class="ss-scroll" style="padding: 14px 16px 16px 14px; box-sizing: border-box; height: 320px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px">
         <h1 style="margin: 0 0 4px; font-size: 17px; font-weight: 800">Settings</h1>
         <button onClick="{{ toggleAdv }}" role="switch" aria-checked="{{ adv }}" style="min-height: 56px; flex-shrink: 0; border: 0; border-radius: 10px; background: #161616; color: #FAFAFA; display: flex; align-items: center; gap: 10px; padding: 0 12px; text-align: left">
           <span style="flex-grow: 1; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 14px; font-weight: 800">Advanced mode</span><span style="font-size: 11px; color: #A1A1A1">Pressure advance, extrude, macros, console, limits</span></span>
@@ -247,10 +247,10 @@ button:disabled{cursor:not-allowed}
   </sc-if>
 
   <sc-if value="{{ show.cancelObj }}" hint-placeholder-val="{{ false }}">
-    <div role="dialog" aria-modal="true" aria-label="Cancel an object" style="position: absolute; top: 0; right: 0; bottom: 0; left: 64px; background: #0A0A0A; padding: 12px; box-sizing: border-box; display: flex; gap: 12px">
+    <div role="dialog" aria-modal="true" aria-label="Cancel an object" style="position: absolute; top: 0; right: 0; bottom: 0; left: 64px; background: #0A0A0A; padding: 14px 16px 16px 14px; box-sizing: border-box; display: flex; gap: 12px">
       <div style="display: flex; flex-direction: column; gap: 6px">
         <div style="font-size: 11px; font-weight: 600; color: #A1A1A1; text-transform: uppercase; letter-spacing: 0.06em">Bed · 180 × 180 mm</div>
-        <div style="position: relative; width: 252px; height: 252px; border-radius: 10px; background: #161616; border: 1px solid #282828; box-sizing: border-box; overflow: hidden">
+        <div style="position: relative; width: 246px; height: 246px; border-radius: 10px; background: #161616; border: 1px solid #282828; box-sizing: border-box; overflow: hidden">
           <sc-for list="{{ objects }}" as="o" hint-placeholder-count="4">
             <button onClick="{{ o.pick }}" disabled="{{ o.gone }}" aria-label="{{ o.name }}" style="{{ o.mapStyle }}">{{ o.short }}</button>
           </sc-for>
@@ -343,7 +343,7 @@ class Component extends DCLogic {
   fresh() {
     return { page: 'home', job: 'idle', modal: null, adj: null, speed: 100, flow: 100, fan: 60, pa: 0.04,
       nozzle: 24, bed: 23, nozzleT: 0, bedT: 0, adv: false, error: false, errorMsg: '', objSel: null, gone: [],
-      fil: null, filPage: 0, jobName: 'Tire Monkey straight handle', jobDur: '40 min', pct: 0, runout: false };
+      fil: null, filPage: 0, sort: 0, loaded: 'PETG', jobName: 'Tire Monkey straight handle', jobDur: '40 min', pct: 0, runout: false };
   }
   renderVals() {
     const s = this.state;
@@ -366,7 +366,8 @@ class Component extends DCLogic {
     const tile = 'border: 0; border-radius: 10px; background: #161616; color: #FAFAFA; padding: 8px; display: flex; flex-direction: column; align-items: flex-start; gap: 4px;';
     const recent = files.slice(0, 3).map((f, i) => ({ name: f.name, meta: f.mat + ' · ' + f.time, pick: askBed(f),
       tileStyle: tile + (i === 0 ? 'outline: 1px solid #00ACC7;' : '') }));
-    const pageFiles = files.slice(s.filPage * 6, s.filPage * 6 + 6).map((f) => ({ name: f.name, meta: f.mat + ' · ' + f.time, pick: askBed(f),
+    const sorted = s.sort === 1 ? files.slice().reverse() : s.sort === 2 ? [2, 0, 5, 1, 3, 4, 6, 7].map((i) => files[i]) : files;
+    const pageFiles = sorted.slice(s.filPage * 6, s.filPage * 6 + 6).map((f) => ({ name: f.name, meta: f.mat + ' · ' + f.time, pick: askBed(f),
       gridStyle: tile + 'opacity:' + (printing ? '0.4' : '1') + '; min-height: 0;' }));
     const mats = Object.keys(MATS).map((k) => ({ name: k, temps: MATS[k][0] + '° / ' + MATS[k][1] + '°', nozzle: MATS[k][0] + '°C nozzle',
       preheat: set({ nozzleT: MATS[k][0], bedT: MATS[k][1] }),
@@ -381,7 +382,7 @@ class Component extends DCLogic {
     const speeds = [['Silent', 50], ['Normal', 100], ['Fast', 125], ['Draft', 150]].map(([n, p]) => {
       const on = s.speed === p;
       return { name: n, pct: p + '%', on: on, pick: set({ speed: p }),
-        style: 'height: 40px; border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1; color: #FAFAFA; padding: 0;' + (on ? 'border: 1px solid #00ACC7; background: #0D3C96;' : 'border: 1px solid #282828; background: transparent;'),
+        style: 'height: 44px; border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1; color: #FAFAFA; padding: 0;' + (on ? 'border: 1px solid #00ACC7; background: #0D3C96;' : 'border: 1px solid #282828; background: transparent;'),
         pctStyle: 'font-size: 10px; color: ' + (on ? '#88D8F2' : '#A1A1A1') };
     });
     const adjOpen = (cfg) => () => this.setState({ adj: { ...cfg, val: cfg.cur } });
@@ -411,7 +412,7 @@ class Component extends DCLogic {
       { id: 3, name: 'Tire Monkey handle 3', short: '3', x: 15, y: 120, w: 70, h: 28 },
       { id: 4, name: 'Cable clip', short: '4', x: 110, y: 70, w: 45, h: 45 }
     ];
-    const k = 250 / 180;
+    const k = 244 / 180;
     const objects = objs.map((o) => {
       const gone = s.gone.includes(o.id), sel = s.objSel === o.id;
       const col = gone ? '#3A3A3A' : sel ? '#FF6467' : '#00ACC7';
@@ -441,10 +442,10 @@ class Component extends DCLogic {
       const dots = Array.from({ length: total }, (_, i) => ({ style: 'width: 8px; height: 8px; border-radius: 50%; background: ' + (i <= f.step ? '#00ACC7' : '#282828') }));
       const close = set({ fil: null, nozzleT: 0 });
       const go = (st) => () => this.setState({ fil: { ...f, step: st } });
-      const done = () => this.setState({ fil: null, ...(s.runout ? { runout: false } : {}) });
+      const done = () => this.setState({ fil: null, loaded: load ? f.mat : null, ...(s.runout ? { runout: false } : {}) });
       const base = { dots, title: load ? 'Load filament' : 'Unload filament', pickMat: false, showBar: false, hasAlt: false, hasNext: true, back: close, backLabel: 'Cancel', temp: '', barStyle: '' };
-      if (f.step === 0) fil = { ...base, body: 'Which material are you loading?' + (load ? '' : '\nPick the one that is in the printer now.'), pickMat: true, hasNext: false };
-      else if (f.step === 1) fil = { ...base, body: 'Heating the nozzle for ' + f.mat + '. This takes about a minute.', showBar: true, temp: Math.round(tgt * 0.62) + '° / ' + tgt + '°', barStyle: 'width: 62%; height: 100%; background: #FF8904', nextLabel: 'Demo: skip ahead', next: go(2) };
+      if (f.step === 0) fil = { ...base, body: load ? ('Which material are you loading?' + (s.loaded ? '\n' + s.loaded + ' is loaded now. Unload it first.' : '')) : 'No filament is recorded as loaded.\nWhich material is in the printer?', pickMat: true, hasNext: false, hasAlt: load && !!s.loaded, altLabel: 'Unload ' + s.loaded + ' first', alt: set({ fil: { mode: 'unload', step: 1, mat: s.loaded }, nozzleT: s.loaded ? MATS[s.loaded][0] : 0 }) };
+      else if (f.step === 1) fil = { ...base, body: (load ? 'Loading ' : 'Unloading ') + f.mat + '.\nHeating the nozzle first. This takes about a minute.', showBar: true, temp: Math.round(tgt * 0.62) + '° / ' + tgt + '°', barStyle: 'width: 62%; height: 100%; background: #FF8904', nextLabel: 'Demo: skip ahead', next: go(2) };
       else if (load && f.step === 2) fil = { ...base, body: 'Nozzle is hot.\nPush the filament into the extruder until you feel it grip, then tap Load.', nextLabel: 'Load', next: go(3) };
       else if (load && f.step === 3) fil = { ...base, body: 'Filament is purging.\nIs the plastic coming out clean and the right colour?', hasAlt: true, altLabel: 'Purge more', alt: go(3), nextLabel: 'Done', next: done, backLabel: 'Cancel' };
       else if (!load && f.step === 2) fil = { ...base, body: 'Unloading…\nWhen the filament is free, pull it out gently and tap Done.', nextLabel: 'Done', next: done };
@@ -501,15 +502,15 @@ class Component extends DCLogic {
       nozzleBig: 'font-size: 20px; font-weight: 800;' + (s.nozzleT ? hot : ''), bedBig: 'font-size: 20px; font-weight: 800;' + (s.bedT ? hot : ''),
       nozzleTargetText: s.nozzleT ? 'target ' + s.nozzleT + '°' : 'off · tap to set', bedTargetText: s.bedT ? 'target ' + s.bedT + '°' : 'off · tap to set', fanText: s.fan + '%',
       editNozzle: adjOpen(nozzleCfg), editBed: adjOpen(bedCfg), editFan: adjOpen(fanCfg),
-      locked, lockBtn: lockedBtnBase + 'height: 48px; font-size: 14px; ' + (locked ? 'border: 1px dashed #282828; background: transparent; color: #737373;' : 'border: 0; background: #161616; color: #FAFAFA;'),
-      lockBtnSm: lockedBtnBase + 'height: 42px; font-size: 12px; ' + (locked ? 'border: 1px dashed #282828; background: transparent; color: #737373;' : 'border: 0; background: #161616; color: #FAFAFA;'),
+      loadedText: s.loaded ? s.loaded + ' loaded' : 'none loaded', unloadLabel: s.loaded ? 'Unload ' + s.loaded : 'Unload filament', locked, lockBtn: lockedBtnBase + 'height: 48px; font-size: 14px; ' + (locked ? 'border: 1px dashed #282828; background: transparent; color: #737373;' : 'border: 0; background: #161616; color: #FAFAFA;'),
+      lockBtnSm: lockedBtnBase + 'height: 44px; font-size: 12px; ' + (locked ? 'border: 1px dashed #282828; background: transparent; color: #737373;' : 'border: 0; background: #161616; color: #FAFAFA;'),
       jog: () => {},
-      startLoad: set({ fil: { mode: 'load', step: 0, mat: null } }), startUnload: set({ fil: { mode: 'unload', step: 0, mat: null } }),
+      startLoad: set({ fil: { mode: 'load', step: 0, mat: null } }), startUnload: set(s.loaded ? { fil: { mode: 'unload', step: 1, mat: s.loaded }, nozzleT: MATS[s.loaded][0] } : { fil: { mode: 'unload', step: 0, mat: null } }),
       runoutLoad: set({ fil: { mode: 'load', step: 0, mat: null } }),
       toggleAdv: () => this.setState(s.adv ? { adv: false } : { modal: { kind: 'adv' } }),
       switchTrack: 'width: 44px; height: 26px; border-radius: 13px; flex-shrink: 0; position: relative; background: ' + (s.adv ? '#FF8904' : '#282828'),
       switchKnob: 'position: absolute; top: 3px; left: ' + (s.adv ? '21px' : '3px') + '; width: 20px; height: 20px; border-radius: 50%; background: #FAFAFA',
-      busy: printing, busyNote: printing ? 'A print is running' : 'Tap a file to print', pageText: 'Page ' + (s.filPage + 1) + ' of 2',
+      busy: printing, busyNote: printing ? 'A print is running' : 'Tap a file to print', pageText: 'Page ' + (s.filPage + 1) + ' of 2', sortLabel: ['Newest first', 'Oldest first', 'Recently printed'][s.sort], cycleSort: set({ sort: (s.sort + 1) % 3, filPage: 0 }),
       prevPage: set({ filPage: 0 }), nextPage: set({ filPage: 1 }),
       jobLine: (s.job === 'paused' ? 'Paused · ' : '') + 'Layer ' + Math.round(pct * 1.25) + ' / 125 · ' + (s.speed === 100 ? '24 min left' : 'speed ' + s.speed + '%'),
       progressStyle: 'width: ' + pct + '%; height: 100%; border-radius: 3px; background: ' + (s.job === 'paused' ? '#FF8904' : '#00ACC7'),

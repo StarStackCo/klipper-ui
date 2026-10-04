@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>C Hairline – Home idle</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;800;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#00ACC7}a:hover{color:#88D8F2}
+button{font-family:inherit;cursor:pointer}
+</style>
+</helmet>
+<div style="width: 480px; height: 320px; display: flex; background: #0A0A0A; color: #FAFAFA; font-family: 'Public Sans', system-ui, sans-serif; overflow: hidden">
+  <nav aria-label="Main" style="width: 60px; flex-shrink: 0; border-right: 1px solid #282828; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 0; box-sizing: border-box">
+    <div style="width: 36px; height: 36px; border-radius: 50%; background: #FAFAFA; display: flex; align-items: center; justify-content: center; margin-bottom: 6px">
+      <img src="/_blob/8f67a68a359635a2ccecc7b98ea7e1c9" alt="StarStack" style="width: 22px; height: 25px; object-fit: contain">
+    </div>
+    <button aria-label="Home" style="width: 48px; height: 46px; border: 0; background: transparent; color: #88D8F2; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg><span style="width: 16px; height: 2px; border-radius: 1px; background: #88D8F2"></span>
+    </button>
+    <button aria-label="Print" style="width: 48px; height: 46px; border: 0; background: transparent; color: #737373; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/></svg><span style="width: 16px; height: 2px"></span>
+    </button>
+    <button aria-label="Controls" style="width: 48px; height: 46px; border: 0; background: transparent; color: #737373; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg><span style="width: 16px; height: 2px"></span>
+    </button>
+    <button aria-label="Settings" style="width: 48px; height: 46px; border: 0; background: transparent; color: #737373; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9L7 7M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg><span style="width: 16px; height: 2px"></span>
+    </button>
+    <div style="flex-grow: 1"></div>
+    <button aria-label="Emergency stop" style="width: 46px; height: 46px; border: 2px solid #FF6467; border-radius: 50%; background: transparent; color: #FF6467; display: flex; align-items: center; justify-content: center">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3h8l5 5v8l-5 5H8l-5-5V8z"/><path d="M12 8v5M12 16.5v.01"/></svg>
+    </button>
+  </nav>
+  <main style="flex-grow: 1; padding: 14px 16px; box-sizing: border-box; display: flex; flex-direction: column; gap: 12px; min-width: 0">
+    <div style="display: flex; align-items: baseline; gap: 12px">
+      <h1 style="margin: 0; font-size: 22px; font-weight: 800">Ready to print</h1>
+      <div style="flex-grow: 1"></div>
+      <span style="font-size: 13px; color: #A1A1A1">Nozzle <b style="color: #FAFAFA">24°</b></span>
+      <span style="font-size: 13px; color: #A1A1A1">Bed <b style="color: #FAFAFA">23°</b></span>
+    </div>
+    <div style="font-size: 11px; font-weight: 600; color: #737373; text-transform: uppercase; letter-spacing: 0.08em">Print again</div>
+    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+      <button style="border: 1px solid #00ACC7; border-radius: 10px; background: transparent; color: #FAFAFA; padding: 8px; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; text-align: left">
+        <svg width="100%" height="64" viewBox="0 0 80 64" fill="none" stroke="#00ACC7" stroke-width="2" stroke-linejoin="round"><path d="M10 42l40-22 20 10-40 22z" fill="#00ACC7" fill-opacity="0.15"/><path d="M10 42v5l20 10v-5"/><path d="M30 57l40-22v-5"/></svg>
+        <span style="font-size: 12px; font-weight: 800; line-height: 1.2">Tire Monkey handle</span><span style="font-size: 11px; color: #A1A1A1">PETG · 40 min</span>
+      </button>
+      <button style="border: 1px solid #282828; border-radius: 10px; background: transparent; color: #FAFAFA; padding: 8px; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; text-align: left">
+        <svg width="100%" height="64" viewBox="0 0 80 64" fill="none" stroke="#8FA0B8" stroke-width="2" stroke-linejoin="round"><path d="M36 60V12l4-6 4 6v48z" fill="#8FA0B8" fill-opacity="0.15"/><path d="M32 60h16"/></svg>
+        <span style="font-size: 12px; font-weight: 800; line-height: 1.2">Collapsing lightsaber</span><span style="font-size: 11px; color: #A1A1A1">PETG · 5 h 8 min</span>
+      </button>
+      <button style="border: 1px solid #282828; border-radius: 10px; background: transparent; color: #FAFAFA; padding: 8px; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; text-align: left">
+        <svg width="100%" height="64" viewBox="0 0 80 64" fill="none" stroke="#8FA0B8" stroke-width="1.8"><path d="M20 22l8-5 8 5v9l-8 5-8-5zM36 22l8-5 8 5v9l-8 5-8-5zM52 22l8-5 8 5v9l-8 5-8-5zM28 36l8-5 8 5v9l-8 5-8-5zM44 36l8-5 8 5v9l-8 5-8-5z"/></svg>
+        <span style="font-size: 12px; font-weight: 800; line-height: 1.2">NASA chainmail hex</span><span style="font-size: 11px; color: #A1A1A1">PLA · 1 h 59 min</span>
+      </button>
+    </div>
+    <div style="flex-grow: 1"></div>
+    <div role="group" aria-label="Preheat" style="display: flex; border: 1px solid #282828; border-radius: 10px; overflow: hidden; height: 48px">
+      <span style="display: flex; align-items: center; padding: 0 12px; font-size: 11px; font-weight: 600; color: #737373; text-transform: uppercase; letter-spacing: 0.08em; border-right: 1px solid #282828">Preheat</span>
+      <button style="flex-grow: 1; border: 0; border-right: 1px solid #282828; background: transparent; color: #FAFAFA; font-size: 14px; font-weight: 800">PLA</button>
+      <button style="flex-grow: 1; border: 0; border-right: 1px solid #282828; background: transparent; color: #FAFAFA; font-size: 14px; font-weight: 800">PETG</button>
+      <button style="flex-grow: 1; border: 0; border-right: 1px solid #282828; background: transparent; color: #FAFAFA; font-size: 14px; font-weight: 800">TPU</button>
+      <button aria-label="Cool down" style="width: 56px; border: 0; background: transparent; color: #88D8F2; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 2v20M4 7l16 10M20 7L4 17"/></svg></button>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":480,"height":320}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

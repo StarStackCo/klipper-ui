@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>A Soft Cards – Home printing</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;800;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#00ACC7}a:hover{color:#88D8F2}
+button{font-family:inherit;cursor:pointer}
+</style>
+</helmet>
+<div style="width: 480px; height: 320px; display: flex; background: #0A0A0A; color: #FAFAFA; font-family: 'Public Sans', system-ui, sans-serif; overflow: hidden">
+  <nav aria-label="Main" style="width: 64px; flex-shrink: 0; background: #111111; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 8px 0; box-sizing: border-box">
+    <div style="width: 36px; height: 36px; border-radius: 10px; background: #FAFAFA; display: flex; align-items: center; justify-content: center; margin-bottom: 4px">
+      <img src="/_blob/8f67a68a359635a2ccecc7b98ea7e1c9" alt="StarStack" style="width: 24px; height: 27px; object-fit: contain">
+    </div>
+    <button aria-label="Home" style="width: 48px; height: 44px; border: 0; border-radius: 10px; background: #0D3C96; color: #FAFAFA; display: flex; align-items: center; justify-content: center">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg>
+    </button>
+    <button aria-label="Print" style="width: 48px; height: 44px; border: 0; border-radius: 10px; background: transparent; color: #A1A1A1; display: flex; align-items: center; justify-content: center">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>
+    </button>
+    <button aria-label="Controls" style="width: 48px; height: 44px; border: 0; border-radius: 10px; background: transparent; color: #A1A1A1; display: flex; align-items: center; justify-content: center">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>
+    </button>
+    <button aria-label="Settings" style="width: 48px; height: 44px; border: 0; border-radius: 10px; background: transparent; color: #A1A1A1; display: flex; align-items: center; justify-content: center">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9L7 7M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg>
+    </button>
+    <div style="flex-grow: 1"></div>
+    <button aria-label="Emergency stop" style="width: 48px; height: 44px; border: 0; border-radius: 10px; background: #E7000B; color: #FFFFFF; display: flex; align-items: center; justify-content: center">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3h8l5 5v8l-5 5H8l-5-5V8z"/><path d="M12 8v5M12 16.5v.01"/></svg>
+    </button>
+  </nav>
+  <main style="flex-grow: 1; padding: 12px; box-sizing: border-box; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+    <section style="background: #161616; border-radius: 10px; padding: 10px; display: flex; gap: 10px; align-items: center">
+      <div style="width: 64px; height: 64px; border-radius: 10px; background: #1F1F1F; display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+        <svg width="46" height="46" viewBox="0 0 80 80" fill="none" stroke="#00ACC7" stroke-width="2.5" stroke-linejoin="round"><path d="M34 70V18l6-8 6 8v52z" fill="#00ACC7" fill-opacity="0.18"/><path d="M30 70h20"/><path d="M34 34h12M34 46h12"/></svg>
+      </div>
+      <div style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+        <div style="font-size: 15px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">Collapsing lightsaber</div>
+        <div style="font-size: 12px; color: #A1A1A1">Layer 214 / 820 · 3 h 6 min left</div>
+        <div style="height: 6px; border-radius: 3px; background: #282828; margin-top: 6px; overflow: hidden"><div style="width: 39%; height: 100%; background: #00ACC7; border-radius: 3px"></div></div>
+      </div>
+      <div style="font-size: 30px; font-weight: 900; color: #88D8F2; padding: 0 4px">39%</div>
+    </section>
+    <div role="group" aria-label="Print speed" style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px">
+      <button style="height: 40px; border: 1px solid #282828; border-radius: 10px; background: transparent; color: #FAFAFA; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1"><span style="font-size: 12px; font-weight: 800">Silent</span><span style="font-size: 10px; color: #A1A1A1">50%</span></button>
+      <button aria-pressed="true" style="height: 40px; border: 1px solid #00ACC7; border-radius: 10px; background: #0D3C96; color: #FAFAFA; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1"><span style="font-size: 12px; font-weight: 800">Normal</span><span style="font-size: 10px; color: #88D8F2">100%</span></button>
+      <button style="height: 40px; border: 1px solid #282828; border-radius: 10px; background: transparent; color: #FAFAFA; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1"><span style="font-size: 12px; font-weight: 800">Fast</span><span style="font-size: 10px; color: #A1A1A1">125%</span></button>
+      <button style="height: 40px; border: 1px solid #282828; border-radius: 10px; background: transparent; color: #FAFAFA; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1"><span style="font-size: 12px; font-weight: 800">Draft</span><span style="font-size: 10px; color: #A1A1A1">150%</span></button>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px">
+      <button style="height: 52px; border: 0; border-radius: 10px; background: #161616; color: #FAFAFA; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px"><span style="font-size: 10px; color: #A1A1A1">Nozzle</span><span style="font-size: 15px; font-weight: 800; color: #FF8904">240°</span><span style="font-size: 10px; color: #A1A1A1">/ 240°</span></button>
+      <button style="height: 52px; border: 0; border-radius: 10px; background: #161616; color: #FAFAFA; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px"><span style="font-size: 10px; color: #A1A1A1">Bed</span><span style="font-size: 15px; font-weight: 800; color: #FF8904">80°</span><span style="font-size: 10px; color: #A1A1A1">/ 80°</span></button>
+      <button style="height: 52px; border: 0; border-radius: 10px; background: #161616; color: #FAFAFA; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px"><span style="font-size: 10px; color: #A1A1A1">Fan</span><span style="font-size: 15px; font-weight: 800">60%</span><span style="font-size: 10px; color: #A1A1A1">part</span></button>
+      <button style="height: 52px; border: 0; border-radius: 10px; background: #161616; color: #FAFAFA; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px"><span style="font-size: 10px; color: #A1A1A1">Flow</span><span style="font-size: 15px; font-weight: 800">100%</span><span style="font-size: 10px; color: #A1A1A1">− / +</span></button>
+    </div>
+    <div style="flex-grow: 1"></div>
+    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px">
+      <button style="height: 48px; border: 0; border-radius: 10px; background: #0D3C96; color: #FAFAFA; font-size: 14px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 6px"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>Pause</button>
+      <button style="height: 48px; border: 1px solid #282828; border-radius: 10px; background: #161616; color: #FAFAFA; font-size: 13px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 6px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 9l6 6M15 9l-6 6"/></svg>Cancel object</button>
+      <button style="height: 48px; border: 1px solid #FF6467; border-radius: 10px; background: transparent; color: #FF6467; font-size: 13px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 6px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>Cancel print</button>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":480,"height":320}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

@@ -11,7 +11,7 @@ Related: [PLAN.md](PLAN.md)
 |---|---|---|
 | 0. Discovery and safety baseline | 🟡 In progress | ✅ Repo created (StarStackCo/klipper-ui, private). ✅ Local project at Documents\klipper-ui. ✅ SSH key authorised. ✅ **Backup done** (`backups/2026-10-04_1234`, 91 MB, archive verified, SHA256SUMS). ✅ Inventory: CB1 image (Debian 12), Klipper v0.13.0-501, Moonraker v0.10.0, Mainsail v2.17.0, KlipperScreen v0.4.6. ✅ Moonraker access fixed (D-014 applied). ✅ Bench config installed, **Klipper Ready**. ✅ Baseline screenshots (`design/baseline/`). ✅ Regression checklist + Run 0 (`docs/test-checklist.md`). ✅ Remote TFT screenshots working (`scripts/ks-screenshot.sh`). **Phase 0 approved by user 2026-10-04** |
 | 1. UX requirements (detail) | ✅ Complete | Answers received. **Requirements v2.1** at `docs/requirements.md`, ✅ **approved by user 2026-10-04**. ✅ KlipperScreen private fork created. ✅ Star mark downloaded Brand sheet received (`design/brand/`) |
-| 2. Design | ⏳ Next | Waiting for go-ahead |
+| 2. Design | 🟡 In progress | Style directions A/B/C + logo-on-dark options on the design canvas (https://claude.ai/artifact/9P1px8ypq2aYb39NX1BjQc), source in `design/phase2-directions/`. Waiting for user's pick |
 | 3. Build increments (bench) | ⏳ Not started | |
 | 3.5 Safety review + move to full printer | ⏳ Not started | |
 | 4. Polish and handover | ⏳ Not started | |
@@ -22,6 +22,7 @@ Related: [PLAN.md](PLAN.md)
 
 | ID | Date | Question | Why it matters | Status |
 |---|---|---|---|---|
+| Q-034 | 2026-10-04 | Pick a style direction: A Soft Cards · B Bold Tiles · C Hairline (or a mix), and a logo-on-dark option (1 white plate · 2 pale sky plate · 3 white circle) | Drives every screen design | Open |
 | Q-033 | 2026-10-04 | Real bed size (X × Y) and max Z height? Bench v2 uses a placeholder 220 × 220 × 250 | The cancel-object bed map should match the real bed | Answered: **180 × 180 × 180 mm** |
 | Q-032 | 2026-10-04 | Logo/star mark on a dark background: the charcoal star `#2E2E2E` disappears on `#0A0A0A` | Brand sheet says light backgrounds only | Open, Phase 2 design options |
 | Q-031 | 2026-10-04 | Is there a true vector (SVG paths) version of the star mark? | Sharp icons at any size | Open, nice-to-have |

@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>B Bold Tiles – Home printing</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;800;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#00ACC7}a:hover{color:#88D8F2}
+button{font-family:inherit;cursor:pointer}
+</style>
+</helmet>
+<div style="width: 480px; height: 320px; display: flex; background: #0A0A0A; color: #FAFAFA; font-family: 'Public Sans', system-ui, sans-serif; overflow: hidden">
+  <nav aria-label="Main" style="width: 72px; flex-shrink: 0; background: #0A0A0A; border-right: 1px solid #1C1C1C; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 0; box-sizing: border-box">
+    <div style="width: 34px; height: 34px; border-radius: 10px; background: #E3F6FC; display: flex; align-items: center; justify-content: center; margin-bottom: 2px">
+      <img src="/_blob/8f67a68a359635a2ccecc7b98ea7e1c9" alt="StarStack" style="width: 22px; height: 25px; object-fit: contain">
+    </div>
+    <button aria-label="Home" style="width: 60px; height: 50px; border: 0; border-radius: 10px; background: #161616; color: #88D8F2; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg><span style="font-size: 10px; font-weight: 800">Home</span>
+    </button>
+    <button aria-label="Print" style="width: 60px; height: 50px; border: 0; border-radius: 10px; background: transparent; color: #A1A1A1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/></svg><span style="font-size: 10px; font-weight: 600">Print</span>
+    </button>
+    <button aria-label="Controls" style="width: 60px; height: 50px; border: 0; border-radius: 10px; background: transparent; color: #A1A1A1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg><span style="font-size: 10px; font-weight: 600">Controls</span>
+    </button>
+    <button aria-label="Settings" style="width: 60px; height: 50px; border: 0; border-radius: 10px; background: transparent; color: #A1A1A1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9L7 7M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg><span style="font-size: 10px; font-weight: 600">Settings</span>
+    </button>
+    <div style="flex-grow: 1"></div>
+    <button aria-label="Emergency stop" style="width: 60px; height: 50px; border: 0; border-radius: 10px; background: #E7000B; color: #FFFFFF; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3h8l5 5v8l-5 5H8l-5-5V8z"/><path d="M12 8v5M12 16.5v.01"/></svg><span style="font-size: 10px; font-weight: 900">STOP</span>
+    </button>
+  </nav>
+  <main style="flex-grow: 1; padding: 10px; box-sizing: border-box; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; flex-grow: 1; min-height: 0">
+      <section style="background: #161616; border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 4px; min-width: 0">
+        <div style="display: flex; align-items: center; gap: 8px">
+          <div style="width: 48px; height: 48px; border-radius: 10px; background: #1F1F1F; display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+            <svg width="34" height="34" viewBox="0 0 80 80" fill="none" stroke="#00ACC7" stroke-width="3" stroke-linejoin="round"><path d="M34 70V18l6-8 6 8v52z" fill="#00ACC7" fill-opacity="0.18"/><path d="M30 70h20"/></svg>
+          </div>
+          <div style="font-size: 13px; font-weight: 800; line-height: 1.2; min-width: 0">Collapsing lightsaber</div>
+        </div>
+        <div style="font-size: 60px; font-weight: 900; line-height: 1; color: #88D8F2; letter-spacing: -0.02em">39%</div>
+        <div style="height: 8px; border-radius: 4px; background: #282828; overflow: hidden"><div style="width: 39%; height: 100%; background: #00ACC7"></div></div>
+        <div style="font-size: 12px; color: #A1A1A1; margin-top: 2px">3 h 6 min left · Layer 214/820</div>
+      </section>
+      <div style="display: flex; flex-direction: column; gap: 6px; min-width: 0">
+        <div role="group" aria-label="Print speed" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px">
+          <button style="height: 44px; border: 0; border-radius: 10px; background: #161616; color: #FAFAFA; font-size: 13px; font-weight: 800">Silent <span style="color: #A1A1A1; font-weight: 600">50</span></button>
+          <button aria-pressed="true" style="height: 44px; border: 0; border-radius: 10px; background: #00ACC7; color: #0A0A0A; font-size: 13px; font-weight: 900">Normal 100</button>
+          <button style="height: 44px; border: 0; border-radius: 10px; background: #161616; color: #FAFAFA; font-size: 13px; font-weight: 800">Fast <span style="color: #A1A1A1; font-weight: 600">125</span></button>
+          <button style="height: 44px; border: 0; border-radius: 10px; background: #161616; color: #FAFAFA; font-size: 13px; font-weight: 800">Draft <span style="color: #A1A1A1; font-weight: 600">150</span></button>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; flex-grow: 1">
+          <button style="border: 0; border-radius: 10px; background: #161616; color: #FAFAFA; display: flex; flex-direction: column; align-items: center; justify-content: center"><span style="font-size: 10px; color: #A1A1A1">Nozzle · Bed</span><span style="font-size: 14px; font-weight: 900; color: #FF8904">240° · 80°</span></button>
+          <button style="border: 0; border-radius: 10px; background: #161616; color: #FAFAFA; display: flex; flex-direction: column; align-items: center; justify-content: center"><span style="font-size: 10px; color: #A1A1A1">Fan · Flow</span><span style="font-size: 14px; font-weight: 900">60% · 100%</span></button>
+        </div>
+      </div>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px">
+      <button style="height: 50px; border: 0; border-radius: 10px; background: #0D3C96; color: #FAFAFA; font-size: 15px; font-weight: 900">Pause</button>
+      <button style="height: 50px; border: 0; border-radius: 10px; background: #161616; color: #FAFAFA; font-size: 13px; font-weight: 800">Cancel object</button>
+      <button style="height: 50px; border: 0; border-radius: 10px; background: #3A0A0C; color: #FF6467; font-size: 13px; font-weight: 900">Cancel print</button>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":480,"height":320}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

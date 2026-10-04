@@ -22,7 +22,7 @@ Related: [PLAN.md](PLAN.md)
 
 | ID | Date | Question | Why it matters | Status |
 |---|---|---|---|---|
-| Q-034 | 2026-10-04 | Pick a style direction: A Soft Cards · B Bold Tiles · C Hairline (or a mix), and a logo-on-dark option (1 white plate · 2 pale sky plate · 3 white circle) | Drives every screen design | Open |
+| Q-034 | 2026-10-04 | Pick a style direction: A Soft Cards · B Bold Tiles · C Hairline (or a mix), and a logo-on-dark option (1 white plate · 2 pale sky plate · 3 white circle) | Drives every screen design | Answered: **Claude's recommendation** → D-028 |
 | Q-033 | 2026-10-04 | Real bed size (X × Y) and max Z height? Bench v2 uses a placeholder 220 × 220 × 250 | The cancel-object bed map should match the real bed | Answered: **180 × 180 × 180 mm** |
 | Q-032 | 2026-10-04 | Logo/star mark on a dark background: the charcoal star `#2E2E2E` disappears on `#0A0A0A` | Brand sheet says light backgrounds only | Open, Phase 2 design options |
 | Q-031 | 2026-10-04 | Is there a true vector (SVG paths) version of the star mark? | Sharp icons at any size | Open, nice-to-have |
@@ -63,6 +63,7 @@ Related: [PLAN.md](PLAN.md)
 
 | ID | Date | Decision | Options considered | Rationale | Decided by | Status |
 |---|---|---|---|---|---|---|
+| D-028 | 2026-10-04 | Visual direction: **A · Soft Cards** base + **3 recent prints** on idle Home (from C) + labelled **STOP** E-stop (from B). Logo option **1, white plate** | A / B / C / mix | Bambu-like, best fit for reprinting, clearest E-stop. Follows the brand's light-background rule | User | Accepted |
 | D-027 | 2026-10-04 | Bench config v2 safety design: real heater pins gpio20/gpio21 never referenced. Fake heaters on logic-only pins gpio19 (servo) / gpio11 (RGB). Pi CPU as the fake sensor. verify_heater relaxed only for the fake heaters. Instant fake homing. Startup BENCH warning. Pins from Mellow FLY-Micro4 docs | Real heater pins + relaxed checks / logic pins | If the bench file ever reaches the real printer, nothing can heat | User | Accepted, **applied 2026-10-04** |
 | D-026 | 2026-10-04 | KlipperScreen fork = **private copy** `StarStackCo/KlipperScreen-starstack`. Branch `starstack` based on `f580242e` (the Pi's version). `master` mirrors upstream. Upstream push disabled. LF line endings. Changes tracked in `FORK_CHANGES.md` | Public fork / private copy | User choice | User | Accepted, created |
 | D-025 | 2026-10-04 | Advanced mode: no PIN. A "proceed at your own risk" confirmation when enabling | PIN / confirm | User | User | Accepted |

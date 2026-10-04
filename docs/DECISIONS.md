@@ -10,7 +10,7 @@ Related: [PLAN.md](PLAN.md)
 | Phase | Status | Notes |
 |---|---|---|
 | 0. Discovery and safety baseline | 🟡 In progress | ✅ Repo created (StarStackCo/klipper-ui, private). ✅ Local project at Documents\klipper-ui. ✅ SSH key authorised. ✅ **Backup done** (`backups/2026-10-04_1234`, 91 MB, archive verified, SHA256SUMS). ✅ Inventory: CB1 image (Debian 12), Klipper v0.13.0-501, Moonraker v0.10.0, Mainsail v2.17.0, KlipperScreen v0.4.6. ✅ Moonraker access fixed (D-014 applied). ✅ Bench config installed, **Klipper Ready**. ✅ Baseline screenshots (`design/baseline/`). ✅ Regression checklist + Run 0 (`docs/test-checklist.md`). ✅ Remote TFT screenshots working (`scripts/ks-screenshot.sh`). **Phase 0 approved by user 2026-10-04** |
-| 1. UX requirements (detail) | 🟡 In progress | Answers received. Draft at `docs/requirements.md`. Brand sheet received (`design/brand/`) |
+| 1. UX requirements (detail) | 🟡 In progress | Answers received. **Requirements v2** at `docs/requirements.md`, waiting for approval. Brand sheet received (`design/brand/`) |
 | 2. Design | ⏳ Not started | |
 | 3. Build increments (bench) | ⏳ Not started | |
 | 3.5 Safety review + move to full printer | ⏳ Not started | |
@@ -22,13 +22,16 @@ Related: [PLAN.md](PLAN.md)
 
 | ID | Date | Question | Why it matters | Status |
 |---|---|---|---|---|
-| Q-027 | 2026-10-04 | Logo files `logo2.png` and `logo.png` on Google Drive return **401 (not shared publicly)**. `stars.svg` and the Public Sans link work | Need the real logo files | Open: user to share or drop the files in `design/brand/` |
+| Q-030 | 2026-10-04 | Should the KlipperScreen fork be **public** (GitHub forks of public repos are always public) or a **private copy** with KlipperScreen as an upstream remote? | Visibility of the StarStack theme/code | Open |
+| Q-029 | 2026-10-04 | Can Claude use the user's cloud computing credit to avoid hitting the 5-hour usage limit? | Session continuity | Answered by Claude: not possible from inside the session. See the 2026-10-04 reply |
+| Q-028 | 2026-10-04 | Can Claude download `stars.svg` from starstack.com? | Star mark for the rail, boot screen and favicon | Open |
+| Q-027 | 2026-10-04 | Logo files `logo2.png` and `logo.png` on Google Drive return **401 (not shared publicly)**. `stars.svg` and the Public Sans link work | Need the real logo files | Answered: use **logo2 only** (user attached it, saved as `design/brand/logo2.png`, 1590×358). Do not use `logo` |
 | Q-026 | 2026-10-04 | Bench config v2 (cartesian) needs the FLY Micro4 pinout. Fake heaters must use **non-heater pins**, so the bench config can never heat a real heater if the board moves to the printer | Safety | Open: Claude to research Mellow docs and propose |
-| Q-025 | 2026-10-04 | E-stop: single tap, or tap + confirm? | Accidental stops vs speed in an emergency | Open |
+| Q-025 | 2026-10-04 | E-stop: single tap, or tap + confirm? | Accidental stops vs speed in an emergency | Answered: **tap, then confirm** |
 | Q-024 | 2026-10-04 | Should Advanced mode be PIN-protected (classroom use)? | Students could change PA/limits | Open |
-| Q-023 | 2026-10-04 | Fast and Draft speed % values? Speed only (M220), or also acceleration? | Preset macros | Open |
-| Q-022 | 2026-10-04 | Load temps per material (proposed nozzle/bed: PLA 210/60, PETG 240/80, TPU 225/50) | Filament + preheat macros | Open |
-| Q-021 | 2026-10-04 | **KlipperScreen's left rail is hard-coded** (`panels/base_panel.py`: back, home, E-stop **only while printing**, shutdown). Custom panels load only from KlipperScreen's own `panels/` folder. The requested TFT design needs a **KlipperScreen fork** (Layer C) | D-005 said Layer C only if unavoidable and approved | Open: user decision |
+| Q-023 | 2026-10-04 | Fast and Draft speed % values? Speed only (M220), or also acceleration? | Preset macros | Answered: Fast **125%**, Draft **150%**. Speed % only (M220), as fixed buttons |
+| Q-022 | 2026-10-04 | Load temps per material (proposed nozzle/bed: PLA 210/60, PETG 240/80, TPU 225/50) | Filament + preheat macros | Answered: as proposed, except **TPU bed 40 °C** |
+| Q-021 | 2026-10-04 | **KlipperScreen's left rail is hard-coded** (`panels/base_panel.py`: back, home, E-stop **only while printing**, shutdown). Custom panels load only from KlipperScreen's own `panels/` folder. The requested TFT design needs a **KlipperScreen fork** (Layer C) | D-005 said Layer C only if unavoidable and approved | Answered: **fork approved**. Every change documented so upstream can always be merged |
 | Q-020 | 2026-10-04 | Mainsail Temperatures panel is empty, though KlipperScreen shows both sensors | Live data must show in the new UI | Open, investigate during the Mainsail theme work |
 | Q-019 | 2026-10-04 | Browser pane asks for approval on every action for `http://192.168.0.102` ("site-level permissions disabled") | Slows down visual checks | Open. Workaround: navigate by URL instead of clicking. User may check the desktop app's settings |
 | Q-018 | 2026-10-04 | The Micro4's MCU temperature reads **-22.9 °C**, which is clearly wrong (Pi reads 39.8 °C) | Display-only sensor, no safety role. Either fix (possibly via a firmware update) or remove it from the UI | Open, low priority |
@@ -56,6 +59,11 @@ Related: [PLAN.md](PLAN.md)
 
 | ID | Date | Decision | Options considered | Rationale | Decided by | Status |
 |---|---|---|---|---|---|---|
+| D-024 | 2026-10-04 | Flow control: ±1% buttons, hard cap 40–120% | | User | User | Accepted |
+| D-023 | 2026-10-04 | No Z babystep in the UI. No idle-timeout logic in the UI (printer config handles it, the UI only displays it) | | User | User | Accepted |
+| D-022 | 2026-10-04 | Cancel object shows a **bed map with object positions + part-name list** | List only / map + list | User | User | Accepted |
+| D-021 | 2026-10-04 | **Single dark theme** only | Dark+light / dark only | User | User | Accepted |
+| D-020 | 2026-10-04 | KlipperScreen will be **forked** to StarStackCo with minimal changes, documented in `FORK_CHANGES.md` for upstream merges. Mainsail stays code-free | Config only / fork | Requested design is impossible without code (Q-021) | User | Accepted |
 | D-019 | 2026-10-04 | Brand: StarStack Brand Sheet v1.0 (colours, Public Sans, 10px radius, 4px spacing, Bootstrap Icons) is the design-system source | n/a | User supplied | User | Accepted |
 | D-018 | 2026-10-04 | Bench config v2 will use **cartesian kinematics** so every TFT button appears | none / cartesian | User request | User | Accepted, design pending (Q-026) |
 | D-017 | 2026-10-04 | Requirements captured in `docs/requirements.md`: consumer-first, Advanced toggle, 4-icon rail + always-visible E-stop, Settings may scroll, speed presets, material-aware load/unload, cancel object, bed meshing/Z offset out of scope | n/a | User answers | User | Draft, waiting for approval |

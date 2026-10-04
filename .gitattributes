@@ -1,0 +1,5 @@
+# Everything that goes to the Pi must use Linux (LF) line endings
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.svg text eol=lf

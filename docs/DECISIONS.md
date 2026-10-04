@@ -9,7 +9,7 @@ Related: [PLAN.md](PLAN.md)
 
 | Phase | Status | Notes |
 |---|---|---|
-| 0. Discovery and safety baseline | 🟡 Setting up | Answers received 2026-10-04. Next: SSH + GitHub setup, then config backup |
+| 0. Discovery and safety baseline | 🟡 In progress | ✅ Repo created (StarStackCo/klipper-ui, private). ✅ Local project at Documents\klipper-ui. ✅ Project SSH key generated. ⏳ Key authorisation on Pi (user). Next: read-only backup |
 | 1. UX requirements | ⏳ Not started | |
 | 2. Design | ⏳ Not started | |
 | 3. Build increments (bench) | ⏳ Not started | |
@@ -22,11 +22,15 @@ Related: [PLAN.md](PLAN.md)
 
 | ID | Date | Question | Why it matters | Status |
 |---|---|---|---|---|
-| Q-011 | 2026-10-04 | Exact GitHub account name (what is "sam@starstack": a username, an org, or an email?) and the repo name (proposed `klipper-custom-ui`) | Repo creation | Open |
-| Q-010 | 2026-10-04 | BTT Pi IP address/hostname and SSH username (BTT image default is `biqu`) | SSH setup | Open |
-| Q-009 | 2026-10-04 | OK to install GitHub CLI (`gh`) with winget? | GitHub workflow | Open |
-| Q-008 | 2026-10-04 | Which folder on this PC should hold the project and the backups? | Scratch workspace is temporary | Open |
-| Q-007 | 2026-10-04 | Bench testing without a mainboard: is it worth adding a separate "bench" Klipper config so Klipper reaches Ready? | More UI states testable on the bench | Open, decide in Phase 0 |
+| Q-015 | 2026-10-04 | Moonraker access: allow literally any IP (0.0.0.0/0) or just the home network (192.168.0.0/24)? | "Any IP" gives full unauthenticated printer control to anything that can reach the Pi | Open |
+| Q-014 | 2026-10-04 | Is Klipper firmware already flashed on the FLY Micro4? (Visible once it's plugged in by USB) | Without it there's no MCU ID and it needs flashing | Open, checked on connect |
+| Q-013 | 2026-10-04 | The new printer.cfg needs real hardware details: which driver/port does each motor use, thermistor types, heater wiring, PZ probe pin, bed size, rotation distances | The old config was for another machine. A wrong pin or thermistor type is a safety problem | Open, needed before the full-printer phase |
+| Q-012 | 2026-10-04 | Bench power is from the PC's USB port. These can supply as little as 0.5–0.9 A, while the Pi + TFT35 + mainboard may draw more | Under-voltage can corrupt the SD card | Mitigation: check `dmesg` for under-voltage after connecting |
+| Q-011 | 2026-10-04 | GitHub account/org and repo name | Repo creation | Answered: org **StarStackCo**, repo **klipper-ui** (private) |
+| Q-010 | 2026-10-04 | BTT Pi IP and SSH username | SSH setup | Answered: 192.168.0.102, default user `biqu` |
+| Q-009 | 2026-10-04 | Install GitHub CLI? | GitHub workflow | Answered: already installed (v2.102.0) and logged in as Sam-Kudarauskas. Nothing installed |
+| Q-008 | 2026-10-04 | Project folder? | Scratch workspace is temporary | Answered: `C:\Users\Sam\Documents\klipper-ui` |
+| Q-007 | 2026-10-04 | Bench testing without a mainboard? | More UI states testable on the bench | Answered: user will connect the FLY Micro4 with nothing plugged into it → D-012 |
 | Q-006 | 2026-10-04 | Is the current config backed up anywhere? | Safety baseline | Answered: only an old 8 GB initial image. Config has changed since, so a backup is needed first |
 | Q-005 | 2026-10-04 | Printer details | Which buttons/panels are needed | Partly answered: cantilevered bed-slinger, E3D PZ probe. Still to confirm in Phase 1: filament sensor, LEDs, camera, etc. |
 | Q-004 | 2026-10-04 | Customisation depth | Scope | Answered → D-005 |
@@ -40,9 +44,12 @@ Related: [PLAN.md](PLAN.md)
 
 | ID | Date | Decision | Options considered | Rationale | Decided by | Status |
 |---|---|---|---|---|---|---|
+| D-013 | 2026-10-04 | Printer backups stay on this PC only (`backups/` is git-ignored). Only reviewed, cleaned config goes to GitHub | Push everything / local only | Configs can contain network details and keys | Claude (safety default) | Accepted |
+| D-012 | 2026-10-04 | Bench = BTT Pi + TFT35 SPI + FLY Micro4 with nothing connected to the mainboard. A **bench config** gets written with no heaters/thermistors/steppers active, so Klipper reaches Ready without false thermal errors. The real printer config is written separately and safety-reviewed before Phase 3.5 | Use old config / bench config | Old config is for another machine. Unplugged thermistors would trigger errors | User + Claude | Accepted |
+| D-011 | 2026-10-04 | Old config is backed up but **not reused** as the base for the new setup | Reuse / start fresh | User: it was for a different machine | User | Accepted |
 | D-010 | 2026-10-04 | Testing in two stages: bench (Pi + screen on 5V USB) for building, then the full printer only after a safety review | Test on full printer from day one / bench first | Safer, and the user's preference | User | Accepted |
 | D-009 | 2026-10-04 | First task is backing up the current config (config folder, Moonraker DB, KlipperScreen.conf) to this PC, read-only on the Pi | n/a | The 8 GB initial image is outdated | User | Accepted |
-| D-008 | 2026-10-04 | Claude connects with Windows' built-in OpenSSH using key-based login (no stored passwords). The user keeps MobaXterm for their own use | MobaXterm / OpenSSH + keys | Claude can't drive a GUI terminal. Keys mean Claude never handles the Pi password | Proposed | Pending approval |
+| D-008 | 2026-10-04 | Claude connects with Windows' built-in OpenSSH using a project-only key (`~/.ssh/klipper_ui_ed25519`). The user keeps MobaXterm for their own use | MobaXterm / OpenSSH + keys | Claude can't drive a GUI terminal. Keys mean Claude never handles the Pi password. Revoke by deleting the `claude-klipper-ui` line in `~/.ssh/authorized_keys` | User | Accepted |
 | D-007 | 2026-10-04 | GitHub: new **private** repo. The user logs in themselves (browser/`gh auth login --web`). Claude never enters credentials | n/a | Security rule | User | Accepted |
 | D-006 | 2026-10-04 | Design direction: modern consumer feel (Bambu-style), simple main screens, plus an advanced layer for power users | n/a | User requirement | User | Accepted |
 | D-005 | 2026-10-04 | Fully replace themes, menus and macros. Avoid code changes to Mainsail/KlipperScreen if possible (Layers A/B). Layer C only if unavoidable and approved | n/a | Survives updates, user preference | User | Accepted |

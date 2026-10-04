@@ -1,6 +1,6 @@
 # Phase 1: UX Requirements
 
-**Status:** DRAFT v2, 2026-10-04. Waiting for user approval. Items marked **❓** are still open (see DECISIONS.md).
+**Status:** DRAFT v2.1, 2026-10-04. Waiting for user approval. No open items.
 **Changes from v1:** answers to round 2 applied (see the change list at the bottom).
 
 ## 1. Who and how
@@ -22,7 +22,8 @@
   - Button fill: Site Primary `#0D3C96`. Highlights/selected/focus: Accent `#00ACC7` and Star Sky `#88D8F2`
   - Status: success `#5CA300`, warning/hot `#FF8904`, error/E-stop `#FF6467`
   - Font **Public Sans** (Black 900 headlines, ExtraBold 800 section heads, Regular 400 body). Radius 10px, spacing unit 4px, **Bootstrap Icons**
-- Logo: **`logo2.png` only** (full lockup). The star mark (`stars.svg`) is for small spaces such as the TFT rail, boot screen and favicon.
+- Logo: **`logo2.png` only** (full lockup). The star mark (`stars.svg`, a 248×280 PNG inside an SVG) is for small spaces such as the TFT rail, boot screen and favicon.
+- ⚠️ The brand sheet says the logo is for light backgrounds. The charcoal bottom star (`#2E2E2E`) nearly disappears on `#0A0A0A`, so Phase 2 must solve this (light plate behind the logo, or an approved dark-background variant).
 - Bambu-inspired: big, clear, friendly. One task per screen.
 
 ## 3. TFT navigation model (480 × 320)
@@ -100,7 +101,7 @@ Legend: **N** = Normal mode · **A** = Advanced mode only · 🔒 = locked while
 ### Settings (scrollable)
 | Action | Mode | Where | Notes |
 |---|---|---|---|
-| **Advanced mode** on/off | N | T M | ❓ PIN-protected or not (Q-024) |
+| **Advanced mode** on/off | N ⚠️ | T M | **No PIN.** Turning it on shows a confirmation: *"Advanced settings can damage prints or the printer. Proceed at your own risk."* Turning it off needs no confirmation |
 | Wi-Fi / network | N | T | |
 | Screen brightness / sleep | N | T | |
 | Language, units, 24h time | N | T | |
@@ -135,13 +136,13 @@ Legend: **N** = Normal mode · **A** = Advanced mode only · 🔒 = locked while
 ## 8. OrcaSlicer settings to check
 
 - **Label objects** ON and **Exclude objects** ON (needed for cancel object + the bed map)
-- **Thumbnails** in a Klipper-readable format (e.g. `48x48/PNG, 300x300/PNG`)
+- **Thumbnails** ✅ confirmed by user: `48x48/PNG, 300x300/PNG`
 - Start G-code passes bed/nozzle temps to `PRINT_START`
 
 ## 9. Implementation approach (decided)
 
 - **Mainsail:** no code changes. Theme folder (`.theme/`) + layout/presets/macros.
-- **KlipperScreen:** a **StarStackCo fork** with minimal, documented changes (`FORK_CHANGES.md` lists every change and how to merge upstream updates).
+- **KlipperScreen:** **private copy** `StarStackCo/KlipperScreen-starstack` (branch `starstack`, based on the Pi's exact version `f580242e`), with minimal, documented changes. `FORK_CHANGES.md` lists every change and how to merge upstream updates.
 
 ---
 
@@ -157,3 +158,9 @@ Legend: **N** = Normal mode · **A** = Advanced mode only · 🔒 = locked while
 - Idle timeout: handled by the printer config, display only
 - Runout UI: build now
 - KlipperScreen fork approved
+
+### Changes v2 → v2.1
+- Advanced mode: no PIN, "proceed at your own risk" confirmation
+- Orca thumbnails confirmed
+- Fork created as a private copy
+- Logo-on-dark issue noted for Phase 2

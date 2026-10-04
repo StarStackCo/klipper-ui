@@ -10,7 +10,7 @@ Related: [PLAN.md](PLAN.md)
 | Phase | Status | Notes |
 |---|---|---|
 | 0. Discovery and safety baseline | 🟡 In progress | ✅ Repo created (StarStackCo/klipper-ui, private). ✅ Local project at Documents\klipper-ui. ✅ SSH key authorised. ✅ **Backup done** (`backups/2026-10-04_1234`, 91 MB, archive verified, SHA256SUMS). ✅ Inventory: CB1 image (Debian 12), Klipper v0.13.0-501, Moonraker v0.10.0, Mainsail v2.17.0, KlipperScreen v0.4.6. ✅ Moonraker access fixed (D-014 applied). ✅ Bench config installed, **Klipper Ready**. ✅ Baseline screenshots (`design/baseline/`). ✅ Regression checklist + Run 0 (`docs/test-checklist.md`). ✅ Remote TFT screenshots working (`scripts/ks-screenshot.sh`). **Phase 0 approved by user 2026-10-04** |
-| 1. UX requirements (detail) | 🟡 In progress | Answers received. **Requirements v2** at `docs/requirements.md`, waiting for approval. Brand sheet received (`design/brand/`) |
+| 1. UX requirements (detail) | 🟡 In progress | Answers received. **Requirements v2.1** at `docs/requirements.md`, waiting for approval. ✅ KlipperScreen private fork created. ✅ Star mark downloaded Brand sheet received (`design/brand/`) |
 | 2. Design | ⏳ Not started | |
 | 3. Build increments (bench) | ⏳ Not started | |
 | 3.5 Safety review + move to full printer | ⏳ Not started | |
@@ -22,13 +22,15 @@ Related: [PLAN.md](PLAN.md)
 
 | ID | Date | Question | Why it matters | Status |
 |---|---|---|---|---|
-| Q-030 | 2026-10-04 | Should the KlipperScreen fork be **public** (GitHub forks of public repos are always public) or a **private copy** with KlipperScreen as an upstream remote? | Visibility of the StarStack theme/code | Open |
+| Q-032 | 2026-10-04 | Logo/star mark on a dark background: the charcoal star `#2E2E2E` disappears on `#0A0A0A` | Brand sheet says light backgrounds only | Open, Phase 2 design options |
+| Q-031 | 2026-10-04 | Is there a true vector (SVG paths) version of the star mark? | Sharp icons at any size | Open, nice-to-have |
+| Q-030 | 2026-10-04 | Should the KlipperScreen fork be **public** (GitHub forks of public repos are always public) or a **private copy** with KlipperScreen as an upstream remote? | Visibility of the StarStack theme/code | Answered: **(b) private copy**. Created `StarStackCo/KlipperScreen-starstack` |
 | Q-029 | 2026-10-04 | Can Claude use the user's cloud computing credit to avoid hitting the 5-hour usage limit? | Session continuity | Answered by Claude: not possible from inside the session. See the 2026-10-04 reply |
-| Q-028 | 2026-10-04 | Can Claude download `stars.svg` from starstack.com? | Star mark for the rail, boot screen and favicon | Open |
+| Q-028 | 2026-10-04 | Can Claude download `stars.svg` from starstack.com? | Star mark for the rail, boot screen and favicon | Answered: yes. Downloaded (56 KB, no scripts). Note: it's a raster PNG inside an SVG, not a true vector |
 | Q-027 | 2026-10-04 | Logo files `logo2.png` and `logo.png` on Google Drive return **401 (not shared publicly)**. `stars.svg` and the Public Sans link work | Need the real logo files | Answered: use **logo2 only** (user attached it, saved as `design/brand/logo2.png`, 1590×358). Do not use `logo` |
 | Q-026 | 2026-10-04 | Bench config v2 (cartesian) needs the FLY Micro4 pinout. Fake heaters must use **non-heater pins**, so the bench config can never heat a real heater if the board moves to the printer | Safety | Open: Claude to research Mellow docs and propose |
 | Q-025 | 2026-10-04 | E-stop: single tap, or tap + confirm? | Accidental stops vs speed in an emergency | Answered: **tap, then confirm** |
-| Q-024 | 2026-10-04 | Should Advanced mode be PIN-protected (classroom use)? | Students could change PA/limits | Open |
+| Q-024 | 2026-10-04 | Should Advanced mode be PIN-protected (classroom use)? | Students could change PA/limits | Answered: **no PIN**. Show a "proceed at your own risk" confirmation when turning it on |
 | Q-023 | 2026-10-04 | Fast and Draft speed % values? Speed only (M220), or also acceleration? | Preset macros | Answered: Fast **125%**, Draft **150%**. Speed % only (M220), as fixed buttons |
 | Q-022 | 2026-10-04 | Load temps per material (proposed nozzle/bed: PLA 210/60, PETG 240/80, TPU 225/50) | Filament + preheat macros | Answered: as proposed, except **TPU bed 40 °C** |
 | Q-021 | 2026-10-04 | **KlipperScreen's left rail is hard-coded** (`panels/base_panel.py`: back, home, E-stop **only while printing**, shutdown). Custom panels load only from KlipperScreen's own `panels/` folder. The requested TFT design needs a **KlipperScreen fork** (Layer C) | D-005 said Layer C only if unavoidable and approved | Answered: **fork approved**. Every change documented so upstream can always be merged |
@@ -59,6 +61,8 @@ Related: [PLAN.md](PLAN.md)
 
 | ID | Date | Decision | Options considered | Rationale | Decided by | Status |
 |---|---|---|---|---|---|---|
+| D-026 | 2026-10-04 | KlipperScreen fork = **private copy** `StarStackCo/KlipperScreen-starstack`. Branch `starstack` based on `f580242e` (the Pi's version). `master` mirrors upstream. Upstream push disabled. LF line endings. Changes tracked in `FORK_CHANGES.md` | Public fork / private copy | User choice | User | Accepted, created |
+| D-025 | 2026-10-04 | Advanced mode: no PIN. A "proceed at your own risk" confirmation when enabling | PIN / confirm | User | User | Accepted |
 | D-024 | 2026-10-04 | Flow control: ±1% buttons, hard cap 40–120% | | User | User | Accepted |
 | D-023 | 2026-10-04 | No Z babystep in the UI. No idle-timeout logic in the UI (printer config handles it, the UI only displays it) | | User | User | Accepted |
 | D-022 | 2026-10-04 | Cancel object shows a **bed map with object positions + part-name list** | List only / map + list | User | User | Accepted |

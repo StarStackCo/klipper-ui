@@ -9,7 +9,7 @@ Related: [PLAN.md](PLAN.md)
 
 | Phase | Status | Notes |
 |---|---|---|
-| 0. Discovery and safety baseline | 🟡 In progress | ✅ Repo created (StarStackCo/klipper-ui, private). ✅ Local project at Documents\klipper-ui. ✅ Project SSH key generated. ⏳ Key authorisation on Pi (user). Next: read-only backup |
+| 0. Discovery and safety baseline | 🟡 In progress | ✅ Repo created (StarStackCo/klipper-ui, private). ✅ Local project at Documents\klipper-ui. ✅ SSH key authorised. ✅ **Backup done** (`backups/2026-10-04_1234`, 91 MB, archive verified, SHA256SUMS). ✅ Inventory: CB1 image (Debian 12), Klipper v0.13.0-501, Moonraker v0.10.0, Mainsail v2.17.0, KlipperScreen v0.4.6. Next: fix Moonraker access, then bench config |
 | 1. UX requirements | ⏳ Not started | |
 | 2. Design | ⏳ Not started | |
 | 3. Build increments (bench) | ⏳ Not started | |
@@ -22,7 +22,8 @@ Related: [PLAN.md](PLAN.md)
 
 | ID | Date | Question | Why it matters | Status |
 |---|---|---|---|---|
-| Q-015 | 2026-10-04 | Moonraker access: allow literally any IP (0.0.0.0/0) or just the home network (192.168.0.0/24)? | "Any IP" gives full unauthenticated printer control to anything that can reach the Pi | Open |
+| Q-016 | 2026-10-04 | Is the connected RP2040 `E6647C7403679636` the FLY Micro4? (The old config pointed at a different RP2040 toolboard, `E660D051131C442C`) | The bench config must point at the right board | Open |
+| Q-015 | 2026-10-04 | Moonraker access: any IP or home network only? | Security | Answered: **home network only** → D-014 |
 | Q-014 | 2026-10-04 | Is Klipper firmware already flashed on the FLY Micro4? (Visible once it's plugged in by USB) | Without it there's no MCU ID and it needs flashing | Open, checked on connect |
 | Q-013 | 2026-10-04 | The new printer.cfg needs real hardware details: which driver/port does each motor use, thermistor types, heater wiring, PZ probe pin, bed size, rotation distances | The old config was for another machine. A wrong pin or thermistor type is a safety problem | Open, needed before the full-printer phase |
 | Q-012 | 2026-10-04 | Bench power is from the PC's USB port. These can supply as little as 0.5–0.9 A, while the Pi + TFT35 + mainboard may draw more | Under-voltage can corrupt the SD card | Mitigation: check `dmesg` for under-voltage after connecting |
@@ -44,6 +45,7 @@ Related: [PLAN.md](PLAN.md)
 
 | ID | Date | Decision | Options considered | Rationale | Decided by | Status |
 |---|---|---|---|---|---|---|
+| D-014 | 2026-10-04 | Moonraker `trusted_clients`: localhost + `192.168.0.0/24` + IPv6 link-local only. Remove the old entries, including `192.168.1.0/24` (wrong subnet, the actual reason Mainsail was refusing the PC) and `128.113.138.0/24` (a public internet range) | Allow all / home only | User choice. Least exposure | User | Accepted, waiting to apply |
 | D-013 | 2026-10-04 | Printer backups stay on this PC only (`backups/` is git-ignored). Only reviewed, cleaned config goes to GitHub | Push everything / local only | Configs can contain network details and keys | Claude (safety default) | Accepted |
 | D-012 | 2026-10-04 | Bench = BTT Pi + TFT35 SPI + FLY Micro4 with nothing connected to the mainboard. A **bench config** gets written with no heaters/thermistors/steppers active, so Klipper reaches Ready without false thermal errors. The real printer config is written separately and safety-reviewed before Phase 3.5 | Use old config / bench config | Old config is for another machine. Unplugged thermistors would trigger errors | User + Claude | Accepted |
 | D-011 | 2026-10-04 | Old config is backed up but **not reused** as the base for the new setup | Reuse / start fresh | User: it was for a different machine | User | Accepted |

@@ -1,5 +1,6 @@
 # Raw printer backups stay on this PC only (may contain secrets / network info)
 backups/
+logs/
 
 # Secrets
 *.secrets

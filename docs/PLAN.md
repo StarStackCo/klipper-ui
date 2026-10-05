@@ -93,22 +93,11 @@ For every increment:
 - Install/update/rollback docs in the repo README.
 - Optional: register the repo with Moonraker's `update_manager` so updates show up in Mainsail.
 
-## 5. Proposed repo structure
+## 5. Repo structure (as built)
 
-```
-klipper-custom-ui/
-├── README.md               install, update, rollback
-├── docs/
-│   ├── PLAN.md             this file
-│   ├── DECISIONS.md        decision/question/change/progress log
-│   ├── action-inventory.md
-│   └── test-checklist.md
-├── design/                 mockups, design tokens, icon sources
-├── mainsail-theme/         → deployed to ~/printer_data/config/.theme/
-├── klipperscreen/          theme (styles/) + KlipperScreen.conf menus
-├── macros/                 → included from printer.cfg
-└── scripts/                deploy.sh / rollback.sh / backup.sh
-```
+- `StarStackCo/klipper-ui` (GPL-3.0): `install.sh`, `macros/`, `mainsail-theme/`, `config/bench/`, `tools/`, `scripts/`, `design/`, `docs/`
+- `StarStackCo/KlipperScreen-starstack` (AGPL-3.0 fork): StarStack screens (`panels/ss_*`, `ks_includes/starstack*.py`), theme source and tools in `tools/starstack/`, change log `FORK_CHANGES.md`
+- Branches: stable `main` / `starstack` (what printers install), work on `dev`
 
 ## 6. Safety and regression checklist (runs on every increment)
 

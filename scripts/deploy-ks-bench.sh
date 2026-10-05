@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# DEPRECATED since step 6 (2026-10-05): the Pi tracks the fork. Use scripts/ks-update.sh.
+# Copying files into ~/KlipperScreen makes the repo "dirty" in Mainsail. Kept only for quick uncommitted experiments.
 # BENCH-ONLY deploy of the StarStack KlipperScreen fork onto the Pi's ~/KlipperScreen.
 # Copies every file that differs from the fork's upstream base (added or changed),
 # installs the Public Sans fonts for the Pi user, selects the theme, restarts

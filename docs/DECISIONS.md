@@ -22,6 +22,7 @@ Related: [PLAN.md](PLAN.md)
 
 | ID | Date | Question | Why it matters | Status |
 |---|---|---|---|---|
+| Q-045 | 2026-10-05 | Pi offline again during step 6 (second time on PC USB power). Nothing had run yet | Step 6 waits for the Pi | Open: user to check power. Strongly recommend a dedicated 5V/3A supply |
 | Q-044 | 2026-10-04 | **Resume next session (KlipperScreen build).** Done + bench-tested: rail/STOP, Home idle/printing/paused, Print, Controls, Settings, adjust, cancel object, dialogs. Written, NOT yet deployed/tested: in-content prompts (#9), filament color-change mode, readable object names. TODO: (1) Home: color-change countdown alternating with time left (user request, scanner `starstack.scan_color_changes` ready); (2) `M600` macro → PAUSE + "Color change" message (+ safety review); (3) reheat-then-resume when nozzle cooled while paused (Mainsail RESUME aborts otherwise); (4) style ± step buttons; (5) error/shutdown screen; (6) full bench re-tour, then check in with user | Session ended at usage limit | **Resolved 2026-10-05**: all items done and bench-tested (Run 3) |
 | Q-043 | 2026-10-04 | User: grey out STOP when no job is running? | Safety: STOP is also needed during homing, jogging, heating, filament changes | Answered: user approved Claude's alternative → D-036 |
 | Q-042 | 2026-10-04 | Mainsail macro panels appear alphabetically (Advanced, Filament, Preheat, Speed). Reorder to Speed, Preheat, Filament, Advanced? (dashboard layout DB keys, or drag in Settings › Dashboard) | Polish | Open, low priority |
@@ -73,6 +74,7 @@ Related: [PLAN.md](PLAN.md)
 
 | ID | Date | Decision | Options considered | Rationale | Decided by | Status |
 |---|---|---|---|---|---|---|
+| D-047 | 2026-10-05 | **Both repos made public** (klipper-ui, KlipperScreen-starstack). Team decision, because the StarStackCo org disables deploy keys org-wide (no per-repo option). Pre-publication audit of full history: no secrets, keys, backups or logs. Public, low risk: LAN IP 192.168.0.102, user `biqu`, file names in screenshots, brand sheet (sam@starstack.com) and logos. Step 6 now uses plain HTTPS (`scripts/install-ks-fork.sh`, with --rollback) | Enable org deploy keys / fine-grained token / public | Simplest to maintain, no credentials on the Pi | User + team | **Applied 2026-10-05** |
 | D-046 | 2026-10-05 | Klipper starting/restarting/reconnecting screen restyled: StarStack logo2 plate, spinner, plain status, Details, confirmed Restart Klipper / Retry connection | | User request | User | Applied, bench-tested |
 | D-045 | 2026-10-05 | Touchscreen hides routine `echo:` messages (guided screens already show them). Warnings/errors (`!!`) still pop up. Everything stays in the Mainsail console | | User: "hide redundant info" | User | Applied |
 | D-044 | 2026-10-05 | Review fixes: rail icons in 5 equal slots (measured ~59 px apart), STOP contents centered. Buttons never gray out while Klipper is busy. Speed presets highlight on tap. Root cause of "speed grays out": a real file on the bench waits forever in M109/M190 (fake heaters) and queues every later command. The same happens briefly during real heat-up | | User review | User | Applied |

@@ -79,6 +79,9 @@ for ks, (bname, colour) in MAP.items():
 if missing:
     sys.exit("Bootstrap icons not found: %s" % missing)
 
+# 2b. StarStack logo (logo2, brand sheet) for the "Starting printer" screen
+shutil.copy(os.path.join(HERE, "..", "design", "brand", "logo2.png"), os.path.join(IMG, "starstack-logo.png"))
+
 # 3. Fonts (static TTFs we use: Regular 400, SemiBold 600, ExtraBold 800, Black 900)
 ps = zipfile.ZipFile(os.path.join(VENDOR, "ps.zip"))
 for w in ("Regular", "SemiBold", "ExtraBold", "Black"):

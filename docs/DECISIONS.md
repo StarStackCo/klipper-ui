@@ -73,6 +73,7 @@ Related: [PLAN.md](PLAN.md)
 
 | ID | Date | Decision | Options considered | Rationale | Decided by | Status |
 |---|---|---|---|---|---|---|
+| D-046 | 2026-10-05 | Klipper starting/restarting/reconnecting screen restyled: StarStack logo2 plate, spinner, plain status, Details, confirmed Restart Klipper / Retry connection | | User request | User | Applied, bench-tested |
 | D-045 | 2026-10-05 | Touchscreen hides routine `echo:` messages (guided screens already show them). Warnings/errors (`!!`) still pop up. Everything stays in the Mainsail console | | User: "hide redundant info" | User | Applied |
 | D-044 | 2026-10-05 | Review fixes: rail icons in 5 equal slots (measured ~59 px apart), STOP contents centered. Buttons never gray out while Klipper is busy. Speed presets highlight on tap. Root cause of "speed grays out": a real file on the bench waits forever in M109/M190 (fake heaters) and queues every later command. The same happens briefly during real heat-up | | User review | User | Applied |
 | D-043 | 2026-10-05 | **Content guard (safety):** the page area is wrapped in a scroller so no page can push STOP off-screen | | Found in testing (prompt grew window to 478 px) | Claude (safety fix) | Applied |

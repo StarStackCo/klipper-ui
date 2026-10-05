@@ -73,6 +73,8 @@ Related: [PLAN.md](PLAN.md)
 
 | ID | Date | Decision | Options considered | Rationale | Decided by | Status |
 |---|---|---|---|---|---|---|
+| D-045 | 2026-10-05 | Touchscreen hides routine `echo:` messages (guided screens already show them). Warnings/errors (`!!`) still pop up. Everything stays in the Mainsail console | | User: "hide redundant info" | User | Applied |
+| D-044 | 2026-10-05 | Review fixes: rail icons in 5 equal slots (measured ~59 px apart), STOP contents centered. Buttons never gray out while Klipper is busy. Speed presets highlight on tap. Root cause of "speed grays out": a real file on the bench waits forever in M109/M190 (fake heaters) and queues every later command. The same happens briefly during real heat-up | | User review | User | Applied |
 | D-043 | 2026-10-05 | **Content guard (safety):** the page area is wrapped in a scroller so no page can push STOP off-screen | | Found in testing (prompt grew window to 478 px) | Claude (safety fix) | Applied |
 | D-042 | 2026-10-05 | Klipper shutdown/error → StarStack "Printer stopped / Printer error" page with one confirmed Restart printer (FIRMWARE_RESTART). Startup/connecting keep the stock splash | | Approved design | User (design) | Applied |
 | D-041 | 2026-10-05 | Resume when the nozzle cooled while paused: UI reheats to Mainsail's saved print temp, then resumes automatically (tap again to stop waiting) | Let Mainsail's RESUME abort / reheat-then-resume | Consumer-friendly. Avoids the "RESUME aborted" dead end | Claude (UX) | Applied |

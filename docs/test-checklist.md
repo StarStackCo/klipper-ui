@@ -132,3 +132,20 @@ Driven remotely with `scripts/ks-tap.sh` (bench devtools) and `scripts/ks-screen
 | Style matches UI | ✅ | Dark flat keys, 8 px corners, blue when pressed. Screenshot `design/klipperscreen/kbd-console.png` |
 | Wi-Fi password entry | ➖ | Same keyboard code path. Not exercised on the bench, to avoid dropping the Pi's Wi-Fi |
 | Clean shutdown before unplug | ✅ | Previous boot ended with a normal power-off. All repos fsck clean |
+
+## Run 5: Upstream KlipperScreen v0.4.7-196 (B-2), 2026-10-05 (bench v2.2, fork dev → starstack)
+
+| Check | Result | Notes |
+|---|---|---|
+| Home idle: Print again + thumbnails | ✅ | After fixing a history refresh loop (thumbnails never landed) |
+| Print / Controls / Settings pages | ✅ | |
+| Console + keyboard | ✅ | |
+| Load filament, nozzle adjust | ✅ | |
+| Demo print: printing screen, speed, layer, thumbnail | ✅ | "Color change in –" fixed to "under 1 min" |
+| Color-change pause → Change filament / Resume (reheat first) | ✅ | Bench heater can't reach 240°, so resume itself not completed (expected) |
+| Cancel object | ✅ | Klipper `excluded_objects: [HANDLE_1]` |
+| Cancel print (confirm) | ✅ | Heaters off, STOP back to gray |
+| STOP → confirm → Printer stopped → Details → Restart | ✅ ×3 | Fixed: empty box, Details button, stuck "Starting printer" |
+| SSH logout doesn't restart the screen | ✅ ×3 | Fixed (fork change #15) |
+| Wi-Fi page opens | ✅ | Stock look (B-6) |
+| KlipperScreen log | ✅ | No tracebacks |

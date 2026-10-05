@@ -74,6 +74,7 @@ Related: [PLAN.md](PLAN.md)
 
 | ID | Date | Decision | Options considered | Rationale | Decided by | Status |
 |---|---|---|---|---|---|---|
+| D-056 | 2026-10-05 | **B-1 on-screen keyboard** (fork hook #13): keys 44 px tall, 16 px from the bottom/right edges, StarStack style. Title bar hidden while typing so all 4 rows fit (restored on close). Page scroll areas may shrink. Released via PR dev → starstack (v0.4.6-46). Also confirmed: the user's shutdown-before-unplug gave a **clean shutdown** (no repo damage) | | User | User | **Released** |
 | D-055 | 2026-10-05 | Backlog started (`docs/BACKLOG.md`): B-1 restyle the on-screen keyboard (≥44 px keys, away from edges, rail visible), B-2 merge the waiting upstream KlipperScreen update, B-3 Phase 3.5, B-4 Mainsail panel order, B-5 devtools off before the full printer | | User | User | Recorded |
 | D-054 | 2026-10-05 | **#6 one-command installer** `install.sh` (runs on the Pi; --dry-run, --uninstall, --fix-printer-cfg; refuses while printing; one-time `.pre-starstack` backups; recovers a damaged KlipperScreen repo) + `tools/apply_mainsail.py`. PC wrapper `scripts/pi-install.sh [--branch dev]`. Superseded scripts removed. README has "Install on a printer". Bench install ✅ | | User | User | **Applied** |
 | D-053 | 2026-10-05 | **#2 one-click updates:** `[update_manager klipper-ui]` (main, managed_services: klipper). Macros + Mainsail `.theme` are symlinks into `~/klipper-ui`. Mainsail update manager: klipper-ui v0.1.0 + KlipperScreen, both valid/clean | | User | User | **Applied** |

@@ -120,3 +120,15 @@ Driven remotely with `scripts/ks-tap.sh` (bench devtools) and `scripts/ks-screen
 | Prompts | ✅ | Macro prompts shown in-page, OK works, rail visible |
 
 **Bench-only noise:** Mainsail's PAUSE/RESUME print "extruder not hot enough" banners (fake cold nozzle).
+
+## Run 4: On-screen keyboard (B-1), 2026-10-05 (bench, fork dev → starstack v0.4.6-46)
+
+| Check | Result | Notes |
+|---|---|---|
+| Keys ≥ 44 px tall | ✅ | 44 px, 4 rows all visible (Console) |
+| Edge margins | ✅ | 16 px bottom, 16 px right (measured from screenshot) |
+| STOP rail visible while typing | ✅ | Keyboard lives inside the page area |
+| Title bar restored on close | ✅ | Closing via the rail |
+| Style matches UI | ✅ | Dark flat keys, 8 px corners, blue when pressed. Screenshot `design/klipperscreen/kbd-console.png` |
+| Wi-Fi password entry | ➖ | Same keyboard code path. Not exercised on the bench, to avoid dropping the Pi's Wi-Fi |
+| Clean shutdown before unplug | ✅ | Previous boot ended with a normal power-off. All repos fsck clean |

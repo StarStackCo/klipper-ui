@@ -3,7 +3,7 @@
 Run: scripts/pi.sh 'python3 -' < scripts/make_bench_print.py
 - Thumbnail copied from a real OrcaSlicer file on the printer (so the UI shows a real preview)
 - 4 labelled objects (EXCLUDE_OBJECT_DEFINE) at real bed positions → cancel-object map
-- SET_PRINT_STATS_INFO layers, ~3 minutes of dwell "printing"
+- SET_PRINT_STATS_INFO layers, M73 time markers, M600 color changes at layers 12 and 28, ~3 minutes of dwell
 """
 import glob, os, re
 
@@ -29,7 +29,13 @@ for name, poly in objs:
     pts = ",".join(f"[{x},{y}]" for x, y in poly)
     out.append(f"EXCLUDE_OBJECT_DEFINE NAME={name} CENTER={cx:.1f},{cy:.1f} POLYGON=[{pts}]")
 out += ["M104 S240", "M140 S80", "G28", f"SET_PRINT_STATS_INFO TOTAL_LAYER={layers}"]
+secs_per_layer = 4 * 1.1
 for layer in range(1, layers + 1):
+    if layer in (12, 28):                      # two color changes, like OrcaSlicer's M600
+        out.append("M600")
+    remaining = int((layers - layer + 1) * secs_per_layer / 60 + 0.5)
+    pct = int((layer - 1) * 100 / layers)
+    out.append(f"M73 P{pct} R{remaining}")
     out.append(f"SET_PRINT_STATS_INFO CURRENT_LAYER={layer}")
     for name, _ in objs:
         out += [f"EXCLUDE_OBJECT_START NAME={name}", "G4 P1100", f"EXCLUDE_OBJECT_END NAME={name}"]

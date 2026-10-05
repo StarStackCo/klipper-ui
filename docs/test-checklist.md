@@ -96,3 +96,27 @@ Automated: `scripts/bench_test_macros.py` (run on the Pi) → **34/34 PASS** (ru
 
 **Finding:** in runs 1–2 the **runout sensor triggered falsely** on the bench (pin floating, shared with driver DIAG), causing a phantom PAUSE. Fixed for the bench by disabling the sensor at startup (bench v2.2). The real printer must verify its sensor reads stable (Phase 3.5).
 **Note:** Mainsail's own PAUSE/CANCEL macros log `"extruder" not hot enough` on the bench (they retract; fake nozzle is cold). Expected.
+
+## Run 3: StarStack touchscreen v1, 2026-10-05 (bench v2.2, macros v1 + M600)
+
+Driven remotely with `scripts/ks-tap.sh` (bench devtools) and `scripts/ks-screenshot.sh`. Screenshots: `design/klipperscreen/` (v1-*, v2-*, final-tour.png). Demo print: `scripts/make_bench_print.py` (thumbnail, 4 objects, 40 layers, M73, M600 at layers 12/28).
+
+| ID | Result | Notes |
+|---|---|---|
+| S1 | ✅ | STOP in the rail on every page, pop-up and the stopped screen. **Red when active** (printing, heater on, busy), **gray when idle**, always tappable |
+| S1-guard | ✅ (fixed) | A macro prompt grew the window to 478 px and pushed STOP off-screen. Fixed by the content guard (window stays 320 px, page scrolls) |
+| S2 | ✅ | Confirmations: STOP, Cancel print, Cancel part, Restart printer, Advanced mode, Bed clear. All appear in-page with the rail visible |
+| S3 | ✅ | Controls: filament + move locked (dashed) while printing. Shut down locked while printing |
+| S7 | ✅ | E-stop → "Printer stopped · Emergency stop was pressed" (red), rail disabled, Restart printer (confirm) → back to Home, Klipper ready |
+| F5 | ✅ | KlipperScreen active after every deploy. No tracebacks from StarStack code |
+| F6 | ✅ | Live temps, progress (G-code-body based, matches layers), time left |
+| Home | ✅ | Idle: 3 recent prints with real thumbnails, preheat. Printing: job card, speed chips, tiles. Done card |
+| Print | ✅ | 6 per page, sort cycle, pager, disabled while printing |
+| Cancel object | ✅ | Bed map (180 mm), list, confirm, last-part → cancel-print guard |
+| Adjust | ✅ | Nozzle +10 applied (target 250) |
+| Color change | ✅ | 2 changes found. Line alternates "Color change in 1 min" / "2 min left". M600 → pause → "Color change" + Change filament |
+| Reheat-resume | ✅ (bench) | Paused with cold nozzle → Resume shows "Reheating to 240°, then resuming". Completion only on the real printer (fake heater) |
+| Filament | ✅ | Pick → heating bar (43°/240°) → (hot steps need the real printer). Visibility bug fixed |
+| Prompts | ✅ | Macro prompts shown in-page, OK works, rail visible |
+
+**Bench-only noise:** Mainsail's PAUSE/RESUME print "extruder not hot enough" banners (fake cold nozzle).

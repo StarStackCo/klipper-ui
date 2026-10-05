@@ -32,6 +32,7 @@
 | `UNLOAD_FILAMENT` | Unload | Heat + 80 mm retract | Medium | Temperature gate, state gate, timeout |
 | `FILAMENT_DONE` | Done | Nozzle heater off (unless paused) | Low | — |
 | `_SS_RUNOUT` | (sensor) | Records state, message | Low | Klipper already paused |
+| `M600` | (slicer color change) | Calls Mainsail's `PAUSE` (retract + park) | Low | No heating or extrusion of its own. Ignored if already paused. Resume reheats via the UI or Mainsail's RESUME |
 
 ## Things to tune/verify on the real printer (Phase 3.5)
 - `load_mm` (60) = gears-to-nozzle length on this extruder; `unload_mm` (80) clears the gears.

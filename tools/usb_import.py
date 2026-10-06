@@ -7,7 +7,9 @@ Run as the printer user by usb/usb_import.sh (which mounts the stick read-only a
 - Keeps the stick's folders. Hidden files/folders and system folders are skipped.
 - A file already on the printer with the same content (at its name or a "name (n)" copy) is skipped.
 - Same name, different content: saved as "name (2).gcode", "name (3).gcode", ...
-- Copies to a hidden temp name first, so Moonraker never sees a half-copied file.
+- Copies to a temp folder next to (not inside) the print jobs folder, then moves the finished file in:
+  Moonraker and KlipperScreen only ever see complete files, as a plain "new file" (a rename inside
+  the watched folder is reported as a move of an unknown file, which KlipperScreen chokes on).
 - Writes <gcodes>/.starstack/usb_import.json; the touchscreen watches it and asks
   "Print this one now?" for the newest copied file.
 """
@@ -69,6 +71,8 @@ def main():
     args = ap.parse_args()
     stick, gcodes = os.path.abspath(args.stick), os.path.abspath(args.gcodes)
     copied, skipped, failed = [], 0, []
+    tmp_dir = os.path.join(os.path.dirname(gcodes), ".starstack_usb_tmp")  # same disk, not watched
+    os.makedirs(tmp_dir, exist_ok=True)
     for src in stick_files(stick):
         rel = os.path.relpath(src, stick)
         target, present = place(src, os.path.join(gcodes, rel))
@@ -80,7 +84,7 @@ def main():
         if shutil.disk_usage(os.path.dirname(target)).free < size + FREE_MARGIN:
             failed.append({"file": rel, "reason": "not enough space"})
             continue
-        tmp = os.path.join(os.path.dirname(target), "." + os.path.basename(target) + ".part")
+        tmp = os.path.join(tmp_dir, "copy.part")
         try:
             shutil.copyfile(src, tmp)  # new modification time: copied files count as newest
             os.replace(tmp, target)

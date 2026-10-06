@@ -1,0 +1,11 @@
+# STARSTACK: one USB stick import (D-065). Started by 99-starstack-usb.rules with the device name (sdX1).
+# Installed to /etc/systemd/system/ by install.sh (@USER@ filled in there).
+[Unit]
+Description=StarStack: copy new G-code files from USB stick %I
+BindsTo=dev-%i.device
+After=dev-%i.device
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/lib/starstack/usb_import.sh %i @USER@
+TimeoutStartSec=600

@@ -1,0 +1,4 @@
+# STARSTACK: USB stick plugged in -> copy new G-code files into the print jobs folder (D-065).
+# Installed to /etc/udev/rules.d/ by install.sh. Any USB block device that holds a filesystem
+# (a partition, or a stick formatted without partitions) starts one import service run.
+ACTION=="add", SUBSYSTEM=="block", ENV{ID_BUS}=="usb", ENV{ID_FS_USAGE}=="filesystem", TAG+="systemd", ENV{SYSTEMD_WANTS}+="starstack-usb-import@%k.service"

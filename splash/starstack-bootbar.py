@@ -10,6 +10,9 @@ put back, so there is no black gap. Stops as soon as the touchscreen app shows i
 If the app still isn't up FAIL_AFTER into the boot, shows "The touchscreen app didn't start" with
 the printer's address for Mainsail instead of a logo that looks frozen (D-079), and keeps it there
 (the app's restarts redraw the logo) until the app does come up.
+After boot it keeps watching (D-080): whenever the app stops (crash, update, restart) its stop
+hook removes ui-up; if the app isn't back within RESTART_LIMIT (or STOPPED_LIMIT when the service
+was stopped on purpose, e.g. during an update), the same message is shown.
 System python3 only (no Pillow): writes RGB565 pixels to /dev/fb0.
 """
 import json
@@ -17,6 +20,7 @@ import math
 import os
 import socket
 import struct
+import subprocess
 import time
 
 SHARE = "/usr/local/share/starstack"
@@ -32,6 +36,8 @@ X0, Y0, BW, BH = 140, 236, 200, 6  # under the logo plate (plate ends at y=210)
 # app can take ~12 s to load during boot and its cover takes over the bar when it's up
 X_GRACE = 25
 FAIL_AFTER = 120  # seconds of uptime (or 3x the usual boot if that's longer)
+RESTART_LIMIT = 60  # app crashing / restarting: normally back in ~3 s
+STOPPED_LIMIT = 180  # service stopped on purpose (updates stop it, then start it again)
 LOGO_ROWS = slice(110 * STRIDE, 211 * STRIDE)  # the plate: used to notice it was painted over
 
 
@@ -135,18 +141,56 @@ def fail_frame(ip):
     return bytes(frame)
 
 
-def watch(fd, deadline):
-    """Bar is done but the app isn't up: after the deadline, show the 'didn't start' screen."""
-    frame, shown_ip = None, ""
+class FailScreen:
+    def __init__(self, fd):
+        self.fd, self.frame, self.ip = fd, None, ""
+
+    def show(self):
+        """Draw (or keep) the 'didn't start' screen; redrawn if anything paints over it."""
+        ip = address()
+        if self.frame is None or ip != self.ip:
+            self.frame, self.ip = fail_frame(ip), ip
+        os.lseek(self.fd, 0, os.SEEK_SET)
+        if os.read(self.fd, len(self.frame)) != self.frame and not os.path.exists(UI_UP):
+            os.lseek(self.fd, 0, os.SEEK_SET)
+            os.write(self.fd, self.frame)
+
+
+def app_service_state():
+    try:
+        r = subprocess.run(
+            ["systemctl", "is-active", "KlipperScreen.service"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+            check=False,
+        )
+        return r.stdout.strip()
+    except (OSError, subprocess.SubprocessError):
+        return "unknown"
+
+
+def watch(fail, deadline):
+    """Boot: bar is done but the app isn't up: after the deadline, show the 'didn't start' screen."""
     while not os.path.exists(UI_UP):
         if uptime() >= deadline:
-            ip = address()
-            if frame is None or ip != shown_ip:
-                frame, shown_ip = fail_frame(ip), ip
-            os.lseek(fd, 0, os.SEEK_SET)
-            if os.read(fd, len(frame)) != frame and not os.path.exists(UI_UP):
-                os.lseek(fd, 0, os.SEEK_SET)
-                os.write(fd, frame)
+            fail.show()
+        time.sleep(1)
+
+
+def supervise(fail):
+    """After boot, forever: the app stopped and didn't come back in time -> 'didn't start' screen."""
+    down_since = None
+    while True:
+        if os.path.exists(UI_UP):
+            down_since = None
+            time.sleep(2)
+            continue
+        if down_since is None:
+            down_since = time.monotonic()
+        limit = STOPPED_LIMIT if app_service_state() == "inactive" else RESTART_LIMIT
+        if time.monotonic() - down_since >= limit:
+            fail.show()
         time.sleep(1)
 
 
@@ -179,8 +223,9 @@ def main():
                 os.write(fd, row)
             last = fill
         time.sleep(0.25)
-    watch(fd, deadline)
-    os.close(fd)
+    fail = FailScreen(fd)
+    watch(fail, deadline)
+    supervise(fail)
 
 
 if __name__ == "__main__":

@@ -6,15 +6,23 @@ Installed to /usr/local/lib/starstack/ by install.sh; started by starstack-splas
 how long the last boot took (/var/lib/starstack/boot_seconds, written by the touchscreen app when
 Home first shows). If the screen app's X server paints over the logo while it starts, the logo is
 put back, so there is no black gap. Stops as soon as the touchscreen app shows its first screen
-(it creates /run/starstack/ui-up), or after 3 minutes. The app's "Starting printer" screen then
-continues the same bar. System python3 only (no Pillow): writes RGB565 pixels to /dev/fb0.
+(it creates /run/starstack/ui-up). The app's "Starting printer" screen then continues the same bar.
+If the app still isn't up FAIL_AFTER into the boot, shows "The touchscreen app didn't start" with
+the printer's address for Mainsail instead of a logo that looks frozen (D-079), and keeps it there
+(the app's restarts redraw the logo) until the app does come up.
+System python3 only (no Pillow): writes RGB565 pixels to /dev/fb0.
 """
+import json
 import math
 import os
+import socket
 import struct
 import time
 
-IMG = "/usr/local/share/starstack/starstack-splash-boot.rgb565"  # logo + empty bar track
+SHARE = "/usr/local/share/starstack"
+IMG = SHARE + "/starstack-splash-boot.rgb565"  # logo + empty bar track
+FAIL_IMG = SHARE + "/starstack-splash-fail.rgb565"  # "The touchscreen app didn't start"
+GLYPHS = SHARE + "/starstack-glyphs"  # .rgb565 + .json: characters for the address line
 STATE = "/var/lib/starstack"
 RUN = "/run/starstack"
 UI_UP = RUN + "/ui-up"
@@ -23,6 +31,7 @@ X0, Y0, BW, BH = 140, 236, 200, 6  # under the logo plate (plate ends at y=210)
 # stop at the latest this long after the screen app's X server starts (D-072). Generous: the
 # app can take ~12 s to load during boot and its cover takes over the bar when it's up
 X_GRACE = 25
+FAIL_AFTER = 120  # seconds of uptime (or 3x the usual boot if that's longer)
 LOGO_ROWS = slice(110 * STRIDE, 211 * STRIDE)  # the plate: used to notice it was painted over
 
 
@@ -93,18 +102,68 @@ def x_running():
     return False
 
 
+def address():
+    """This printer's IPv4 address on the network, or None (no packet is sent)."""
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sk:
+            sk.connect(("10.255.255.255", 1))
+            ip = sk.getsockname()[0]
+        return None if ip.startswith("127.") else ip
+    except OSError:
+        return None
+
+
+def fail_frame(ip):
+    """The 'didn't start' screen with 'http://<ip>' (or 'no network') written under it."""
+    with open(FAIL_IMG, "rb") as f:
+        frame = bytearray(f.read())
+    with open(GLYPHS + ".json") as f:
+        g = json.load(f)
+    with open(GLYPHS + ".rgb565", "rb") as f:
+        strip = f.read()
+    chars = g["chars"]
+    text = ["NONET"] if ip is None else [c for c in "http://" + ip if c in chars]
+    width = sum(chars[c][1] for c in text)
+    x = max(0, (480 - width) // 2)
+    for c in text:
+        cx, w = chars[c]
+        for y in range(g["height"]):
+            src = (y * g["width"] + cx) * 2
+            dst = (g["y"] + y) * STRIDE + x * 2
+            frame[dst : dst + w * 2] = strip[src : src + w * 2]
+        x += w
+    return bytes(frame)
+
+
+def watch(fd, deadline):
+    """Bar is done but the app isn't up: after the deadline, show the 'didn't start' screen."""
+    frame, shown_ip = None, ""
+    while not os.path.exists(UI_UP):
+        if uptime() >= deadline:
+            ip = address()
+            if frame is None or ip != shown_ip:
+                frame, shown_ip = fail_frame(ip), ip
+            os.lseek(fd, 0, os.SEEK_SET)
+            if os.read(fd, len(frame)) != frame and not os.path.exists(UI_UP):
+                os.lseek(fd, 0, os.SEEK_SET)
+                os.write(fd, frame)
+        time.sleep(1)
+
+
 def main():
     with open(IMG, "rb") as f:
         logo = f.read()
     setup_run_dir()
-    total, end = expected(), time.monotonic() + 180
+    total = expected()
+    deadline = max(FAIL_AFTER, 3 * total)
     fd = os.open("/dev/fb0", os.O_RDWR)
-    last, n, x_seen = -1, 0, False
-    while time.monotonic() < end and not os.path.exists(UI_UP):
-        # Safety net: an older touchscreen app never says it's up, so never keep drawing over it.
-        # Checked once a second only: keep this loop light while everything else is loading.
-        if not x_seen and n % 4 == 0 and x_running():
-            x_seen, end = True, min(end, time.monotonic() + X_GRACE)
+    last, n, end = -1, 0, None
+    while not os.path.exists(UI_UP) and uptime() < deadline:
+        if end is not None and time.monotonic() > end:
+            break  # X has been up a while: leave the screen to the app (D-072)
+        # Checked once a second only: keep this loop light while everything else is loading
+        if end is None and n % 4 == 0 and x_running():
+            end = time.monotonic() + X_GRACE
         n += 1
         os.lseek(fd, LOGO_ROWS.start, os.SEEK_SET)
         if os.read(fd, LOGO_ROWS.stop - LOGO_ROWS.start) != logo[LOGO_ROWS]:  # X cleared it
@@ -120,6 +179,7 @@ def main():
                 os.write(fd, row)
             last = fill
         time.sleep(0.25)
+    watch(fd, deadline)
     os.close(fd)
 
 

@@ -192,7 +192,8 @@ SPL_BAR=/usr/local/lib/starstack/starstack-bootbar.py
 SPL_STATE=/var/lib/starstack
 SPL_IMG=/usr/local/share/starstack/starstack-splash.rgb565
 SPL_SHARE=/usr/local/share/starstack
-SPL_BOOT="starstack-splash-boot.rgb565 starstack-splash-boot.png"  # boot/restart images (D-073)
+SPL_BOOT="starstack-splash-boot.rgb565 starstack-splash-boot.png starstack-splash-fail.rgb565
+  starstack-glyphs.rgb565 starstack-glyphs.json"  # boot/restart images (D-073), app-failed screen (D-079)
 SPL_UNIT=/etc/systemd/system/starstack-splash.service
 SPL_DROP=/etc/systemd/system/KlipperScreen.service.d/starstack-splash.conf
 ARMENV=/boot/armbianEnv.txt

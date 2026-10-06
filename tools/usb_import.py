@@ -21,7 +21,9 @@ import shutil
 import sys
 import time
 
-EXTS = (".gcode", ".gco", ".g")
+# Print files only. NOT ".g": Duet/RepRap firmware keeps its config macros (config.g, tpre0.g, ...)
+# as .g files, and those must never show up as printable jobs (found on a real stick, D-065).
+EXTS = (".gcode", ".gco")
 SKIP_DIRS = {"System Volume Information", "$RECYCLE.BIN", "LOST.DIR", "lost+found"}
 FREE_MARGIN = 200 * 1024 * 1024  # never fill the SD card / eMMC completely
 

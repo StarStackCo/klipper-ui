@@ -35,7 +35,10 @@ The installer:
    in copies new G-code files, folders included, into the print jobs folder and the touchscreen offers to
    print the newest one. The stick is mounted read-only and unmounted after copying, so it can be pulled
    out right away
-7. restarts Moonraker, Klipper and KlipperScreen
+7. sets up the **StarStack boot screen** (asks for your password; skip with `--no-splash`): the logo
+   shows on the touchscreen from power-up until the UI starts, at shutdown and while the UI restarts.
+   Boot text goes to the serial port only. Takes effect after a reboot
+8. restarts Moonraker, Klipper and KlipperScreen
 
 Every file it changes is backed up once as `<file>.pre-starstack`.
 

@@ -7,6 +7,8 @@
 #   bash ~/klipper-ui/install.sh --uninstall     back to stock Mainsail + KlipperScreen
 #   bash ~/klipper-ui/install.sh --fix-printer-cfg   also add the required lines to printer.cfg
 #   bash ~/klipper-ui/install.sh --no-usb        skip the USB stick import (step 6, needs sudo)
+#   bash ~/klipper-ui/install.sh --no-splash     skip the StarStack boot screen (step 7, needs sudo)
+#   bash ~/klipper-ui/install.sh --no-fastboot   skip the faster-boot changes (step 8, needs sudo)
 #
 # What it does (each step prints what it changed; backups are made once, never overwritten):
 #   1. Links the StarStack macros and Mainsail theme from this repo into ~/printer_data/config
@@ -18,7 +20,16 @@
 #   5. Applies Mainsail UI settings + macro groups + dashboard panel order (Moonraker database)
 #   6. USB stick import: plugging in a stick copies new G-code files into the print jobs folder
 #      (udev rule + service, asks for your password once via sudo; skip with --no-usb)
-#   7. Restarts Moonraker, Klipper and KlipperScreen
+#   7. Boot screen: StarStack logo on the touchscreen from power-up until the UI starts, at
+#      shutdown and while the UI restarts; kernel text goes to the serial port only, Plymouth off
+#      (/boot/armbianEnv.txt, backed up), and the touchscreen app starts without waiting for the
+#      network (KlipperScreen.service, backed up). sudo; skip with --no-splash. Needs a reboot
+#   8. Faster boot: Klipper and Moonraker start without waiting for the network
+#      (klipper/moonraker.service, backed up); turns off unused services (webcam streamer
+#      crowsnest, OpenVPN, NFS, keyboard/console setup) and automatic OS updates; the
+#      touchscreen's X server no longer loads OpenGL (/etc/X11/xorg.conf.d). sudo; skip with
+#      --no-fastboot; --uninstall turns them back on. Needs a reboot
+#   9. Restarts Moonraker, Klipper and KlipperScreen
 # It refuses to run while a print is in progress.
 set -euo pipefail
 
@@ -29,14 +40,16 @@ KS_DIR="$HOME/KlipperScreen"
 KS_FORK="https://github.com/StarStackCo/KlipperScreen-starstack.git"
 KS_UP="https://github.com/KlipperScreen/KlipperScreen.git"
 UI_ORIGIN="https://github.com/StarStackCo/klipper-ui.git"
-DRY=0; MODE=install; FIX_CFG=0; USB=1
+DRY=0; MODE=install; FIX_CFG=0; USB=1; SPLASH=1; FASTBOOT=1
 for a in "$@"; do
   case "$a" in
     --dry-run) DRY=1 ;;
     --uninstall) MODE=uninstall ;;
     --fix-printer-cfg) FIX_CFG=1 ;;
     --no-usb) USB=0 ;;
-    -h|--help) sed -n '2,25p' "$0"; exit 0 ;;
+    --no-splash) SPLASH=0 ;;
+    --no-fastboot) FASTBOOT=0 ;;
+    -h|--help) sed -n '2,35p' "$0"; exit 0 ;;
     *) echo "unknown option: $a"; exit 2 ;;
   esac
 done
@@ -113,6 +126,11 @@ printer_cfg_check() {
 }
 
 klipperscreen_fork() {
+  # Same channel as this repo: klipper-ui dev (bench testing) pairs with the fork's dev branch,
+  # otherwise the stable starstack branch (D-072: a dev klipper-ui with the stable app broke the
+  # boot bar)
+  local KS_BRANCH=starstack
+  [ "$(git -C "$REPO" branch --show-current 2>/dev/null)" = dev ] && KS_BRANCH=dev
   if [ ! -d "$KS_DIR" ]; then echo "   KlipperScreen not installed: install it with KIAUH first, then re-run"; return; fi
   if ! git -C "$KS_DIR" fsck --no-dangling >/dev/null 2>&1; then
     local b="$KS_DIR.corrupt-$(date +%Y%m%d-%H%M)"
@@ -122,8 +140,8 @@ klipperscreen_fork() {
   do_ "git -C '$KS_DIR' remote set-url origin '$KS_FORK'"
   git -C "$KS_DIR" remote get-url upstream >/dev/null 2>&1 || do_ "git -C '$KS_DIR' remote add upstream '$KS_UP'"
   do_ "git -C '$KS_DIR' remote set-url --push upstream DISABLED"
-  do_ "git -C '$KS_DIR' fetch -q --tags origin && git -C '$KS_DIR' checkout -q -f -B starstack origin/starstack && git -C '$KS_DIR' branch -q -u origin/starstack"
-  [ "$DRY" = 1 ] || echo "   KlipperScreen: $(git -C "$KS_DIR" describe --tags --always) on starstack"
+  do_ "git -C '$KS_DIR' fetch -q --tags origin && git -C '$KS_DIR' checkout -q -f -B $KS_BRANCH origin/$KS_BRANCH && git -C '$KS_DIR' branch -q -u origin/$KS_BRANCH"
+  [ "$DRY" = 1 ] || echo "   KlipperScreen: $(git -C "$KS_DIR" describe --tags --always) on $KS_BRANCH"
   do_ "mkdir -p ~/.local/share/fonts && cp '$KS_DIR'/styles/starstack/fonts/*.ttf ~/.local/share/fonts/ && fc-cache -f ~/.local/share/fonts"
   local kc="$CFG/KlipperScreen.conf"
   [ -e "$kc" ] || do_ "touch '$kc'"
@@ -169,6 +187,145 @@ usb_remove() {
   fi
 }
 
+SPL_LIB=/usr/local/lib/starstack/starstack-splash.sh
+SPL_BAR=/usr/local/lib/starstack/starstack-bootbar.py
+SPL_STATE=/var/lib/starstack
+SPL_IMG=/usr/local/share/starstack/starstack-splash.rgb565
+SPL_SHARE=/usr/local/share/starstack
+SPL_BOOT="starstack-splash-boot.rgb565 starstack-splash-boot.png starstack-splash-fail.rgb565
+  starstack-glyphs.rgb565 starstack-glyphs.json"  # boot/restart images (D-073), app-failed screen (D-079)
+SPL_UNIT=/etc/systemd/system/starstack-splash.service
+SPL_DROP=/etc/systemd/system/KlipperScreen.service.d/starstack-splash.conf
+ARMENV=/boot/armbianEnv.txt
+KS_UNIT=/etc/systemd/system/KlipperScreen.service
+
+splash_install() {
+  if [ "$(cat /sys/class/graphics/fb0/virtual_size 2>/dev/null)" != "480,320" ]; then
+    echo "   skipped: the touchscreen isn't a 480x320 TFT35 (the splash is made for that size)"; return
+  fi
+  local changed=0
+  cmp -s "$REPO/splash/starstack-splash.sh" "$SPL_LIB" || changed=1
+  cmp -s "$REPO/splash/starstack-bootbar.py" "$SPL_BAR" || changed=1
+  [ -d "$SPL_STATE" ] || changed=1
+  cmp -s "$REPO/splash/starstack-splash.rgb565" "$SPL_IMG" || changed=1
+  for f in $SPL_BOOT; do cmp -s "$REPO/splash/$f" "$SPL_SHARE/$f" || changed=1; done
+  cmp -s "$REPO/splash/starstack-splash.service" "$SPL_UNIT" || changed=1
+  cmp -s "$REPO/splash/klipperscreen-splash.conf" "$SPL_DROP" || changed=1
+  if [ $changed = 1 ]; then
+    echo "   installing the boot screen (sudo may ask for your password)"
+    do_ "sudo install -D -o root -g root -m 755 '$REPO/splash/starstack-splash.sh' '$SPL_LIB'"
+    do_ "sudo install -D -o root -g root -m 755 '$REPO/splash/starstack-bootbar.py' '$SPL_BAR'"
+    do_ "sudo install -d -o $(id -un) -g $(id -gn) -m 755 '$SPL_STATE'"  # boot time, written by the touchscreen app
+    do_ "sudo install -D -o root -g root -m 644 '$REPO/splash/starstack-splash.rgb565' '$SPL_IMG'"
+    for f in $SPL_BOOT; do do_ "sudo install -o root -g root -m 644 '$REPO/splash/$f' '$SPL_SHARE/$f'"; done
+    do_ "sudo install -o root -g root -m 644 '$REPO/splash/starstack-splash.service' '$SPL_UNIT'"
+    do_ "sudo install -D -o root -g root -m 644 '$REPO/splash/klipperscreen-splash.conf' '$SPL_DROP'"
+    do_ "sudo systemctl daemon-reload && sudo systemctl enable starstack-splash.service"
+  else
+    echo "   ok: boot screen files installed"
+  fi
+  # No login prompt drawn over the logo on the touchscreen's console (SSH and serial still work)
+  if [ "$(systemctl is-enabled getty@tty1 2>/dev/null)" != masked ]; then
+    do_ "sudo systemctl mask getty@tty1.service autovt@tty1.service"
+    echo "   touchscreen login prompt turned off (getty@tty1 masked)"
+  fi
+  # Kernel/boot text to the serial port only, no blinking cursor, no Plymouth (it blanked the
+  # logo until the UI started, D-069) (Armbian boot options)
+  if [ -f "$ARMENV" ]; then
+    if grep -q '^console=cancel_lcd' "$ARMENV" && grep -q 'vt.global_cursor_default=0' "$ARMENV" \
+      && grep -q 'plymouth.enable=0' "$ARMENV"; then
+      echo "   ok: boot text already off the touchscreen"
+    else
+      [ -e "$ARMENV.pre-starstack" ] || do_ "sudo cp -a '$ARMENV' '$ARMENV.pre-starstack'"
+      do_ "sudo sed -i 's/^console=.*/console=cancel_lcd/' '$ARMENV'"
+      grep -q '^console=' "$ARMENV" || do_ "echo 'console=cancel_lcd' | sudo tee -a '$ARMENV' >/dev/null"
+      grep -q '^extraargs=' "$ARMENV" || do_ "echo 'extraargs=' | sudo tee -a '$ARMENV' >/dev/null"
+      for arg in vt.global_cursor_default=0 plymouth.enable=0; do
+        grep -q "$arg" "$ARMENV" || do_ "sudo sed -i 's/^extraargs=\(.*\)/extraargs=\1 $arg/' '$ARMENV'"
+      done
+      echo "   boot text moved off the touchscreen ($ARMENV, backup: $ARMENV.pre-starstack). Reboot to see it"
+    fi
+  fi
+  # Start the touchscreen app without waiting for the network and Moonraker (D-069)
+  if [ -f "$KS_UNIT" ] && ! grep -q 'StarStack (D-069)' "$KS_UNIT"; then
+    [ -e "$KS_UNIT.pre-starstack" ] || do_ "sudo cp -a '$KS_UNIT' '$KS_UNIT.pre-starstack'"
+    do_ "sudo sed -i -f '$REPO/splash/klipperscreen-unit.sed' '$KS_UNIT' && sudo systemctl daemon-reload"
+    echo "   touchscreen app now starts early in the boot ($KS_UNIT, backup: $KS_UNIT.pre-starstack)"
+  fi
+}
+
+splash_remove() {
+  if [ -e "$SPL_UNIT" ] || [ -e "$SPL_DROP" ]; then
+    do_ "sudo systemctl disable starstack-splash.service 2>/dev/null; sudo rm -rf '$SPL_UNIT' '$SPL_DROP' '$SPL_LIB' '$SPL_BAR' '$SPL_SHARE' '$SPL_STATE' && sudo systemctl daemon-reload"
+    echo "   boot screen removed"
+  fi
+  if [ "$(systemctl is-enabled getty@tty1 2>/dev/null)" = masked ]; then
+    do_ "sudo systemctl unmask getty@tty1.service autovt@tty1.service"
+  fi
+  if [ -e "$ARMENV.pre-starstack" ]; then
+    do_ "sudo mv '$ARMENV.pre-starstack' '$ARMENV'"; echo "   restored $ARMENV (reboot to apply)"
+  fi
+  if [ -e "$KS_UNIT.pre-starstack" ]; then
+    do_ "sudo mv '$KS_UNIT.pre-starstack' '$KS_UNIT' && sudo systemctl daemon-reload"
+    echo "   restored $KS_UNIT"
+  fi
+}
+
+# ---- 8. Faster boot (D-075)
+FB_UNITS="/etc/systemd/system/klipper.service /etc/systemd/system/moonraker.service"
+FB_XCONF=/etc/X11/xorg.conf.d/10-starstack-noglx.conf  # X without OpenGL (D-076)
+FB_LIST=/var/lib/starstack/disabled-services  # what this step turned off, so --uninstall can undo it
+# Unused on a StarStack printer: webcam streamer (no camera: it fails after ~5 s of CPU every boot),
+# OpenVPN (not configured), NFS client, keyboard/console setup (no keyboard or text console), and
+# automatic OS updates (updates are done on purpose, not in the background on a printer)
+FB_OFF="crowsnest.service openvpn.service rpcbind.service rpcbind.socket nfs-client.target
+  keyboard-setup.service console-setup.service
+  unattended-upgrades.service apt-daily.timer apt-daily-upgrade.timer"
+
+fastboot_install() {
+  local u
+  for u in $FB_UNITS; do
+    [ -f "$u" ] || continue
+    if grep -q 'StarStack (D-075)' "$u"; then
+      echo "   ok: $(basename "$u") starts without waiting for the network"
+    else
+      [ -e "$u.pre-starstack" ] || do_ "sudo cp -a '$u' '$u.pre-starstack'"
+      do_ "sudo sed -i -f '$REPO/boot/no-network-wait.sed' '$u'"
+      echo "   $(basename "$u") no longer waits for the network (backup: $u.pre-starstack)"
+    fi
+  done
+  if cmp -s "$REPO/boot/10-starstack-noglx.conf" "$FB_XCONF"; then
+    echo "   ok: touchscreen display server starts without OpenGL"
+  else
+    do_ "sudo install -D -o root -g root -m 644 '$REPO/boot/10-starstack-noglx.conf' '$FB_XCONF'"
+    echo "   touchscreen display server no longer loads OpenGL (~5 s faster)"
+  fi
+  do_ "sudo install -d -o $(id -un) -g $(id -gn) -m 755 /var/lib/starstack"
+  for u in $FB_OFF; do
+    if [ "$(systemctl is-enabled "$u" 2>/dev/null)" = enabled ]; then
+      do_ "sudo systemctl disable --now '$u' 2>/dev/null; echo '$u' >> '$FB_LIST'"
+      echo "   turned off $u"
+    fi
+  done
+  do_ "sudo systemctl daemon-reload"
+  # crowsnest: if a camera is added later, re-enable with: sudo systemctl enable --now crowsnest
+}
+
+fastboot_remove() {
+  local u
+  [ -e "$FB_XCONF" ] && do_ "sudo rm -f '$FB_XCONF'" && echo "   removed $FB_XCONF"
+  for u in $FB_UNITS; do
+    if [ -e "$u.pre-starstack" ]; then
+      do_ "sudo mv '$u.pre-starstack' '$u'"; echo "   restored $u"
+    fi
+  done
+  if [ -f "$FB_LIST" ]; then
+    for u in $(sort -u "$FB_LIST"); do do_ "sudo systemctl enable '$u' 2>/dev/null || true"; done
+    do_ "rm -f '$FB_LIST'"; echo "   turned the services back on (reboot to start them)"
+  fi
+  do_ "sudo systemctl daemon-reload"
+}
+
 if [ "$MODE" = uninstall ]; then
   say "Uninstall StarStack UI"
   unlink_restore starstack_macros.cfg
@@ -182,23 +339,29 @@ if [ "$MODE" = uninstall ]; then
   [ "$DRY" = 1 ] || python3 "$REPO/tools/apply_mainsail.py" --rollback
   echo "   printer.cfg was not changed: remove the StarStack lines by hand if you added them"
   usb_remove
+  fastboot_remove  # before splash_remove: its list lives in /var/lib/starstack
+  splash_remove
   restart_all
   exit 0
 fi
 
-say "1/7 Link StarStack macros + Mainsail theme"
+say "1/9 Link StarStack macros + Mainsail theme"
 link macros/starstack_macros.cfg starstack_macros.cfg
 link mainsail-theme/.theme .theme
-say "2/7 Check printer.cfg"
+say "2/9 Check printer.cfg"
 printer_cfg_check
-say "3/7 Moonraker update manager"
+say "3/9 Moonraker update manager"
 moonraker_sections
-say "4/7 KlipperScreen -> StarStack fork"
+say "4/9 KlipperScreen -> StarStack fork"
 klipperscreen_fork
-say "5/7 Mainsail settings + macro groups + panel order"
+say "5/9 Mainsail settings + macro groups + panel order"
 if [ "$DRY" = 1 ]; then echo "   (dry-run) apply mainsail-theme/settings.json + macrogroups.json + dashboard.json"; else python3 "$REPO/tools/apply_mainsail.py" | sed 's/^/   /'; fi
-say "6/7 USB stick import"
+say "6/9 USB stick import"
 if [ "$USB" = 1 ]; then usb_install; else echo "   skipped (--no-usb)"; fi
-say "7/7 Restart services"
+say "7/9 Boot screen"
+if [ "$SPLASH" = 1 ]; then splash_install; else echo "   skipped (--no-splash)"; fi
+say "8/9 Faster boot"
+if [ "$FASTBOOT" = 1 ]; then fastboot_install; else echo "   skipped (--no-fastboot)"; fi
+say "9/9 Restart services"
 restart_all
 say "Done. Updates now appear in Mainsail: Machine > Update Manager (klipper-ui, KlipperScreen)."

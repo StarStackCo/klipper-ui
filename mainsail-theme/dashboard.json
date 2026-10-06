@@ -1,0 +1,13 @@
+{
+  "_comment": "Mainsail dashboard layouts (namespace 'mainsail', keys 'dashboard.<layout>'). Copied from Mainsail v2.17.0 defaults (src/store/gui/index.ts); '@macrogroups' is replaced by one panel per macro group, in macrogroups.json order (B-4: Speed, Flow, Preheat, Filament, Advanced instead of alphabetical). Rollback deletes these keys so Mainsail falls back to its defaults.",
+  "layouts": {
+    "mobileLayout": ["-webcam", "toolhead-control", "extruder-control", "@macrogroups", "machine-settings", "miscellaneous", "temperature", "-miniconsole"],
+    "tabletLayout1": ["webcam", "toolhead-control", "extruder-control", "@macrogroups", "machine-settings", "miscellaneous"],
+    "tabletLayout2": ["temperature", "miniconsole"],
+    "desktopLayout1": ["webcam", "toolhead-control", "extruder-control", "@macrogroups", "machine-settings", "miscellaneous"],
+    "desktopLayout2": ["temperature", "miniconsole"],
+    "widescreenLayout1": ["toolhead-control", "extruder-control", "@macrogroups", "miscellaneous"],
+    "widescreenLayout2": ["temperature", "machine-settings"],
+    "widescreenLayout3": ["webcam", "miniconsole"]
+  }
+}

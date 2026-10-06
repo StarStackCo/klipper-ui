@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Apply (or roll back) StarStack's Mainsail UI settings and macro groups via Moonraker on this Pi.
 
-    python3 tools/apply_mainsail.py            apply mainsail-theme/settings.json + macrogroups.json
+    python3 tools/apply_mainsail.py            apply mainsail-theme/settings.json + macrogroups.json + dashboard.json
     python3 tools/apply_mainsail.py --show     print what is stored now
     python3 tools/apply_mainsail.py --rollback settings back to Mainsail defaults, StarStack macro groups removed
 
@@ -17,6 +17,7 @@ API = os.environ.get("MOONRAKER", "http://localhost:7125") + "/server/database/i
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SETTINGS = json.load(open(os.path.join(ROOT, "mainsail-theme", "settings.json"), encoding="utf-8"))["settings"]
 GROUPS = json.load(open(os.path.join(ROOT, "mainsail-theme", "macrogroups.json"), encoding="utf-8"))
+LAYOUTS = json.load(open(os.path.join(ROOT, "mainsail-theme", "dashboard.json"), encoding="utf-8"))["layouts"]
 
 
 def post(key, value):
@@ -52,6 +53,30 @@ def group_value(g):
     return {**{k: g[k] for k in keys}, "macros": macros}
 
 
+def layout_value(names):
+    """dashboard.json entry -> Mainsail layout: '-name' = hidden, '@macrogroups' = our groups in order."""
+    out = []
+    for n in names:
+        if n == "@macrogroups":
+            out += [{"name": "macrogroup_" + g["id"], "visible": True} for g in GROUPS["groups"]]
+        else:
+            out.append({"name": n.lstrip("-"), "visible": not n.startswith("-")})
+    return out
+
+
+def apply_layouts():
+    """B-4: macro panels in our order. A layout the user already rearranged in Mainsail is kept."""
+    applied, kept = 0, []
+    for key, names in LAYOUTS.items():
+        want, have = layout_value(names), get("dashboard." + key)
+        if have and have != want:
+            kept.append(key)
+            continue
+        post("dashboard." + key, want)
+        applied += 1
+    print(f"Mainsail: {applied} dashboard layouts applied" + (f", kept user layouts: {kept}" if kept else ""))
+
+
 def show():
     for s in SETTINGS:
         print(f"  {s['key']:34} {get(s['key'])!r}")
@@ -59,6 +84,11 @@ def show():
     print(f"  {'macros.mode':34} {macros.get('mode')!r}")
     for g in (macros.get("macrogroups") or {}).values():
         print(f"  group {g['name']:9} {', '.join(m['name'] for m in g.get('macros', []))}")
+    names = {"macrogroup_" + g["id"]: g["name"] for g in GROUPS["groups"]}
+    for key in LAYOUTS:
+        layout = get("dashboard." + key)
+        panels = [names.get(p["name"], p["name"]) for p in layout] if layout else "Mainsail default"
+        print(f"  {'dashboard.' + key:34} {panels}")
 
 
 mode = sys.argv[1] if len(sys.argv) > 1 else "--apply"
@@ -70,6 +100,8 @@ elif mode == "--rollback":
     for g in GROUPS["groups"]:
         delete("macros.macrogroups." + g["id"])
     post("macros.mode", "simple")
+    for key in LAYOUTS:
+        delete("dashboard." + key)
     print("Mainsail settings rolled back")
     show()
 else:
@@ -79,4 +111,5 @@ else:
     for g in GROUPS["groups"]:
         post("macros.macrogroups." + g["id"], group_value(g))
     print(f"Mainsail: {len(SETTINGS)} settings and {len(GROUPS['groups'])} macro groups applied")
+    apply_layouts()
     show()

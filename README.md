@@ -30,7 +30,7 @@ The installer:
    `[include mainsail.cfg]` (add `--fix-printer-cfg` to let it add them)
 3. adds `[update_manager klipper-ui]` and points `[update_manager KlipperScreen]` at the StarStack fork
 4. switches KlipperScreen to the StarStack fork, installs the Public Sans font, selects the `starstack` theme
-5. applies the Mainsail settings and macro groups
+5. applies the Mainsail settings, macro groups and dashboard panel order
 6. restarts Moonraker, Klipper and KlipperScreen
 
 Every file it changes is backed up once as `<file>.pre-starstack`.

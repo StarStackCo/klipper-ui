@@ -14,7 +14,7 @@
 #   3. Adds [update_manager klipper-ui] and points [update_manager KlipperScreen] at the StarStack fork
 #   4. Switches ~/KlipperScreen to the StarStack fork (re-clones if the git folder is damaged),
 #      installs the Public Sans font and selects the starstack theme
-#   5. Applies Mainsail UI settings + macro groups (Moonraker database)
+#   5. Applies Mainsail UI settings + macro groups + dashboard panel order (Moonraker database)
 #   6. Restarts Moonraker, Klipper and KlipperScreen
 # It refuses to run while a print is in progress.
 set -euo pipefail
@@ -163,8 +163,8 @@ say "3/6 Moonraker update manager"
 moonraker_sections
 say "4/6 KlipperScreen -> StarStack fork"
 klipperscreen_fork
-say "5/6 Mainsail settings + macro groups"
-if [ "$DRY" = 1 ]; then echo "   (dry-run) apply mainsail-theme/settings.json + macrogroups.json"; else python3 "$REPO/tools/apply_mainsail.py" | sed 's/^/   /'; fi
+say "5/6 Mainsail settings + macro groups + panel order"
+if [ "$DRY" = 1 ]; then echo "   (dry-run) apply mainsail-theme/settings.json + macrogroups.json + dashboard.json"; else python3 "$REPO/tools/apply_mainsail.py" | sed 's/^/   /'; fi
 say "6/6 Restart services"
 restart_all
 say "Done. Updates now appear in Mainsail: Machine > Update Manager (klipper-ui, KlipperScreen)."

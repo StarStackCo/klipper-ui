@@ -188,7 +188,10 @@ def supervise(fail):
             continue
         if down_since is None:
             down_since = time.monotonic()
-        limit = STOPPED_LIMIT if app_service_state() == "inactive" else RESTART_LIMIT
+        # "activating" = crash-restart loop, "active" = started but never showed a screen.
+        # A stop on purpose (updates) reports "inactive" or "failed" (X exits 1 when stopped).
+        state = app_service_state()
+        limit = RESTART_LIMIT if state in ("active", "activating") else STOPPED_LIMIT
         if time.monotonic() - down_since >= limit:
             fail.show()
         time.sleep(1)

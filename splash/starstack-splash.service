@@ -5,7 +5,8 @@
 Description=StarStack boot splash on the touchscreen
 DefaultDependencies=no
 After=systemd-udevd.service systemd-udev-trigger.service
-Before=sysinit.target shutdown.target KlipperScreen.service
+# not Before=sysinit.target: waiting for the display driver must never hold up the boot
+Before=shutdown.target KlipperScreen.service
 Conflicts=shutdown.target
 
 [Service]

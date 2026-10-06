@@ -29,7 +29,7 @@ TRACK = (0x28, 0x28, 0x28)
 FONTS = os.path.join(os.path.dirname(ROOT), "KlipperScreen-starstack", "styles", "starstack", "fonts")
 TEXT, MUTED, ACCENT = (0xFA, 0xFA, 0xFA), (0xA1, 0xA1, 0xA1), (0x00, 0xAC, 0xC7)
 GLYPHS = "0123456789.:/htp"  # enough for "http://192.168.0.102"
-ADDR_Y, ADDR_H = 278, 24  # address line (bar program draws it), keep in sync with bootbar
+ADDR_Y, ADDR_H = 282, 24  # address line (bar program draws it), keep in sync with bootbar
 BAR = (140, 236, 200, 6)  # x, y, w, h: keep in sync with starstack-bootbar.py and ss_starting.py
 
 
@@ -97,7 +97,8 @@ def main():
     fail = Image.new("RGB", (W, H), BG)
     fail.paste(img.crop((0, 0, W, 215)), (0, -24))  # logo plate moved up a little for 3 lines
     centered(fail, 206, "The touchscreen app didn't start", font("ExtraBold", 17), TEXT)
-    centered(fail, 236, "Restart the printer, or open Mainsail in a browser:", font("Regular", 14), MUTED)
+    centered(fail, 232, "Turn the printer off and on again, or reboot it", font("Regular", 14), MUTED)
+    centered(fail, 252, "from Mainsail in a browser:", font("Regular", 14), MUTED)
     save(fail, "starstack-splash-fail")
     strip, table = glyph_strip()
     save(strip, "starstack-glyphs")

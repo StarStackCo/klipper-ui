@@ -8,6 +8,7 @@
 #   bash ~/klipper-ui/install.sh --fix-printer-cfg   also add the required lines to printer.cfg
 #   bash ~/klipper-ui/install.sh --no-usb        skip the USB stick import (step 6, needs sudo)
 #   bash ~/klipper-ui/install.sh --no-splash     skip the StarStack boot screen (step 7, needs sudo)
+#   bash ~/klipper-ui/install.sh --no-fastboot   skip the faster-boot changes (step 8, needs sudo)
 #
 # What it does (each step prints what it changed; backups are made once, never overwritten):
 #   1. Links the StarStack macros and Mainsail theme from this repo into ~/printer_data/config
@@ -23,7 +24,11 @@
 #      shutdown and while the UI restarts; kernel text goes to the serial port only, Plymouth off
 #      (/boot/armbianEnv.txt, backed up), and the touchscreen app starts without waiting for the
 #      network (KlipperScreen.service, backed up). sudo; skip with --no-splash. Needs a reboot
-#   8. Restarts Moonraker, Klipper and KlipperScreen
+#   8. Faster boot: Klipper and Moonraker start without waiting for the network
+#      (klipper/moonraker.service, backed up); turns off unused services (webcam streamer
+#      crowsnest, OpenVPN, NFS, keyboard/console setup) and automatic OS updates. sudo; skip with
+#      --no-fastboot; --uninstall turns them back on. Needs a reboot
+#   9. Restarts Moonraker, Klipper and KlipperScreen
 # It refuses to run while a print is in progress.
 set -euo pipefail
 
@@ -34,7 +39,7 @@ KS_DIR="$HOME/KlipperScreen"
 KS_FORK="https://github.com/StarStackCo/KlipperScreen-starstack.git"
 KS_UP="https://github.com/KlipperScreen/KlipperScreen.git"
 UI_ORIGIN="https://github.com/StarStackCo/klipper-ui.git"
-DRY=0; MODE=install; FIX_CFG=0; USB=1; SPLASH=1
+DRY=0; MODE=install; FIX_CFG=0; USB=1; SPLASH=1; FASTBOOT=1
 for a in "$@"; do
   case "$a" in
     --dry-run) DRY=1 ;;
@@ -42,7 +47,8 @@ for a in "$@"; do
     --fix-printer-cfg) FIX_CFG=1 ;;
     --no-usb) USB=0 ;;
     --no-splash) SPLASH=0 ;;
-    -h|--help) sed -n '2,29p' "$0"; exit 0 ;;
+    --no-fastboot) FASTBOOT=0 ;;
+    -h|--help) sed -n '2,34p' "$0"; exit 0 ;;
     *) echo "unknown option: $a"; exit 2 ;;
   esac
 done
@@ -263,6 +269,53 @@ splash_remove() {
   fi
 }
 
+# ---- 8. Faster boot (D-075)
+FB_UNITS="/etc/systemd/system/klipper.service /etc/systemd/system/moonraker.service"
+FB_LIST=/var/lib/starstack/disabled-services  # what this step turned off, so --uninstall can undo it
+# Unused on a StarStack printer: webcam streamer (no camera: it fails after ~5 s of CPU every boot),
+# OpenVPN (not configured), NFS client, keyboard/console setup (no keyboard or text console), and
+# automatic OS updates (updates are done on purpose, not in the background on a printer)
+FB_OFF="crowsnest.service openvpn.service rpcbind.service rpcbind.socket nfs-client.target
+  keyboard-setup.service console-setup.service
+  unattended-upgrades.service apt-daily.timer apt-daily-upgrade.timer"
+
+fastboot_install() {
+  local u
+  for u in $FB_UNITS; do
+    [ -f "$u" ] || continue
+    if grep -q 'StarStack (D-075)' "$u"; then
+      echo "   ok: $(basename "$u") starts without waiting for the network"
+    else
+      [ -e "$u.pre-starstack" ] || do_ "sudo cp -a '$u' '$u.pre-starstack'"
+      do_ "sudo sed -i -f '$REPO/boot/no-network-wait.sed' '$u'"
+      echo "   $(basename "$u") no longer waits for the network (backup: $u.pre-starstack)"
+    fi
+  done
+  do_ "sudo install -d -o $(id -un) -g $(id -gn) -m 755 /var/lib/starstack"
+  for u in $FB_OFF; do
+    if [ "$(systemctl is-enabled "$u" 2>/dev/null)" = enabled ]; then
+      do_ "sudo systemctl disable --now '$u' 2>/dev/null; echo '$u' >> '$FB_LIST'"
+      echo "   turned off $u"
+    fi
+  done
+  do_ "sudo systemctl daemon-reload"
+  # crowsnest: if a camera is added later, re-enable with: sudo systemctl enable --now crowsnest
+}
+
+fastboot_remove() {
+  local u
+  for u in $FB_UNITS; do
+    if [ -e "$u.pre-starstack" ]; then
+      do_ "sudo mv '$u.pre-starstack' '$u'"; echo "   restored $u"
+    fi
+  done
+  if [ -f "$FB_LIST" ]; then
+    for u in $(sort -u "$FB_LIST"); do do_ "sudo systemctl enable '$u' 2>/dev/null || true"; done
+    do_ "rm -f '$FB_LIST'"; echo "   turned the services back on (reboot to start them)"
+  fi
+  do_ "sudo systemctl daemon-reload"
+}
+
 if [ "$MODE" = uninstall ]; then
   say "Uninstall StarStack UI"
   unlink_restore starstack_macros.cfg
@@ -276,26 +329,29 @@ if [ "$MODE" = uninstall ]; then
   [ "$DRY" = 1 ] || python3 "$REPO/tools/apply_mainsail.py" --rollback
   echo "   printer.cfg was not changed: remove the StarStack lines by hand if you added them"
   usb_remove
+  fastboot_remove  # before splash_remove: its list lives in /var/lib/starstack
   splash_remove
   restart_all
   exit 0
 fi
 
-say "1/8 Link StarStack macros + Mainsail theme"
+say "1/9 Link StarStack macros + Mainsail theme"
 link macros/starstack_macros.cfg starstack_macros.cfg
 link mainsail-theme/.theme .theme
-say "2/8 Check printer.cfg"
+say "2/9 Check printer.cfg"
 printer_cfg_check
-say "3/8 Moonraker update manager"
+say "3/9 Moonraker update manager"
 moonraker_sections
-say "4/8 KlipperScreen -> StarStack fork"
+say "4/9 KlipperScreen -> StarStack fork"
 klipperscreen_fork
-say "5/8 Mainsail settings + macro groups + panel order"
+say "5/9 Mainsail settings + macro groups + panel order"
 if [ "$DRY" = 1 ]; then echo "   (dry-run) apply mainsail-theme/settings.json + macrogroups.json + dashboard.json"; else python3 "$REPO/tools/apply_mainsail.py" | sed 's/^/   /'; fi
-say "6/8 USB stick import"
+say "6/9 USB stick import"
 if [ "$USB" = 1 ]; then usb_install; else echo "   skipped (--no-usb)"; fi
-say "7/8 Boot screen"
+say "7/9 Boot screen"
 if [ "$SPLASH" = 1 ]; then splash_install; else echo "   skipped (--no-splash)"; fi
-say "8/8 Restart services"
+say "8/9 Faster boot"
+if [ "$FASTBOOT" = 1 ]; then fastboot_install; else echo "   skipped (--no-fastboot)"; fi
+say "9/9 Restart services"
 restart_all
 say "Done. Updates now appear in Mainsail: Machine > Update Manager (klipper-ui, KlipperScreen)."

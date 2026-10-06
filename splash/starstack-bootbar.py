@@ -14,13 +14,15 @@ import os
 import struct
 import time
 
-IMG = "/usr/local/share/starstack/starstack-splash.rgb565"
+IMG = "/usr/local/share/starstack/starstack-splash-boot.rgb565"  # logo + empty bar track
 STATE = "/var/lib/starstack"
 RUN = "/run/starstack"
 UI_UP = RUN + "/ui-up"
 STRIDE = 480 * 2
 X0, Y0, BW, BH = 140, 236, 200, 6  # under the logo plate (plate ends at y=210)
-X_GRACE = 8  # stop at the latest this long after the screen app's X server starts (D-072)
+# stop at the latest this long after the screen app's X server starts (D-072). Generous: the
+# app can take ~12 s to load during boot and its cover takes over the bar when it's up
+X_GRACE = 25
 LOGO_ROWS = slice(110 * STRIDE, 211 * STRIDE)  # the plate: used to notice it was painted over
 
 
@@ -97,13 +99,15 @@ def main():
     setup_run_dir()
     total, end = expected(), time.monotonic() + 180
     fd = os.open("/dev/fb0", os.O_RDWR)
-    last = -1
+    last, n, x_seen = -1, 0, False
     while time.monotonic() < end and not os.path.exists(UI_UP):
-        # Safety net: an older touchscreen app never says it's up, so never keep drawing over it
-        if x_running():
-            end = min(end, time.monotonic() + X_GRACE)
-        os.lseek(fd, 0, os.SEEK_SET)
-        if os.read(fd, len(logo))[LOGO_ROWS] != logo[LOGO_ROWS]:  # X cleared the screen
+        # Safety net: an older touchscreen app never says it's up, so never keep drawing over it.
+        # Checked once a second only: keep this loop light while everything else is loading.
+        if not x_seen and n % 4 == 0 and x_running():
+            x_seen, end = True, min(end, time.monotonic() + X_GRACE)
+        n += 1
+        os.lseek(fd, LOGO_ROWS.start, os.SEEK_SET)
+        if os.read(fd, LOGO_ROWS.stop - LOGO_ROWS.start) != logo[LOGO_ROWS]:  # X cleared it
             if os.path.exists(UI_UP):
                 break
             os.lseek(fd, 0, os.SEEK_SET)
@@ -115,7 +119,7 @@ def main():
                 os.lseek(fd, (Y0 + y) * STRIDE + X0 * 2, os.SEEK_SET)
                 os.write(fd, row)
             last = fill
-        time.sleep(0.2)
+        time.sleep(0.25)
     os.close(fd)
 
 

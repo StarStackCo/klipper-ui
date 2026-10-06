@@ -1,0 +1,18 @@
+# STARSTACK: StarStack logo on the touchscreen during boot and shutdown (D-068).
+# Installed to /etc/systemd/system/ by install.sh. Runs before KlipperScreen at boot; at
+# shutdown it is stopped after KlipperScreen, so the logo replaces the UI until power-off.
+[Unit]
+Description=StarStack boot splash on the touchscreen
+DefaultDependencies=no
+After=systemd-udevd.service systemd-udev-trigger.service
+Before=sysinit.target shutdown.target KlipperScreen.service
+Conflicts=shutdown.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/lib/starstack/starstack-splash.sh
+ExecStop=/usr/local/lib/starstack/starstack-splash.sh
+
+[Install]
+WantedBy=sysinit.target

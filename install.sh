@@ -7,6 +7,7 @@
 #   bash ~/klipper-ui/install.sh --uninstall     back to stock Mainsail + KlipperScreen
 #   bash ~/klipper-ui/install.sh --fix-printer-cfg   also add the required lines to printer.cfg
 #   bash ~/klipper-ui/install.sh --no-usb        skip the USB stick import (step 6, needs sudo)
+#   bash ~/klipper-ui/install.sh --no-splash     skip the StarStack boot screen (step 7, needs sudo)
 #
 # What it does (each step prints what it changed; backups are made once, never overwritten):
 #   1. Links the StarStack macros and Mainsail theme from this repo into ~/printer_data/config
@@ -18,7 +19,10 @@
 #   5. Applies Mainsail UI settings + macro groups + dashboard panel order (Moonraker database)
 #   6. USB stick import: plugging in a stick copies new G-code files into the print jobs folder
 #      (udev rule + service, asks for your password once via sudo; skip with --no-usb)
-#   7. Restarts Moonraker, Klipper and KlipperScreen
+#   7. Boot screen: StarStack logo on the touchscreen from power-up until the UI starts, at
+#      shutdown and while the UI restarts; kernel text goes to the serial port only
+#      (/boot/armbianEnv.txt, backed up; sudo; skip with --no-splash). Takes effect after a reboot
+#   8. Restarts Moonraker, Klipper and KlipperScreen
 # It refuses to run while a print is in progress.
 set -euo pipefail
 
@@ -29,14 +33,15 @@ KS_DIR="$HOME/KlipperScreen"
 KS_FORK="https://github.com/StarStackCo/KlipperScreen-starstack.git"
 KS_UP="https://github.com/KlipperScreen/KlipperScreen.git"
 UI_ORIGIN="https://github.com/StarStackCo/klipper-ui.git"
-DRY=0; MODE=install; FIX_CFG=0; USB=1
+DRY=0; MODE=install; FIX_CFG=0; USB=1; SPLASH=1
 for a in "$@"; do
   case "$a" in
     --dry-run) DRY=1 ;;
     --uninstall) MODE=uninstall ;;
     --fix-printer-cfg) FIX_CFG=1 ;;
     --no-usb) USB=0 ;;
-    -h|--help) sed -n '2,25p' "$0"; exit 0 ;;
+    --no-splash) SPLASH=0 ;;
+    -h|--help) sed -n '2,29p' "$0"; exit 0 ;;
     *) echo "unknown option: $a"; exit 2 ;;
   esac
 done
@@ -169,6 +174,67 @@ usb_remove() {
   fi
 }
 
+SPL_LIB=/usr/local/lib/starstack/starstack-splash.sh
+SPL_IMG=/usr/local/share/starstack/starstack-splash.rgb565
+SPL_UNIT=/etc/systemd/system/starstack-splash.service
+SPL_DROP=/etc/systemd/system/KlipperScreen.service.d/starstack-splash.conf
+ARMENV=/boot/armbianEnv.txt
+
+splash_install() {
+  if [ "$(cat /sys/class/graphics/fb0/virtual_size 2>/dev/null)" != "480,320" ]; then
+    echo "   skipped: the touchscreen isn't a 480x320 TFT35 (the splash is made for that size)"; return
+  fi
+  local changed=0
+  cmp -s "$REPO/splash/starstack-splash.sh" "$SPL_LIB" || changed=1
+  cmp -s "$REPO/splash/starstack-splash.rgb565" "$SPL_IMG" || changed=1
+  cmp -s "$REPO/splash/starstack-splash.service" "$SPL_UNIT" || changed=1
+  cmp -s "$REPO/splash/klipperscreen-splash.conf" "$SPL_DROP" || changed=1
+  if [ $changed = 1 ]; then
+    echo "   installing the boot screen (sudo may ask for your password)"
+    do_ "sudo install -D -o root -g root -m 755 '$REPO/splash/starstack-splash.sh' '$SPL_LIB'"
+    do_ "sudo install -D -o root -g root -m 644 '$REPO/splash/starstack-splash.rgb565' '$SPL_IMG'"
+    do_ "sudo install -o root -g root -m 644 '$REPO/splash/starstack-splash.service' '$SPL_UNIT'"
+    do_ "sudo install -D -o root -g root -m 644 '$REPO/splash/klipperscreen-splash.conf' '$SPL_DROP'"
+    do_ "sudo systemctl daemon-reload && sudo systemctl enable starstack-splash.service"
+  else
+    echo "   ok: boot screen files installed"
+  fi
+  # No login prompt drawn over the logo on the touchscreen's console (SSH and serial still work)
+  if [ "$(systemctl is-enabled getty@tty1 2>/dev/null)" != masked ]; then
+    do_ "sudo systemctl mask getty@tty1.service autovt@tty1.service"
+    echo "   touchscreen login prompt turned off (getty@tty1 masked)"
+  fi
+  # Kernel/boot text to the serial port only, no blinking cursor (Armbian boot options)
+  if [ -f "$ARMENV" ]; then
+    if grep -q '^console=cancel_lcd' "$ARMENV" && grep -q 'vt.global_cursor_default=0' "$ARMENV"; then
+      echo "   ok: boot text already off the touchscreen"
+    else
+      [ -e "$ARMENV.pre-starstack" ] || do_ "sudo cp -a '$ARMENV' '$ARMENV.pre-starstack'"
+      do_ "sudo sed -i 's/^console=.*/console=cancel_lcd/' '$ARMENV'"
+      grep -q '^console=' "$ARMENV" || do_ "echo 'console=cancel_lcd' | sudo tee -a '$ARMENV' >/dev/null"
+      if grep -q '^extraargs=' "$ARMENV"; then
+        grep -q 'vt.global_cursor_default=0' "$ARMENV" || do_ "sudo sed -i 's/^extraargs=\(.*\)/extraargs=\1 vt.global_cursor_default=0/' '$ARMENV'"
+      else
+        do_ "echo 'extraargs=vt.global_cursor_default=0' | sudo tee -a '$ARMENV' >/dev/null"
+      fi
+      echo "   boot text moved off the touchscreen ($ARMENV, backup: $ARMENV.pre-starstack). Reboot to see it"
+    fi
+  fi
+}
+
+splash_remove() {
+  if [ -e "$SPL_UNIT" ] || [ -e "$SPL_DROP" ]; then
+    do_ "sudo systemctl disable starstack-splash.service 2>/dev/null; sudo rm -f '$SPL_UNIT' '$SPL_DROP' '$SPL_LIB' '$SPL_IMG' && sudo systemctl daemon-reload"
+    echo "   boot screen removed"
+  fi
+  if [ "$(systemctl is-enabled getty@tty1 2>/dev/null)" = masked ]; then
+    do_ "sudo systemctl unmask getty@tty1.service autovt@tty1.service"
+  fi
+  if [ -e "$ARMENV.pre-starstack" ]; then
+    do_ "sudo mv '$ARMENV.pre-starstack' '$ARMENV'"; echo "   restored $ARMENV (reboot to apply)"
+  fi
+}
+
 if [ "$MODE" = uninstall ]; then
   say "Uninstall StarStack UI"
   unlink_restore starstack_macros.cfg
@@ -182,23 +248,26 @@ if [ "$MODE" = uninstall ]; then
   [ "$DRY" = 1 ] || python3 "$REPO/tools/apply_mainsail.py" --rollback
   echo "   printer.cfg was not changed: remove the StarStack lines by hand if you added them"
   usb_remove
+  splash_remove
   restart_all
   exit 0
 fi
 
-say "1/7 Link StarStack macros + Mainsail theme"
+say "1/8 Link StarStack macros + Mainsail theme"
 link macros/starstack_macros.cfg starstack_macros.cfg
 link mainsail-theme/.theme .theme
-say "2/7 Check printer.cfg"
+say "2/8 Check printer.cfg"
 printer_cfg_check
-say "3/7 Moonraker update manager"
+say "3/8 Moonraker update manager"
 moonraker_sections
-say "4/7 KlipperScreen -> StarStack fork"
+say "4/8 KlipperScreen -> StarStack fork"
 klipperscreen_fork
-say "5/7 Mainsail settings + macro groups + panel order"
+say "5/8 Mainsail settings + macro groups + panel order"
 if [ "$DRY" = 1 ]; then echo "   (dry-run) apply mainsail-theme/settings.json + macrogroups.json + dashboard.json"; else python3 "$REPO/tools/apply_mainsail.py" | sed 's/^/   /'; fi
-say "6/7 USB stick import"
+say "6/8 USB stick import"
 if [ "$USB" = 1 ]; then usb_install; else echo "   skipped (--no-usb)"; fi
-say "7/7 Restart services"
+say "7/8 Boot screen"
+if [ "$SPLASH" = 1 ]; then splash_install; else echo "   skipped (--no-splash)"; fi
+say "8/8 Restart services"
 restart_all
 say "Done. Updates now appear in Mainsail: Machine > Update Manager (klipper-ui, KlipperScreen)."

@@ -119,6 +119,11 @@ printer_cfg_check() {
 }
 
 klipperscreen_fork() {
+  # Same channel as this repo: klipper-ui dev (bench testing) pairs with the fork's dev branch,
+  # otherwise the stable starstack branch (D-072: a dev klipper-ui with the stable app broke the
+  # boot bar)
+  local KS_BRANCH=starstack
+  [ "$(git -C "$REPO" branch --show-current 2>/dev/null)" = dev ] && KS_BRANCH=dev
   if [ ! -d "$KS_DIR" ]; then echo "   KlipperScreen not installed: install it with KIAUH first, then re-run"; return; fi
   if ! git -C "$KS_DIR" fsck --no-dangling >/dev/null 2>&1; then
     local b="$KS_DIR.corrupt-$(date +%Y%m%d-%H%M)"
@@ -128,8 +133,8 @@ klipperscreen_fork() {
   do_ "git -C '$KS_DIR' remote set-url origin '$KS_FORK'"
   git -C "$KS_DIR" remote get-url upstream >/dev/null 2>&1 || do_ "git -C '$KS_DIR' remote add upstream '$KS_UP'"
   do_ "git -C '$KS_DIR' remote set-url --push upstream DISABLED"
-  do_ "git -C '$KS_DIR' fetch -q --tags origin && git -C '$KS_DIR' checkout -q -f -B starstack origin/starstack && git -C '$KS_DIR' branch -q -u origin/starstack"
-  [ "$DRY" = 1 ] || echo "   KlipperScreen: $(git -C "$KS_DIR" describe --tags --always) on starstack"
+  do_ "git -C '$KS_DIR' fetch -q --tags origin && git -C '$KS_DIR' checkout -q -f -B $KS_BRANCH origin/$KS_BRANCH && git -C '$KS_DIR' branch -q -u origin/$KS_BRANCH"
+  [ "$DRY" = 1 ] || echo "   KlipperScreen: $(git -C "$KS_DIR" describe --tags --always) on $KS_BRANCH"
   do_ "mkdir -p ~/.local/share/fonts && cp '$KS_DIR'/styles/starstack/fonts/*.ttf ~/.local/share/fonts/ && fc-cache -f ~/.local/share/fonts"
   local kc="$CFG/KlipperScreen.conf"
   [ -e "$kc" ] || do_ "touch '$kc'"

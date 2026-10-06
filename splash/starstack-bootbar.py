@@ -20,6 +20,7 @@ RUN = "/run/starstack"
 UI_UP = RUN + "/ui-up"
 STRIDE = 480 * 2
 X0, Y0, BW, BH = 140, 236, 200, 6  # under the logo plate (plate ends at y=210)
+X_GRACE = 8  # stop at the latest this long after the screen app's X server starts (D-072)
 LOGO_ROWS = slice(110 * STRIDE, 211 * STRIDE)  # the plate: used to notice it was painted over
 
 
@@ -78,6 +79,18 @@ def bar_rows(fill):
     return rows
 
 
+def x_running():
+    for pid in os.listdir("/proc"):
+        if pid.isdigit():
+            try:
+                with open(f"/proc/{pid}/comm") as f:
+                    if f.read().strip() == "Xorg":
+                        return True
+            except OSError:
+                pass
+    return False
+
+
 def main():
     with open(IMG, "rb") as f:
         logo = f.read()
@@ -86,6 +99,9 @@ def main():
     fd = os.open("/dev/fb0", os.O_RDWR)
     last = -1
     while time.monotonic() < end and not os.path.exists(UI_UP):
+        # Safety net: an older touchscreen app never says it's up, so never keep drawing over it
+        if x_running():
+            end = min(end, time.monotonic() + X_GRACE)
         os.lseek(fd, 0, os.SEEK_SET)
         if os.read(fd, len(logo))[LOGO_ROWS] != logo[LOGO_ROWS]:  # X cleared the screen
             if os.path.exists(UI_UP):

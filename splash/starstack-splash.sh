@@ -15,4 +15,7 @@ for v in /sys/class/vtconsole/vtcon*; do
   grep -q "frame buffer" "$v/name" 2>/dev/null && echo 0 > "$v/bind" 2>/dev/null
 done
 cat "$IMG" > /dev/fb0 2>/dev/null
+# At boot: progress bar under the logo until the touchscreen app is up (D-070)
+BAR=/usr/local/lib/starstack/starstack-bootbar.py
+[ "$1" = boot ] && [ -x /usr/bin/python3 ] && [ -f "$BAR" ] && exec /usr/bin/python3 "$BAR"
 exit 0

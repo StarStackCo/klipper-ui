@@ -176,6 +176,8 @@ usb_remove() {
 }
 
 SPL_LIB=/usr/local/lib/starstack/starstack-splash.sh
+SPL_BAR=/usr/local/lib/starstack/starstack-bootbar.py
+SPL_STATE=/var/lib/starstack
 SPL_IMG=/usr/local/share/starstack/starstack-splash.rgb565
 SPL_UNIT=/etc/systemd/system/starstack-splash.service
 SPL_DROP=/etc/systemd/system/KlipperScreen.service.d/starstack-splash.conf
@@ -188,12 +190,16 @@ splash_install() {
   fi
   local changed=0
   cmp -s "$REPO/splash/starstack-splash.sh" "$SPL_LIB" || changed=1
+  cmp -s "$REPO/splash/starstack-bootbar.py" "$SPL_BAR" || changed=1
+  [ -d "$SPL_STATE" ] || changed=1
   cmp -s "$REPO/splash/starstack-splash.rgb565" "$SPL_IMG" || changed=1
   cmp -s "$REPO/splash/starstack-splash.service" "$SPL_UNIT" || changed=1
   cmp -s "$REPO/splash/klipperscreen-splash.conf" "$SPL_DROP" || changed=1
   if [ $changed = 1 ]; then
     echo "   installing the boot screen (sudo may ask for your password)"
     do_ "sudo install -D -o root -g root -m 755 '$REPO/splash/starstack-splash.sh' '$SPL_LIB'"
+    do_ "sudo install -D -o root -g root -m 755 '$REPO/splash/starstack-bootbar.py' '$SPL_BAR'"
+    do_ "sudo install -d -o $(id -un) -g $(id -gn) -m 755 '$SPL_STATE'"  # boot time, written by the touchscreen app
     do_ "sudo install -D -o root -g root -m 644 '$REPO/splash/starstack-splash.rgb565' '$SPL_IMG'"
     do_ "sudo install -o root -g root -m 644 '$REPO/splash/starstack-splash.service' '$SPL_UNIT'"
     do_ "sudo install -D -o root -g root -m 644 '$REPO/splash/klipperscreen-splash.conf' '$SPL_DROP'"
@@ -233,7 +239,7 @@ splash_install() {
 
 splash_remove() {
   if [ -e "$SPL_UNIT" ] || [ -e "$SPL_DROP" ]; then
-    do_ "sudo systemctl disable starstack-splash.service 2>/dev/null; sudo rm -f '$SPL_UNIT' '$SPL_DROP' '$SPL_LIB' '$SPL_IMG' && sudo systemctl daemon-reload"
+    do_ "sudo systemctl disable starstack-splash.service 2>/dev/null; sudo rm -rf '$SPL_UNIT' '$SPL_DROP' '$SPL_LIB' '$SPL_BAR' '$SPL_IMG' '$SPL_STATE' && sudo systemctl daemon-reload"
     echo "   boot screen removed"
   fi
   if [ "$(systemctl is-enabled getty@tty1 2>/dev/null)" = masked ]; then

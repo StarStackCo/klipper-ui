@@ -10,9 +10,10 @@ Before=shutdown.target KlipperScreen.service
 Conflicts=shutdown.target
 
 [Service]
-Type=oneshot
+# simple, not oneshot: "boot" keeps drawing the progress bar (D-070) without holding up the boot
+Type=simple
 RemainAfterExit=yes
-ExecStart=/usr/local/lib/starstack/starstack-splash.sh
+ExecStart=/usr/local/lib/starstack/starstack-splash.sh boot
 ExecStop=/usr/local/lib/starstack/starstack-splash.sh
 
 [Install]

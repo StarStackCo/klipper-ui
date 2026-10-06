@@ -26,7 +26,8 @@
 #      network (KlipperScreen.service, backed up). sudo; skip with --no-splash. Needs a reboot
 #   8. Faster boot: Klipper and Moonraker start without waiting for the network
 #      (klipper/moonraker.service, backed up); turns off unused services (webcam streamer
-#      crowsnest, OpenVPN, NFS, keyboard/console setup) and automatic OS updates. sudo; skip with
+#      crowsnest, OpenVPN, NFS, keyboard/console setup) and automatic OS updates; the
+#      touchscreen's X server no longer loads OpenGL (/etc/X11/xorg.conf.d). sudo; skip with
 #      --no-fastboot; --uninstall turns them back on. Needs a reboot
 #   9. Restarts Moonraker, Klipper and KlipperScreen
 # It refuses to run while a print is in progress.
@@ -48,7 +49,7 @@ for a in "$@"; do
     --no-usb) USB=0 ;;
     --no-splash) SPLASH=0 ;;
     --no-fastboot) FASTBOOT=0 ;;
-    -h|--help) sed -n '2,34p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,35p' "$0"; exit 0 ;;
     *) echo "unknown option: $a"; exit 2 ;;
   esac
 done
@@ -271,6 +272,7 @@ splash_remove() {
 
 # ---- 8. Faster boot (D-075)
 FB_UNITS="/etc/systemd/system/klipper.service /etc/systemd/system/moonraker.service"
+FB_XCONF=/etc/X11/xorg.conf.d/10-starstack-noglx.conf  # X without OpenGL (D-076)
 FB_LIST=/var/lib/starstack/disabled-services  # what this step turned off, so --uninstall can undo it
 # Unused on a StarStack printer: webcam streamer (no camera: it fails after ~5 s of CPU every boot),
 # OpenVPN (not configured), NFS client, keyboard/console setup (no keyboard or text console), and
@@ -291,6 +293,12 @@ fastboot_install() {
       echo "   $(basename "$u") no longer waits for the network (backup: $u.pre-starstack)"
     fi
   done
+  if cmp -s "$REPO/boot/10-starstack-noglx.conf" "$FB_XCONF"; then
+    echo "   ok: touchscreen display server starts without OpenGL"
+  else
+    do_ "sudo install -D -o root -g root -m 644 '$REPO/boot/10-starstack-noglx.conf' '$FB_XCONF'"
+    echo "   touchscreen display server no longer loads OpenGL (~5 s faster)"
+  fi
   do_ "sudo install -d -o $(id -un) -g $(id -gn) -m 755 /var/lib/starstack"
   for u in $FB_OFF; do
     if [ "$(systemctl is-enabled "$u" 2>/dev/null)" = enabled ]; then
@@ -304,6 +312,7 @@ fastboot_install() {
 
 fastboot_remove() {
   local u
+  [ -e "$FB_XCONF" ] && do_ "sudo rm -f '$FB_XCONF'" && echo "   removed $FB_XCONF"
   for u in $FB_UNITS; do
     if [ -e "$u.pre-starstack" ]; then
       do_ "sudo mv '$u.pre-starstack' '$u'"; echo "   restored $u"

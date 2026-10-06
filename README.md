@@ -31,7 +31,11 @@ The installer:
 3. adds `[update_manager klipper-ui]` and points `[update_manager KlipperScreen]` at the StarStack fork
 4. switches KlipperScreen to the StarStack fork, installs the Public Sans font, selects the `starstack` theme
 5. applies the Mainsail settings, macro groups and dashboard panel order
-6. restarts Moonraker, Klipper and KlipperScreen
+6. sets up the **USB stick import** (asks for your password once; skip with `--no-usb`): plugging a stick
+   in copies new G-code files, folders included, into the print jobs folder and the touchscreen offers to
+   print the newest one. The stick is mounted read-only and unmounted after copying, so it can be pulled
+   out right away
+7. restarts Moonraker, Klipper and KlipperScreen
 
 Every file it changes is backed up once as `<file>.pre-starstack`.
 

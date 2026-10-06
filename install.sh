@@ -6,6 +6,7 @@
 #   bash ~/klipper-ui/install.sh --dry-run       show what would change, change nothing
 #   bash ~/klipper-ui/install.sh --uninstall     back to stock Mainsail + KlipperScreen
 #   bash ~/klipper-ui/install.sh --fix-printer-cfg   also add the required lines to printer.cfg
+#   bash ~/klipper-ui/install.sh --no-usb        skip the USB stick import (step 6, needs sudo)
 #
 # What it does (each step prints what it changed; backups are made once, never overwritten):
 #   1. Links the StarStack macros and Mainsail theme from this repo into ~/printer_data/config
@@ -15,7 +16,9 @@
 #   4. Switches ~/KlipperScreen to the StarStack fork (re-clones if the git folder is damaged),
 #      installs the Public Sans font and selects the starstack theme
 #   5. Applies Mainsail UI settings + macro groups + dashboard panel order (Moonraker database)
-#   6. Restarts Moonraker, Klipper and KlipperScreen
+#   6. USB stick import: plugging in a stick copies new G-code files into the print jobs folder
+#      (udev rule + service, asks for your password once via sudo; skip with --no-usb)
+#   7. Restarts Moonraker, Klipper and KlipperScreen
 # It refuses to run while a print is in progress.
 set -euo pipefail
 
@@ -26,13 +29,14 @@ KS_DIR="$HOME/KlipperScreen"
 KS_FORK="https://github.com/StarStackCo/KlipperScreen-starstack.git"
 KS_UP="https://github.com/KlipperScreen/KlipperScreen.git"
 UI_ORIGIN="https://github.com/StarStackCo/klipper-ui.git"
-DRY=0; MODE=install; FIX_CFG=0
+DRY=0; MODE=install; FIX_CFG=0; USB=1
 for a in "$@"; do
   case "$a" in
     --dry-run) DRY=1 ;;
     --uninstall) MODE=uninstall ;;
     --fix-printer-cfg) FIX_CFG=1 ;;
-    -h|--help) sed -n '2,22p' "$0"; exit 0 ;;
+    --no-usb) USB=0 ;;
+    -h|--help) sed -n '2,25p' "$0"; exit 0 ;;
     *) echo "unknown option: $a"; exit 2 ;;
   esac
 done
@@ -138,6 +142,33 @@ restart_all() {
   echo "   klipper: $(curl -s -m 5 $MOON/printer/info | python3 -c 'import sys,json;print(json.load(sys.stdin)["result"]["state"])' 2>/dev/null || echo '?')"
 }
 
+USB_LIB=/usr/local/lib/starstack/usb_import.sh
+USB_UNIT=/etc/systemd/system/starstack-usb-import@.service
+USB_RULE=/etc/udev/rules.d/99-starstack-usb.rules
+
+usb_install() {  # root-owned copies: the wrapper runs as root, so the printer user must not be able to edit it
+  local tmp; tmp=$(mktemp -d)
+  sed "s|@REPO@|$REPO|g" "$REPO/usb/usb_import.sh" > "$tmp/usb_import.sh"
+  sed "s|@USER@|$(id -un)|g" "$REPO/usb/starstack-usb-import@.service" > "$tmp/unit"
+  if cmp -s "$tmp/usb_import.sh" "$USB_LIB" && cmp -s "$tmp/unit" "$USB_UNIT" && cmp -s "$REPO/usb/99-starstack-usb.rules" "$USB_RULE"; then
+    echo "   ok: USB stick import already installed"; rm -rf "$tmp"; return
+  fi
+  echo "   installing USB stick import (sudo may ask for your password)"
+  do_ "sudo install -D -o root -g root -m 755 '$tmp/usb_import.sh' '$USB_LIB'"
+  do_ "sudo install -o root -g root -m 644 '$tmp/unit' '$USB_UNIT'"
+  do_ "sudo install -o root -g root -m 644 '$REPO/usb/99-starstack-usb.rules' '$USB_RULE'"
+  do_ "sudo systemctl daemon-reload && sudo udevadm control --reload-rules"
+  rm -rf "$tmp"
+  echo "   USB stick import installed: new G-code files are copied to ~/printer_data/gcodes"
+}
+
+usb_remove() {
+  if [ -e "$USB_RULE" ] || [ -e "$USB_UNIT" ] || [ -e "$USB_LIB" ]; then
+    do_ "sudo rm -f '$USB_RULE' '$USB_UNIT' '$USB_LIB' && sudo systemctl daemon-reload && sudo udevadm control --reload-rules"
+    echo "   USB stick import removed"
+  fi
+}
+
 if [ "$MODE" = uninstall ]; then
   say "Uninstall StarStack UI"
   unlink_restore starstack_macros.cfg
@@ -150,21 +181,24 @@ if [ "$MODE" = uninstall ]; then
   fi
   [ "$DRY" = 1 ] || python3 "$REPO/tools/apply_mainsail.py" --rollback
   echo "   printer.cfg was not changed: remove the StarStack lines by hand if you added them"
+  usb_remove
   restart_all
   exit 0
 fi
 
-say "1/6 Link StarStack macros + Mainsail theme"
+say "1/7 Link StarStack macros + Mainsail theme"
 link macros/starstack_macros.cfg starstack_macros.cfg
 link mainsail-theme/.theme .theme
-say "2/6 Check printer.cfg"
+say "2/7 Check printer.cfg"
 printer_cfg_check
-say "3/6 Moonraker update manager"
+say "3/7 Moonraker update manager"
 moonraker_sections
-say "4/6 KlipperScreen -> StarStack fork"
+say "4/7 KlipperScreen -> StarStack fork"
 klipperscreen_fork
-say "5/6 Mainsail settings + macro groups + panel order"
+say "5/7 Mainsail settings + macro groups + panel order"
 if [ "$DRY" = 1 ]; then echo "   (dry-run) apply mainsail-theme/settings.json + macrogroups.json + dashboard.json"; else python3 "$REPO/tools/apply_mainsail.py" | sed 's/^/   /'; fi
-say "6/6 Restart services"
+say "6/7 USB stick import"
+if [ "$USB" = 1 ]; then usb_install; else echo "   skipped (--no-usb)"; fi
+say "7/7 Restart services"
 restart_all
 say "Done. Updates now appear in Mainsail: Machine > Update Manager (klipper-ui, KlipperScreen)."

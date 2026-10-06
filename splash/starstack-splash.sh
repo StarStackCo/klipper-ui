@@ -9,5 +9,10 @@ i=0
 while [ ! -e /dev/fb0 ] && [ $i -lt 100 ]; do sleep 0.2; i=$((i + 1)); done  # driver may load late
 [ "$(cat $FB/virtual_size 2>/dev/null)" = "480,320" ] || exit 0
 [ "$(cat $FB/bits_per_pixel 2>/dev/null)" = "16" ] || exit 0
+# Detach the Linux text console from the screen (needs root, so only at boot/shutdown; D-069).
+# Otherwise it paints its empty black console over the logo whenever X starts or stops.
+for v in /sys/class/vtconsole/vtcon*; do
+  grep -q "frame buffer" "$v/name" 2>/dev/null && echo 0 > "$v/bind" 2>/dev/null
+done
 cat "$IMG" > /dev/fb0 2>/dev/null
 exit 0

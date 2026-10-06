@@ -20,8 +20,9 @@
 #   6. USB stick import: plugging in a stick copies new G-code files into the print jobs folder
 #      (udev rule + service, asks for your password once via sudo; skip with --no-usb)
 #   7. Boot screen: StarStack logo on the touchscreen from power-up until the UI starts, at
-#      shutdown and while the UI restarts; kernel text goes to the serial port only
-#      (/boot/armbianEnv.txt, backed up; sudo; skip with --no-splash). Takes effect after a reboot
+#      shutdown and while the UI restarts; kernel text goes to the serial port only, Plymouth off
+#      (/boot/armbianEnv.txt, backed up), and the touchscreen app starts without waiting for the
+#      network (KlipperScreen.service, backed up). sudo; skip with --no-splash. Needs a reboot
 #   8. Restarts Moonraker, Klipper and KlipperScreen
 # It refuses to run while a print is in progress.
 set -euo pipefail
@@ -179,6 +180,7 @@ SPL_IMG=/usr/local/share/starstack/starstack-splash.rgb565
 SPL_UNIT=/etc/systemd/system/starstack-splash.service
 SPL_DROP=/etc/systemd/system/KlipperScreen.service.d/starstack-splash.conf
 ARMENV=/boot/armbianEnv.txt
+KS_UNIT=/etc/systemd/system/KlipperScreen.service
 
 splash_install() {
   if [ "$(cat /sys/class/graphics/fb0/virtual_size 2>/dev/null)" != "480,320" ]; then
@@ -204,21 +206,28 @@ splash_install() {
     do_ "sudo systemctl mask getty@tty1.service autovt@tty1.service"
     echo "   touchscreen login prompt turned off (getty@tty1 masked)"
   fi
-  # Kernel/boot text to the serial port only, no blinking cursor (Armbian boot options)
+  # Kernel/boot text to the serial port only, no blinking cursor, no Plymouth (it blanked the
+  # logo until the UI started, D-069) (Armbian boot options)
   if [ -f "$ARMENV" ]; then
-    if grep -q '^console=cancel_lcd' "$ARMENV" && grep -q 'vt.global_cursor_default=0' "$ARMENV"; then
+    if grep -q '^console=cancel_lcd' "$ARMENV" && grep -q 'vt.global_cursor_default=0' "$ARMENV" \
+      && grep -q 'plymouth.enable=0' "$ARMENV"; then
       echo "   ok: boot text already off the touchscreen"
     else
       [ -e "$ARMENV.pre-starstack" ] || do_ "sudo cp -a '$ARMENV' '$ARMENV.pre-starstack'"
       do_ "sudo sed -i 's/^console=.*/console=cancel_lcd/' '$ARMENV'"
       grep -q '^console=' "$ARMENV" || do_ "echo 'console=cancel_lcd' | sudo tee -a '$ARMENV' >/dev/null"
-      if grep -q '^extraargs=' "$ARMENV"; then
-        grep -q 'vt.global_cursor_default=0' "$ARMENV" || do_ "sudo sed -i 's/^extraargs=\(.*\)/extraargs=\1 vt.global_cursor_default=0/' '$ARMENV'"
-      else
-        do_ "echo 'extraargs=vt.global_cursor_default=0' | sudo tee -a '$ARMENV' >/dev/null"
-      fi
+      grep -q '^extraargs=' "$ARMENV" || do_ "echo 'extraargs=' | sudo tee -a '$ARMENV' >/dev/null"
+      for arg in vt.global_cursor_default=0 plymouth.enable=0; do
+        grep -q "$arg" "$ARMENV" || do_ "sudo sed -i 's/^extraargs=\(.*\)/extraargs=\1 $arg/' '$ARMENV'"
+      done
       echo "   boot text moved off the touchscreen ($ARMENV, backup: $ARMENV.pre-starstack). Reboot to see it"
     fi
+  fi
+  # Start the touchscreen app without waiting for the network and Moonraker (D-069)
+  if [ -f "$KS_UNIT" ] && ! grep -q 'StarStack (D-069)' "$KS_UNIT"; then
+    [ -e "$KS_UNIT.pre-starstack" ] || do_ "sudo cp -a '$KS_UNIT' '$KS_UNIT.pre-starstack'"
+    do_ "sudo sed -i -f '$REPO/splash/klipperscreen-unit.sed' '$KS_UNIT' && sudo systemctl daemon-reload"
+    echo "   touchscreen app now starts early in the boot ($KS_UNIT, backup: $KS_UNIT.pre-starstack)"
   fi
 }
 
@@ -232,6 +241,10 @@ splash_remove() {
   fi
   if [ -e "$ARMENV.pre-starstack" ]; then
     do_ "sudo mv '$ARMENV.pre-starstack' '$ARMENV'"; echo "   restored $ARMENV (reboot to apply)"
+  fi
+  if [ -e "$KS_UNIT.pre-starstack" ]; then
+    do_ "sudo mv '$KS_UNIT.pre-starstack' '$KS_UNIT' && sudo systemctl daemon-reload"
+    echo "   restored $KS_UNIT"
   fi
 }
 

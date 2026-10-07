@@ -48,7 +48,7 @@
 | Flow | **−1% / +1% buttons**, hard limits **40%–120%** |
 | PLA | Nozzle 210 °C · Bed 60 °C |
 | PETG | Nozzle 240 °C · Bed 80 °C |
-| TPU | Nozzle 225 °C · Bed **40 °C** |
+| TPU | Nozzle 225 °C · Bed **50 °C** (was 40, changed 2026-10-07 to match the slicer, D-082) |
 
 ## 5. Action inventory
 
@@ -152,7 +152,7 @@ Legend: **N** = Normal mode · **A** = Advanced mode only · 🔒 = locked while
 - Z babystep removed
 - Speed presets fixed: 50 / 100 / 125 / 150%, speed only
 - Flow: ±1% buttons, 40–120% cap
-- Material temps fixed, with TPU bed at 40 °C
+- Material temps fixed, with TPU bed at 50 °C (D-082)
 - Cancel object shows a bed map + part-name list
 - E-stop: tap, then confirm
 - Idle timeout: handled by the printer config, display only

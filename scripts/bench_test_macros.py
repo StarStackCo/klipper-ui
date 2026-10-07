@@ -80,7 +80,7 @@ check("PREHEAT unknown material refused, no heat", has(m, "Unknown material") an
 gcode("PREHEAT_PLA"); s = status()
 check("PREHEAT_PLA → 210/60", s["extruder"]["target"] == 210 and s["heater_bed"]["target"] == 60)
 gcode("PREHEAT_TPU"); s = status()
-check("PREHEAT_TPU → 225/40", s["extruder"]["target"] == 225 and s["heater_bed"]["target"] == 40)
+check("PREHEAT_TPU → 225/50", s["extruder"]["target"] == 225 and s["heater_bed"]["target"] == 50)
 gcode("M106 S128"); gcode("COOL_DOWN"); s = status()
 check("COOL_DOWN → heaters 0, fan 0", s["extruder"]["target"] == 0 and s["heater_bed"]["target"] == 0 and s["fan"]["speed"] == 0)
 

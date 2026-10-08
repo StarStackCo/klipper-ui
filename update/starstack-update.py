@@ -557,6 +557,11 @@ def undo(st, target, reason, auto):
         f"Update undone ({what}): {reason}" if auto else f"Last update undone ({what})"
     )
     set_health(st, "undone", msg)
+    if wait_klipper("ready", 90):  # the first message went out while Klipper was down
+        say(
+            "StarStack: " + msg + ". Everything is back on the previous versions.",
+            error=auto,
+        )
     return msg
 
 

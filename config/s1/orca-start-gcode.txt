@@ -1,0 +1,22 @@
+; STARSTACK S1: OrcaSlicer start G-code (D-089)
+; Paste everything below into Printer settings > Machine G-code > Machine start G-code,
+; replacing the old one. PRINT_START (macros/starstack_macros.cfg) heats the bed, heats the
+; nozzle, homes, cleans the nozzle, measures the bed and heats to print temperature, without
+; blocking: Cancel works at once. The M140/M104 lines stop Orca adding its own blocking
+; M190/M109 waits before this G-code (Orca only adds them when the start G-code sets no
+; temperature).
+M140 S[bed_temperature_initial_layer_single] ; start the bed now (PRINT_START waits for it)
+M104 S0 ; nozzle off until the bed is hot (less oozing)
+PRINT_START BED=[bed_temperature_initial_layer_single] EXTRUDER=[nozzle_temperature_initial_layer]
+;
+; Extrude purge line
+M117 Purging Filament
+G92 E0 ; reset extruder position
+G0 E7 X15 Z0.2 F500 ; purge
+G0 X25 E4 F500 ; purge
+G0 X35 E4 F650 ; purge
+G0 X45 E4 F800 ; purge
+G0 X48 Z0.05 F8000 ; wipe, move close to the bed
+G0 X51 Z0.2 F8000 ; wipe, move quickly away from the bed
+G92 E0 ; reset extruder position
+M117 Printing

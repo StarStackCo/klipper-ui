@@ -234,3 +234,14 @@ file (`ss_bench_start_cancel.gcode`: `PRINT_START BED=60 EXTRUDER=150`), bed ste
 | `apt-get -s upgrade` keeps them back | ✅ | 252 others would install |
 | Moonraker (PackageKit) "system" list skips them | ✅ | 256 → 252 after a refresh; none of the held packages listed |
 
+## Run 12: update health check, automatic undo, Undo button (D-092 part 1), 2026-10-08 (klipper-ui dev c45d69e..85e959e, fork dev f1ad0ca5)
+
+| Check | Result | Notes |
+|---|---|---|
+| User re-ran `install.sh --printer=s1`: helper runs with `SupplementaryGroups=moonraker-admin` | ✅ | |
+| First run records the last known good (5 repos + Mainsail v2.19.0 + 3 config files) | ✅ | 16:40:52 |
+| Good update (klipper-ui forward one commit) → checked, new good, "Undo last update" offered | ✅ | Checked within seconds |
+| Bad update (throwaway local commit breaking the macros, Klipper restarted → error) | ✅ | Noticed 16:42:10; after 5 min put klipper-ui back, restarted Moonraker and Klipper itself (16:47:13–20); Klipper ready, repo level with GitHub again |
+| Undo message on the console | ❌ → fix | Sent while Klipper was down, so only the Updates page showed it. Fixed in 85e959e (repeats it once Klipper is ready); needs the next `install.sh` run to reach the S1 |
+| "Undo last update" on the touchscreen (user) | ✅ | 23 s: back one version, Moonraker + Klipper restarted, Klipper ready; Undo row gone afterwards (one step) |
+

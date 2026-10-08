@@ -94,7 +94,7 @@ For every increment:
 - ✅ Repo registered with Moonraker's `update_manager` (install.sh step 3).
 - 🟡 One-tap updates with tested versions and board firmware (D-087): built and tested on the S1; update helper service installed and running on the S1; left: release v0.2.0 (D-088).
 - ✅ Start of print that never blocks Cancel (`PRINT_START`, D-089): all tests passed on the S1.
-- Open: filament check before printing (Q-052), update safety (Q-053).
+- ✅ Filament check before printing (D-090). ✅ Update safety part 1 + 4 (D-092: health check, automatic undo, Undo button, kernel/boot packages held). Later: signed releases (B-10), USB update file (B-11), pinned Mainsail (B-12), shipping prep (B-13).
 - Still to do: Wi-Fi on the S1 with the antenna (B-6), starter prints (B-8, last), camera switch when a camera is fitted (B-9). See [BACKLOG.md](BACKLOG.md).
 
 ## 5. Repo structure (as built)

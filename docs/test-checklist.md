@@ -214,3 +214,14 @@ file (`ss_bench_start_cancel.gcode`: `PRINT_START BED=60 EXTRUDER=150`), bed ste
 | Pause/resume: part fan off and back; cancel: nozzle lifts | ✅ | Pause: park + fan 39 % → 0; resume: fan back to 39 %; cancel while printing: heaters off at once, lift 10 + 40 mm. No `_S1` error. User: "everything works as intended" |
 | Old file (M190/M109): Cancel on the touchscreen → "Canceling…", then emergency stop + restart after 3 s | ✅ | `Main(27)_PETG_4h44m`: backstop fired 16:01:49, firmware restart 16:01:51, ready again, heaters off |
 
+## Run 10: filament check before printing (D-090), 2026-10-08 (klipper-ui dev 546633d, fork dev a6a084d8)
+
+| Check | Result | Notes |
+|---|---|---|
+| PRINT_START with nothing loaded: waits, asks on the touchscreen and in Mainsail | ❌ → ✅ | First the question vanished: the touchscreen resets its pages when the print turns "paused". Now asked 1 s later from the timer. Buttons PLA / PETG / TPU in one row |
+| Answer PETG in the question | ✅ | Recorded, question closed, moved on to heating the bed (canceled before any motion) |
+| No answer within the limit (set to 3 s for the test) | ✅ | Canceled with a message, heaters off, question closed; limit back to 600 s |
+| Touchscreen Print, nothing loaded → "No filament loaded" → It's loaded → PETG → "Is the bed clear?" | ✅ | User; Not yet, nothing printed |
+| Touchscreen Print, PLA loaded, PETG file → "Different filament loaded" | ✅ | User; Go back. PETG recorded again afterwards |
+| Load filament from the question → back to Print | ⏳ | Not tried yet (same load flow as before + return to Print) |
+

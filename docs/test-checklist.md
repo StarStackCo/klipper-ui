@@ -225,3 +225,12 @@ file (`ss_bench_start_cancel.gcode`: `PRINT_START BED=60 EXTRUDER=150`), bed ste
 | Touchscreen Print, PLA loaded, PETG file → "Different filament loaded" | ✅ | User; Go back. PETG recorded again afterwards |
 | Load filament from the question → back to Print | ⏳ | Not tried yet (same load flow as before + return to Print) |
 
+## Run 11: kernel/boot packages held (D-092 part 4), 2026-10-08 (klipper-ui dev 0812b02)
+
+| Check | Result | Notes |
+|---|---|---|
+| `install.sh --dry-run` lists the packages to hold | ✅ | 8: linux-image/dtb/u-boot (BTT vendor), armbian-bsp-cli, armbian-firmware, armbian-config, initramfs-tools(-core) |
+| User ran `install.sh --printer=s1`: packages held, list saved for uninstall | ✅ | `apt-mark showhold` + `/var/lib/starstack/held-packages` |
+| `apt-get -s upgrade` keeps them back | ✅ | 252 others would install |
+| Moonraker (PackageKit) "system" list skips them | ✅ | 256 → 252 after a refresh; none of the held packages listed |
+

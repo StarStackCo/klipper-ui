@@ -133,16 +133,18 @@ Legend: **N** = Normal mode · **A** = Advanced mode only · 🔒 = locked while
 
 `[exclude_object]`, `[pause_resume]`, `[virtual_sdcard]`, `[display_status]`, `[idle_timeout]` (already present per user), `[filament_switch_sensor]` (when fitted), `min_extrude_temp`, `[verify_heater]` defaults left as they are.
 
+✅ 2026-10-08: all present in `config/s1/printer.cfg` (`virtual_sdcard` and `display_status` come from `mainsail.cfg`). The S1 has no runout sensor.
+
 ## 8. OrcaSlicer settings to check
 
 - **Label objects** ON and **Exclude objects** ON (needed for cancel object + the bed map)
 - **Thumbnails** ✅ confirmed by user: `48x48/PNG, 300x300/PNG`
-- Start G-code passes bed/nozzle temps to `PRINT_START`
+- ~~Start G-code passes bed/nozzle temps to `PRINT_START`~~ The S1 profile has no `PRINT_START`: its start G-code heats, homes, runs `NOZZLE_CLEAN` and `BED_MESH_CALIBRATE` itself (checked 2026-10-08, D-081). Change filament G-code calls `CHANGE_FILAMENT` (= `M600`)
 
 ## 9. Implementation approach (decided)
 
 - **Mainsail:** no code changes. Theme folder (`.theme/`) + layout/presets/macros.
-- **KlipperScreen:** **private copy** `StarStackCo/KlipperScreen-starstack` (branch `starstack`, based on the Pi's exact version `f580242e`), with minimal, documented changes. `FORK_CHANGES.md` lists every change and how to merge upstream updates.
+- **KlipperScreen:** copy `StarStackCo/KlipperScreen-starstack` (private at first, public since D-047) (branch `starstack`, based on the Pi's exact version `f580242e`), with minimal, documented changes. `FORK_CHANGES.md` lists every change and how to merge upstream updates.
 
 ---
 

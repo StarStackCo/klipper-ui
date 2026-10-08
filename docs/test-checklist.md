@@ -149,3 +149,48 @@ Driven remotely with `scripts/ks-tap.sh` (bench devtools) and `scripts/ks-screen
 | SSH logout doesn't restart the screen | ✅ ×3 | Fixed (fork change #15) |
 | Wi-Fi page opens | ✅ | Stock look (B-6) |
 | KlipperScreen log | ✅ | No tracebacks |
+
+## Run 6: Boot screen, faster boot, watchdog, Advanced pages, 2026-10-06 (bench v2.2, release klipper-ui PR #6 / fork PR #11)
+
+Summary (details in DECISIONS.md D-067..D-080 and the build/deploy log):
+
+| Check | Result | Notes |
+|---|---|---|
+| Boot: logo from power-up, no white/black gaps, bar reaches the end | ✅ | Boot to Home 32–35 s (was ~40 s) |
+| "Touchscreen app didn't start" screen at boot and after a stopped app | ✅ | Shows the Mainsail address |
+| App restart → back on Home | ✅ | |
+| Pop-ups don't cover the left rail | ✅ | |
+| Klipper, Moonraker, KlipperScreen, splash services up after reboot | ✅ | |
+
+## Run 7: StarStack S1 full printer, 2026-10-07/08 (S1 config v1 → v1.1, Micro4 firmware v0.13.0-501)
+
+Staged power-up, each stage approved by the user (D-081..D-085):
+
+| Check | Result | Notes |
+|---|---|---|
+| Unplugged temperature sensors stop the printer | ✅ | "ADC out of range" (min_temp 0 fix) |
+| Bed thermistor + heater | ✅ | 20.6 → 40 °C, holds; heater check quiet |
+| X/Y/Z motors: right axis, right direction | ✅ | STEPPER_BUZZ + FORCE_MOVE (force move off again afterwards) |
+| Sensorless homing X (195) and Y (206) | ✅ | Stops at the ends, no grinding |
+| Hotend thermistor + heater, hotend and part fans | ✅ | 22 → 60 °C in ~14 s; fans spin (user) |
+| Probe, Z homing, extrusion | ✅ | Tested by the user by hand |
+| First full print (Benchy, slicer start G-code: G28, NOZZLE_CLEAN, mesh) | ✅ | 51 min, complete |
+| PID re-tune nozzle 220 °C / bed 60 °C, SAVE_CONFIG | ✅ | Values in D-084 |
+| Release on the S1: `_SS` macros show TPU 50 °C and 50/60/100 mm; services up; devtools off | ✅ | |
+| Mainsail at http://starstack-s1.local | ✅ | D-085 |
+| Touchscreen walk-through on the S1 | ⚠️ | Part 1 done (Run 8). Part 2 (heating, moving, printing from the screen) still to do |
+
+## Run 8: S1 touchscreen walk-through, part 1 (no heating or moving), 2026-10-08 (fork dev 6717b3d2)
+
+Driven with devtools (switched on for this run only) and screenshots in `design/klipperscreen/s1-*.png`, `s1-run/`.
+
+| Check | Result | Notes |
+|---|---|---|
+| Home idle: newest file, Print again, loaded filament, Preheat / Load / Cool | ✅ | |
+| Top bar: nozzle and bed temperatures | ❌ → ✅ | Missing since the v0.4.7 merge; fixed (fork #48, D-086) |
+| Print a file (11 pages, thumbnails, sort) | ✅ | |
+| Controls (heaters, fan, filament, move) | ✅ | |
+| Settings + About (name `starstack-s1`, Ethernet IP, Klipper version) | ✅ | |
+| Advanced pages open: Screen, Wi-Fi, Shut down/reboot, Updates, Fans, Move, Extrude (blocked when cold), Bed mesh, Input shaper, Console, Adjust | ✅ | No errors in the KlipperScreen log |
+| Part 2: load/unload from the screen, start a print, pause, resume, cancel, STOP | ⏳ | Needs the user at the printer |
+

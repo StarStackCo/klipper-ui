@@ -194,3 +194,23 @@ Driven with devtools (switched on for this run only) and screenshots in `design/
 | Advanced pages open: Screen, Wi-Fi, Shut down/reboot, Updates, Fans, Move, Extrude (blocked when cold), Bed mesh, Input shaper, Console, Adjust | ✅ | No errors in the KlipperScreen log |
 | Part 2: load/unload from the screen, start a print, pause, resume, cancel, STOP | ⏳ | Needs the user at the printer |
 
+## Run 9: start of print and cancel (PRINT_START, D-089), 2026-10-08 (klipper-ui dev b6dd199, fork dev 6ceb71e3)
+
+Found by the user: canceling while the bed heated kept heating and showed "printing" until the bed
+reached 80 °C; a red `Unknown command "_S1"` on cancel. Tests 1–3 run by Claude with a 4-line test
+file (`ss_bench_start_cancel.gcode`: `PRINT_START BED=60 EXTRUDER=150`), bed step only, no motion.
+
+| Check | Result | Notes |
+|---|---|---|
+| S1 config v1.2 loads, no warnings; `PRINT_START` present | ✅ | Backup `printer.cfg.pre-d089` on the Pi |
+| Start → file pauses in the background, bed heating, "Heating bed 31/60°C" | ✅ | |
+| RESUME while getting ready is refused | ✅ | Mainsail refuses (cold nozzle); `_SS_RESUME_GUARD` refuses when hot |
+| Cancel while the bed heats | ✅ | 0.34 s to canceled, heaters off; no `_S1` error |
+| Heat time limit (set to 6 s for the test) | ✅ | Canceled with "the bed didn't reach 60°C…", heaters off, status cleared; limit back to 600 s |
+| Touchscreen while getting ready | ✅ | "Heating bed 36 / 60°" + heat bar, "Getting ready" (grayed), no %/time left; back to Home after cancel |
+| Full start with the new Orca start G-code: bed → nozzle → home → clean → cool to 150 → mesh → park → heat → purge → print | ⏳ | Needs the user (motion, re-slice in Orca) |
+| Orca adds no M190/M109 of its own before `PRINT_START` | ⏳ | Check the first re-sliced file |
+| Cancel at each step (nozzle heat, cooling, final heat) | ⏳ | User at the printer |
+| Pause/resume: part fan off and back; cancel: nozzle lifts | ⏳ | First real test of the renamed `_PRINTER_*` macros |
+| Old file (M190/M109): Cancel on the touchscreen → "Canceling…", then emergency stop + restart after 3 s | ⏳ | User at the printer |
+

@@ -139,7 +139,7 @@ Legend: **N** = Normal mode · **A** = Advanced mode only · 🔒 = locked while
 
 - **Label objects** ON and **Exclude objects** ON (needed for cancel object + the bed map)
 - **Thumbnails** ✅ confirmed by user: `48x48/PNG, 300x300/PNG`
-- ~~Start G-code passes bed/nozzle temps to `PRINT_START`~~ The S1 profile has no `PRINT_START`: its start G-code heats, homes, runs `NOZZLE_CLEAN` and `BED_MESH_CALIBRATE` itself (checked 2026-10-08, D-081). Change filament G-code calls `CHANGE_FILAMENT` (= `M600`)
+- Start G-code: `PRINT_START BED=… EXTRUDER=…` + purge line (D-089, text in `config/s1/orca-start-gcode.txt`): heating no longer blocks Cancel. Before D-089 the S1 profile had no `PRINT_START`: its start G-code heated, homed, ran `NOZZLE_CLEAN` and `BED_MESH_CALIBRATE` itself (checked 2026-10-08, D-081). Change filament G-code calls `CHANGE_FILAMENT` (= `M600`)
 
 ## 9. Implementation approach (decided)
 

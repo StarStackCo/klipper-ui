@@ -37,7 +37,9 @@
 #      --no-fastboot; --uninstall turns them back on. Needs a reboot
 #   9. Update helper (starstack-update.service, sudo; skip with --no-update-helper): one "Update
 #      everything" tap also installs newly tested Klipper/Moonraker versions and, with --printer,
-#      brings the board firmware to the same Klipper version (Katapult)
+#      brings the board firmware to the same Klipper version (Katapult). Also holds the kernel,
+#      bootloader and board packages (update/held-packages.txt), so "Update everything" can't
+#      install an untested one that stops the Pi booting (D-092)
 #  10. Restarts Moonraker, Klipper and KlipperScreen
 # It refuses to run while a print is in progress.
 set -euo pipefail
@@ -403,6 +405,32 @@ helper_install() {
     echo "   board firmware: not managed (add --printer=s1 on a StarStack S1)"
   fi
   [ $changed = 1 ] && do_ "sudo systemctl restart starstack-update.service" || true
+  held_install
+}
+
+HELD_LIST=/var/lib/starstack/held-packages  # packages this installer put on hold (for --uninstall)
+
+held_install() {
+  local pat p want=() missing=() held
+  while read -r pat; do
+    case "$pat" in ''|'#'*) continue ;; esac
+    while read -r p; do want+=("$p"); done < <(dpkg-query -W -f='${db:Status-Abbrev} ${Package}\n' "$pat" 2>/dev/null | awk '$1 == "ii" {print $2}')
+  done < "$REPO/update/held-packages.txt"
+  held=$(apt-mark showhold)
+  for p in "${want[@]}"; do grep -qx "$p" <<< "$held" || missing+=("$p"); done
+  if [ ${#missing[@]} -gt 0 ]; then
+    echo "   holding kernel/boot packages so updates skip them: ${missing[*]}"
+    do_ "sudo apt-mark hold ${missing[*]} >/dev/null && printf '%s\n' ${missing[*]} >> '$HELD_LIST'"
+  else
+    echo "   ok: kernel/boot packages held (${#want[@]})"
+  fi
+}
+
+held_remove() {
+  if [ -s "$HELD_LIST" ]; then
+    do_ "sudo apt-mark unhold $(sort -u "$HELD_LIST" | tr '\n' ' ') >/dev/null && rm -f '$HELD_LIST'"
+    echo "   kernel/boot packages no longer held"
+  fi
 }
 
 helper_remove() {
@@ -421,6 +449,7 @@ if [ "$MODE" = uninstall ]; then
   done
   # after moonraker.conf is restored: it no longer includes this file
   [ -L "$CFG/starstack-updates.conf" ] && do_ "rm '$CFG/starstack-updates.conf'"
+  held_remove
   helper_remove
   if [ -d "$KS_DIR" ]; then
     do_ "git -C '$KS_DIR' remote set-url origin '$KS_UP' && git -C '$KS_DIR' fetch -q origin && git -C '$KS_DIR' checkout -q -f -B master origin/master"

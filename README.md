@@ -8,7 +8,7 @@ A consumer-friendly UI for Klipper printers, Bambu-style simple with an Advanced
 - **Macros** behind the buttons: speed presets, flow (40–120%), preheat, guided filament load/unload with a
   remembered material, color change (`M600`), runout
 
-![Touchscreen pages](design/klipperscreen/final-tour.png)
+![Touchscreen pages on the S1](design/klipperscreen/s1-tour.png)
 
 Built for the **StarStack S1**: BTT Pi (CB1), BTT TFT35 SPI, Mellow FLY Micro4, cantilevered bed-slinger
 (180 × 180 × 165 mm) with an E3D PZ probe, E3D Revo Voron and Galileo 2 extruder. Its `printer.cfg` is in

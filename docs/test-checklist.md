@@ -178,5 +178,19 @@ Staged power-up, each stage approved by the user (D-081..D-085):
 | PID re-tune nozzle 220 °C / bed 60 °C, SAVE_CONFIG | ✅ | Values in D-084 |
 | Release on the S1: `_SS` macros show TPU 50 °C and 50/60/100 mm; services up; devtools off | ✅ | |
 | Mainsail at http://starstack-s1.local | ✅ | D-085 |
-| Touchscreen walk-through on the S1 (Home, print, pause/resume, filament load/unload, Advanced) | ➖ | Not run as a checklist yet: suggested next |
+| Touchscreen walk-through on the S1 | ⚠️ | Part 1 done (Run 8). Part 2 (heating, moving, printing from the screen) still to do |
+
+## Run 8: S1 touchscreen walk-through, part 1 (no heating or moving), 2026-10-08 (fork dev 6717b3d2)
+
+Driven with devtools (switched on for this run only) and screenshots in `design/klipperscreen/s1-*.png`, `s1-run/`.
+
+| Check | Result | Notes |
+|---|---|---|
+| Home idle: newest file, Print again, loaded filament, Preheat / Load / Cool | ✅ | |
+| Top bar: nozzle and bed temperatures | ❌ → ✅ | Missing since the v0.4.7 merge; fixed (fork #48, D-086) |
+| Print a file (11 pages, thumbnails, sort) | ✅ | |
+| Controls (heaters, fan, filament, move) | ✅ | |
+| Settings + About (name `starstack-s1`, Ethernet IP, Klipper version) | ✅ | |
+| Advanced pages open: Screen, Wi-Fi, Shut down/reboot, Updates, Fans, Move, Extrude (blocked when cold), Bed mesh, Input shaper, Console, Adjust | ✅ | No errors in the KlipperScreen log |
+| Part 2: load/unload from the screen, start a print, pause, resume, cancel, STOP | ⏳ | Needs the user at the printer |
 

@@ -10,8 +10,12 @@ A consumer-friendly UI for Klipper printers, Bambu-style simple with an Advanced
 
 ![Touchscreen pages](design/klipperscreen/final-tour.png)
 
-Built for: BTT Pi (CB1), BTT TFT35 SPI, Mellow FLY Micro4, cantilevered bed-slinger with an E3D PZ probe.
-Works on any Klipper + Moonraker + Mainsail + KlipperScreen setup.
+Built for the **StarStack S1**: BTT Pi (CB1), BTT TFT35 SPI, Mellow FLY Micro4, cantilevered bed-slinger
+(180 × 180 × 165 mm) with an E3D PZ probe, E3D Revo Voron and Galileo 2 extruder. Its `printer.cfg` is in
+[`config/s1/`](config/s1/) (see [`config/README.md`](config/README.md), also for board firmware updates).
+The UI works on any Klipper + Moonraker + Mainsail + KlipperScreen setup.
+
+On the S1, Mainsail is at **http://starstack-s1.local** (or the printer's IP address).
 
 ## Install on a printer
 
@@ -37,13 +41,18 @@ The installer:
    out right away
 7. sets up the **StarStack boot screen** (asks for your password; skip with `--no-splash`): the logo
    shows on the touchscreen from power-up until the UI starts, at shutdown and while the UI restarts.
-   Boot text goes to the serial port only. Takes effect after a reboot
-8. restarts Moonraker, Klipper and KlipperScreen
+   A progress bar fills while it starts, and if the touchscreen app ever fails to start the screen says so
+   and shows the Mainsail address. Boot text goes to the serial port only. Takes effect after a reboot
+8. makes it **boot faster** (asks for your password; skip with `--no-fastboot`): Klipper, Moonraker and the
+   touchscreen start without waiting for the network, unused services (webcam streamer, OpenVPN, NFS,
+   console setup) and automatic OS updates are switched off, and the touchscreen skips OpenGL.
+   `--uninstall` turns them back on. Update the OS from Mainsail's Update Manager instead
+9. restarts Moonraker, Klipper and KlipperScreen
 
 Every file it changes is backed up once as `<file>.pre-starstack`.
 
 **OrcaSlicer:** turn on *Label objects* (cancel object), thumbnails `48x48/PNG, 300x300/PNG`, and set
-*Change filament G-code* to `M600` for color changes.
+*Change filament G-code* to `M600` for color changes (the S1 config also accepts `CHANGE_FILAMENT`).
 
 ## Update
 
@@ -80,13 +89,24 @@ From a PC with SSH access to the bench Pi (`scripts/pi.sh` logs every command to
 | `scripts/pi-install.sh [--branch dev] [--dry-run]` | Update `~/klipper-ui` on the Pi and run the installer |
 | `scripts/ks-update.sh [--branch dev] [shot.png]` | Push the touchscreen fork branch, update the Pi, restart, screenshot |
 | `scripts/ks-screenshot.sh shot.png` | Capture the touchscreen |
-| `scripts/ks-tap.sh "click Settings" [shot.png]` | Drive the touchscreen (bench devtools) |
+| `scripts/ks-tap.sh "click Settings" [shot.png]` | Drive the touchscreen (needs bench devtools: `touch ~/.starstack_dev`, off on the S1) |
 | `scripts/bench_test_macros.py` | Automated macro tests (bench config only) |
 | `scripts/make_bench_print.py` | Demo print with thumbnail, objects, layers, color changes |
 
-Layout: `macros/` Klipper macros · `mainsail-theme/` Mainsail theme + settings · `config/bench/` bench-only
-printer.cfg (fake heaters, never for a real printer) · `tools/` installer helpers and CI checks · `design/` designs
-and screenshots · `docs/` plan, decisions, requirements, checklists, backlog.
+Layout:
+
+| Folder | What |
+|---|---|
+| `macros/` | Klipper macros behind the buttons |
+| `mainsail-theme/` | Mainsail theme + settings |
+| `config/` | `s1/` the S1's printer.cfg (+ reference moonraker.conf), `bench/` bench-only printer.cfg (fake heaters, never for a real printer) |
+| `splash/` | Boot screen: logo images, progress bar + "app didn't start" watchdog, systemd units |
+| `boot/` | Faster-boot changes (systemd edit, X config) |
+| `usb/` | USB stick import (udev rule, service, script) |
+| `tools/` | Installer helpers, image generator, CI checks |
+| `scripts/` | PC-side bench tools (SSH, screenshots, macro tests) |
+| `design/` | Designs and screenshots |
+| `docs/` | [Plan](docs/PLAN.md), [decisions log](docs/DECISIONS.md), [requirements](docs/requirements.md), [test checklist](docs/test-checklist.md), [macro safety review](docs/macro-safety-review.md), [backlog](docs/BACKLOG.md) |
 
 ## License
 

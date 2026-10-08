@@ -4,7 +4,9 @@
 # Versions stay 0.x until the first unit ships (D-088); v1.0.0 needs FIRST_UNIT_SHIPPED=1.
 # For each repo with new commits on dev: opens the dev -> stable PR, waits for its checks (stops on
 # a failure), merges it, brings dev level with stable. Then tags both stable branches with the
-# version, so Mainsail and the touchscreen show it. Printers get it with "Update everything".
+# version (klipper-ui only: the fork already carries upstream KlipperScreen's v0.x tags, so it keeps
+# its upstream-based version and the klipper-ui tag records which fork commit belongs to it, D-091).
+# Printers get it with "Update everything".
 # Needs: gh logged in; both repos clean, on dev and pushed. Run the bench/S1 checklist first.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -25,8 +27,8 @@ for r in "${REPOS[@]}"; do  # check everything before changing anything
   [ -z "$(git -C "$dir" status --porcelain)" ] || { echo "$slug: uncommitted changes"; exit 1; }
   [ "$(git -C "$dir" branch --show-current)" = dev ] || { echo "$slug: not on dev"; exit 1; }
   [ "$(git -C "$dir" rev-parse dev)" = "$(git -C "$dir" rev-parse origin/dev)" ] || { echo "$slug: dev not pushed"; exit 1; }
-  if git -C "$dir" rev-parse -q --verify "refs/tags/$VER" >/dev/null; then echo "$slug: $VER already exists"; exit 1; fi
 done
+if git -C "$ROOT" rev-parse -q --verify "refs/tags/$VER" >/dev/null; then echo "klipper-ui: $VER already exists"; exit 1; fi
 
 for r in "${REPOS[@]}"; do
   IFS='|' read -r dir slug stable <<< "$r"
@@ -46,8 +48,10 @@ for r in "${REPOS[@]}"; do
   else
     echo "== $slug: nothing new on dev"
   fi
-  git -C "$dir" tag -a "$VER" "origin/$stable" -m "StarStack $VER: $DESC"
-  git -C "$dir" push -q origin "$VER"
-  echo "   tagged $VER on $stable ($(git -C "$dir" rev-parse --short "origin/$stable"))"
+  echo "   $stable is at $(git -C "$dir" describe --tags --always "origin/$stable")"
 done
+fork_at=$(git -C "$FORK" rev-parse --short origin/starstack)
+git -C "$ROOT" tag -a "$VER" origin/main -m "StarStack $VER: $DESC" -m "Touchscreen: KlipperScreen-starstack $fork_at"
+git -C "$ROOT" push -q origin "$VER"
+echo "   tagged klipper-ui $VER on main ($(git -C "$ROOT" rev-parse --short origin/main)), touchscreen $fork_at"
 echo "Released $VER. Add a row to the build/deploy log in docs/DECISIONS.md."

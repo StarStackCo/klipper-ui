@@ -283,7 +283,7 @@ FB_OFF="crowsnest.service openvpn.service rpcbind.service rpcbind.socket nfs-cli
   unattended-upgrades.service apt-daily.timer apt-daily-upgrade.timer"
 
 fastboot_install() {
-  local u
+  local u reload=0
   for u in $FB_UNITS; do
     [ -f "$u" ] || continue
     if grep -q 'StarStack (D-075)' "$u"; then
@@ -291,6 +291,7 @@ fastboot_install() {
     else
       [ -e "$u.pre-starstack" ] || do_ "sudo cp -a '$u' '$u.pre-starstack'"
       do_ "sudo sed -i -f '$REPO/boot/no-network-wait.sed' '$u'"
+      reload=1
       echo "   $(basename "$u") no longer waits for the network (backup: $u.pre-starstack)"
     fi
   done
@@ -300,14 +301,15 @@ fastboot_install() {
     do_ "sudo install -D -o root -g root -m 644 '$REPO/boot/10-starstack-noglx.conf' '$FB_XCONF'"
     echo "   touchscreen display server no longer loads OpenGL (~5 s faster)"
   fi
-  do_ "sudo install -d -o $(id -un) -g $(id -gn) -m 755 /var/lib/starstack"
+  [ -d /var/lib/starstack ] || do_ "sudo install -d -o $(id -un) -g $(id -gn) -m 755 /var/lib/starstack"
   for u in $FB_OFF; do
     if [ "$(systemctl is-enabled "$u" 2>/dev/null)" = enabled ]; then
       do_ "sudo systemctl disable --now '$u' 2>/dev/null; echo '$u' >> '$FB_LIST'"
       echo "   turned off $u"
+      reload=1
     fi
   done
-  do_ "sudo systemctl daemon-reload"
+  [ $reload = 0 ] || do_ "sudo systemctl daemon-reload"  # nothing to do = no password prompt
   # crowsnest: if a camera is added later, re-enable with: sudo systemctl enable --now crowsnest
 }
 

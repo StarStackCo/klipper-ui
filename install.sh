@@ -19,7 +19,8 @@
 #   2. Checks printer.cfg has what the UI needs (and adds it with --fix-printer-cfg)
 #   3. Adds [update_manager klipper-ui] and points [update_manager KlipperScreen] at the StarStack fork,
 #      includes the tested Klipper/Moonraker versions (update/versions.conf, D-087) and removes the
-#      update entries of add-ons the printer doesn't load (timelapse, print_area_bed_mesh)
+#      update entries of add-ons the printer doesn't use (timelapse, print_area_bed_mesh, and the
+#      webcam streamer and Wi-Fi keepalive when they're switched off)
 #   4. Switches ~/KlipperScreen to the StarStack fork (re-clones if the git folder is damaged),
 #      installs the Public Sans font and selects the starstack theme
 #   5. Applies Mainsail UI settings + macro groups + dashboard panel order (Moonraker database)
@@ -89,9 +90,12 @@ unlink_restore() {
 moonraker_sections() {
   backup_once "$CFG/moonraker.conf"
   [ "$DRY" = 1 ] && { echo "   (dry-run) update [update_manager klipper-ui] and [update_manager KlipperScreen], include the tested versions, drop unused add-on entries"; return; }
-  python3 - "$CFG/moonraker.conf" "$REPO" "$UI_ORIGIN" "$KS_FORK" "$CFG/printer.cfg" <<'PY'
+  # webcam streamer off: step 8 turns it off (no camera), or it already is
+  local cam_off=0
+  { [ "$FASTBOOT" = 1 ] || [ "$(systemctl is-enabled crowsnest 2>/dev/null)" != enabled ]; } && cam_off=1
+  python3 - "$CFG/moonraker.conf" "$REPO" "$UI_ORIGIN" "$KS_FORK" "$CFG/printer.cfg" "$cam_off" "$CFG/sonar.conf" <<'PY'
 import re, sys
-p, repo, ui_origin, ks_fork, printer_cfg = sys.argv[1:]
+p, repo, ui_origin, ks_fork, printer_cfg, cam_off, sonar_conf = sys.argv[1:]
 s = open(p).read()
 try:
     pcfg = open(printer_cfg).read()
@@ -111,8 +115,14 @@ if m:
             'origin: %s\nprimary_branch: starstack\n' % ks_fork) + body
     s = s[:m.start(1)] + body + s[m.end(1):]
 # Update entries of add-ons this printer doesn't load only offer untested updates (D-087)
+try:
+    sonar_off = re.search(r'^\s*enable:\s*false', open(sonar_conf).read(), re.M | re.I) is not None
+except OSError:
+    sonar_off = True
 unused = {'timelapse': 'timelapse.cfg' not in pcfg and not section('timelapse'),
-          'print_area_bed_mesh': 'print_area_bed_mesh' not in pcfg}
+          'print_area_bed_mesh': 'print_area_bed_mesh' not in pcfg,
+          'crowsnest': cam_off == '1',  # the Camera switch (B-9) adds it back when a camera is fitted
+          'sonar': sonar_off}
 for name, drop in unused.items():
     m = section('update_manager ' + name)
     if m and drop:

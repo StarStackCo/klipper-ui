@@ -52,7 +52,9 @@ The installer:
    `--uninstall` turns them back on. Update the OS from Mainsail's Update Manager instead
 9. installs the **update helper** (asks for your password; skip with `--no-update-helper`): after an
    update it applies newly tested Klipper/Moonraker versions and, with `--printer=s1`, rebuilds and flashes
-   the board firmware to match Klipper while the printer is idle
+   the board firmware to match Klipper while the printer is idle. It also holds the kernel, bootloader and
+   board packages ([`update/held-packages.txt`](update/held-packages.txt)), so OS updates can't install an
+   untested one
 10. restarts Moonraker, Klipper and KlipperScreen
 
 Every file it changes is backed up once as `<file>.pre-starstack`.

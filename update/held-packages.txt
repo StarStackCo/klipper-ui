@@ -1,0 +1,12 @@
+# STARSTACK: OS packages that "Update everything" must not upgrade (klipper-ui D-092).
+# Kernel, device tree, bootloader, board support and firmware, and the boot image builder: a bad
+# one can stop the Pi booting. install.sh (step 9) holds the installed packages matching these
+# patterns. To update them: test on the S1 first (sudo apt-mark unhold <pkg>, upgrade, reboot,
+# run the checklist), then hold again by re-running install.sh.
+linux-image-*
+linux-dtb-*
+linux-u-boot-*
+armbian-bsp-*
+armbian-firmware*
+armbian-config
+initramfs-tools*

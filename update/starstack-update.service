@@ -1,13 +1,16 @@
 # STARSTACK: update helper (klipper-ui D-087): finishes "Update everything" (tested versions,
-# board firmware). Installed by install.sh as /etc/systemd/system/starstack-update.service.
+# board firmware, health check and undo). Installed by install.sh as /etc/systemd/system/starstack-update.service.
 [Unit]
-Description=StarStack update helper (tested versions, board firmware)
+Description=StarStack update helper (tested versions, board firmware, undo)
 After=moonraker.service
 Wants=moonraker.service
 
 [Service]
 Type=simple
 User=@USER@
+# Moonraker's polkit group: lets the helper restart klipper/moonraker/KlipperScreen itself when an
+# update broke Moonraker (undo, D-092)
+SupplementaryGroups=moonraker-admin
 Environment=STARSTACK_REPO=@REPO@
 ExecStart=/usr/bin/python3 /usr/local/lib/starstack/starstack-update.py
 Restart=always

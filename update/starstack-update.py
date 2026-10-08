@@ -11,6 +11,10 @@ the job so one tap is enough:
    idle, it builds the firmware with the printer's saved build config and flashes it through the
    board's Katapult bootloader (D-083). Only on printers set up for it (install.sh --printer s1).
 
+3. Health check and undo (D-092): after any update, Moonraker, Klipper, the touchscreen app and the
+   board must be healthy within 5 minutes, or every changed part goes back to the last known good
+   versions. The touchscreen's "Undo last update" goes back one update (/run/starstack/undo-request).
+
 Never while printing or paused, never while Moonraker is updating. Messages go to the printer's
 console (both UIs) and ~/printer_data/logs/starstack-update.log; the touchscreen's Updates page
 reads /run/starstack/board-firmware.
@@ -46,6 +50,24 @@ BUILD = os.path.join(STATE_DIR, "firmware-build")
 STATUS = "/run/starstack/board-firmware"
 LOG = os.path.join(HOME, "printer_data", "logs", "starstack-update.log")
 PINS = os.path.join(REPO, "update", "versions.conf")
+GIT_REPOS = {
+    "klipper": KLIPPER,
+    "moonraker": os.path.join(HOME, "moonraker"),
+    "klipper-ui": REPO,
+    "KlipperScreen": os.path.join(HOME, "KlipperScreen"),
+    "mainsail-config": os.path.join(HOME, "mainsail-config"),
+}
+MAINSAIL_INFO = os.path.join(HOME, "mainsail", "release_info.json")
+KS_UNIT = "/etc/systemd/system/KlipperScreen.service"
+CONFIG_DIR = os.path.join(HOME, "printer_data", "config")
+CONFIG_FILES = ("printer.cfg", "moonraker.conf", "KlipperScreen.conf")
+GOOD_DIR = os.path.join(
+    STATE_DIR, "good"
+)  # config copy of the last known good (+ ".prev")
+HEALTH = "/run/starstack/update-health"  # read by the touchscreen's Updates page
+UNDO_REQUEST = "/run/starstack/undo-request"  # written by its "Undo last update" button
+HEALTH_WAIT = 300  # seconds for everything to be healthy after an update (user: 5 min)
+CONFIG_REFRESH = 3600  # keep the good config copy up to date with the user's own edits
 POLL = 15
 SETTLE = 45  # seconds after an update or Klipper restart before touching the board
 MAX_TRIES = 2  # flash attempts per Klipper version
@@ -334,10 +356,307 @@ def board_check(st, check_only=False, force=False):
     return "failed: " + err
 
 
+# ---------------------------------------------------------------- 3. health check and undo (D-092)
+# "Last known good": the exact versions (git commits, Mainsail release) of a printer that was idle
+# and healthy, plus a copy of its main config files. After any update (touchscreen, Mainsail or by
+# hand) the helper waits up to HEALTH_WAIT for Moonraker, Klipper (ready), the touchscreen app and
+# the board firmware; if they aren't all healthy by then, it puts every changed part back to the
+# last good versions. "Undo last update" (touchscreen) goes back to the record before that.
+
+
+def git(path, *args, timeout=60):
+    r = subprocess.run(
+        ["git", "-C", path, *args],
+        capture_output=True,
+        text=True,
+        timeout=timeout,
+        check=False,
+    )
+    return r.stdout.strip() if r.returncode == 0 else None
+
+
+def current_versions():
+    v = {}
+    for name, path in GIT_REPOS.items():
+        if os.path.isdir(os.path.join(path, ".git")):
+            v[name] = git(path, "rev-parse", "HEAD")
+    try:
+        with open(MAINSAIL_INFO) as f:
+            v["mainsail"] = json.load(f).get("version")
+    except (OSError, ValueError):
+        pass
+    return v
+
+
+def file_hash(path):
+    try:
+        with open(path, "rb") as f:
+            return hashlib.sha256(f.read()).hexdigest()
+    except OSError:
+        return None
+
+
+def service_active(unit):
+    r = subprocess.run(
+        ["systemctl", "is-active", unit], capture_output=True, text=True, check=False
+    )
+    return r.stdout.strip() == "active"
+
+
+def restart(unit):
+    """Restart a service without Moonraker (the helper's unit has Moonraker's polkit group)."""
+    r = subprocess.run(
+        ["systemctl", "--no-ask-password", "restart", unit],
+        capture_output=True,
+        text=True,
+        timeout=120,
+        check=False,
+    )
+    log(f"restart {unit}: {'ok' if r.returncode == 0 else r.stderr.strip()}")
+
+
+def healthy():
+    """(True, "") or (False, why) for the printer's software after an update."""
+    if api("/server/info") is None:
+        return False, "Moonraker isn't answering"
+    state, msg, host, mcu = versions()
+    if state != "ready":
+        first = (msg.strip().splitlines() or [""])[0][:100]
+        return False, f"Klipper is {state}" + (f" ({first})" if first else "")
+    if os.path.exists(KS_UNIT) and not service_active("KlipperScreen"):
+        return False, "the touchscreen app isn't running"
+    if firmware_profile() and mismatch(state, msg, host, mcu):
+        return False, "the board firmware doesn't match Klipper yet"
+    return True, ""
+
+
+def set_health(st, state, message):
+    prev = st.get("prev")
+    info = {
+        "state": state,
+        "message": message,
+        "time": time.time(),
+        "can_undo": bool(prev),
+        "undo_to": time.strftime("%Y-%m-%d %H:%M", time.localtime(prev["time"]))
+        if prev
+        else "",
+    }
+    try:
+        os.makedirs(os.path.dirname(HEALTH), exist_ok=True)
+        with open(HEALTH + ".tmp", "w") as f:
+            json.dump(info, f)
+        os.replace(HEALTH + ".tmp", HEALTH)
+    except OSError:
+        pass
+
+
+def record_good(st, cur):
+    """These versions work: keep them (and the config) as the new last known good."""
+    if st.get("good") and st["good"]["versions"] != cur:
+        if os.path.isdir(GOOD_DIR + ".prev"):
+            shutil.rmtree(GOOD_DIR + ".prev")
+        if os.path.isdir(GOOD_DIR):
+            os.replace(GOOD_DIR, GOOD_DIR + ".prev")
+        st["prev"] = dict(st["good"], config_dir=GOOD_DIR + ".prev")
+    save_config(st, cur)
+
+
+def save_config(st, cur):
+    os.makedirs(GOOD_DIR, exist_ok=True)
+    hashes = {}
+    for name in CONFIG_FILES:
+        src = os.path.join(CONFIG_DIR, name)
+        if os.path.isfile(src):
+            shutil.copy2(src, os.path.join(GOOD_DIR, name))
+            hashes[name] = file_hash(src)
+    branches = {
+        n: git(p, "branch", "--show-current")
+        for n, p in GIT_REPOS.items()
+        if n in cur and n != "mainsail"
+    }
+    st["good"] = {
+        "time": time.time(),
+        "versions": cur,
+        "branches": branches,
+        "config": hashes,
+        "config_dir": GOOD_DIR,
+    }
+    st["config_saved"] = time.time()
+    save_state(st)
+
+
+def summary(old, new):
+    names = [n for n in sorted(set(old) | set(new)) if old.get(n) != new.get(n)]
+    return ", ".join(names) or "nothing"
+
+
+def undo(st, target, reason, auto):
+    cur = current_versions()
+    changed = [n for n, v in target["versions"].items() if cur.get(n) != v]
+    what = ", ".join(changed) or "nothing"
+    head = "Update undone automatically" if auto else "Undoing the last update"
+    say(f"StarStack: {head} ({what}): {reason}", error=auto)
+    set_health(st, "undoing", f"Putting back the previous versions: {what}")
+    for name in changed:
+        if name == "mainsail":
+            continue
+        path, sha = GIT_REPOS[name], target["versions"][name]
+        branch = target.get("branches", {}).get(name)
+        if branch and git(path, "branch", "--show-current") != branch:
+            git(path, "checkout", "-q", branch)
+        ok = git(path, "reset", "-q", "--hard", sha) is not None
+        log(f"{name}: back to {sha[:9]}" + ("" if ok else " FAILED"))
+    restored = False
+    if auto:  # config files changed during this update (not the user's earlier edits)
+        since = st.get("changed_at", time.time()) - 60
+        for name, h in target.get("config", {}).items():
+            dst = os.path.join(CONFIG_DIR, name)
+            src = os.path.join(target["config_dir"], name)
+            try:
+                newer = os.path.getmtime(dst) >= since
+            except OSError:
+                newer = True
+            if file_hash(dst) != h and newer and os.path.isfile(src):
+                if os.path.isfile(dst):
+                    shutil.copy2(dst, dst + ".pre-undo")
+                shutil.copy2(src, dst)
+                restored = True
+                log(f"config {name} restored (the changed one is {name}.pre-undo)")
+    if (
+        restored
+        or {"moonraker", "klipper-ui"} & set(changed)
+        or api("/server/info") is None
+    ):
+        restart("moonraker")
+        for _ in range(60):
+            time.sleep(2)
+            if api("/server/info"):
+                break
+    if restored or {"klipper", "klipper-ui", "mainsail-config"} & set(changed):
+        restart("klipper")
+    if "KlipperScreen" in changed:
+        restart("KlipperScreen")
+    if "mainsail" in changed:
+        api("/machine/update/rollback?name=mainsail", "POST", timeout=120)
+    api(
+        "/machine/update/refresh", "POST", timeout=180
+    )  # Mainsail/touchscreen show the right versions
+    st["pins"] = pins_hash()  # the pins now match the versions put back
+    st["fw"] = {}
+    st["settle_until"] = time.time() + SETTLE
+    st.pop("changed_at", None)
+    if not auto:  # the previous record becomes the good one; one step of undo only
+        st["good"], st["prev"] = dict(target, config_dir=GOOD_DIR), None
+        if os.path.isdir(GOOD_DIR):
+            shutil.rmtree(GOOD_DIR)
+        if os.path.isdir(GOOD_DIR + ".prev"):
+            os.replace(GOOD_DIR + ".prev", GOOD_DIR)
+    st["undone"] = {"time": time.time(), "reason": reason, "auto": auto, "what": what}
+    save_state(st)
+    msg = (
+        f"Update undone ({what}): {reason}" if auto else f"Last update undone ({what})"
+    )
+    set_health(st, "undone", msg)
+    if wait_klipper("ready", 90):  # the first message went out while Klipper was down
+        say(
+            "StarStack: " + msg + ". Everything is back on the previous versions.",
+            error=auto,
+        )
+    return msg
+
+
+def health_step(st, check_only=False):
+    """None when there's nothing to do, else a status line for the log."""
+    cur = current_versions()
+    good = st.get("good")
+    if check_only:
+        if not good:
+            return "health: no known-good record yet"
+        if cur == good["versions"]:
+            return "health: running the last known good versions"
+        return f"health: new versions ({summary(good['versions'], cur)}): {healthy()[1] or 'healthy'}"
+    if st.get("pins") and st["pins"] != pins_hash():
+        st["changed_at"] = (
+            time.time()
+        )  # new tested versions are being installed: wait for them
+        save_state(st)
+        return None
+    if os.path.exists(UNDO_REQUEST):
+        try:
+            os.remove(UNDO_REQUEST)
+        except OSError:
+            pass
+        if busy_printing():
+            set_health(st, "ok", "Undo waits: the printer is printing")
+            return "undo requested while printing: ignored"
+        if (api("/machine/update/status") or {}).get("busy"):
+            set_health(st, "ok", "Undo waits: an update is running")
+            return "undo requested while updating: ignored"
+        if not st.get("prev"):
+            set_health(st, "ok", "There is no earlier version to go back to")
+            return "undo requested: nothing to go back to"
+        return undo(st, st["prev"], "Undo button", auto=False)
+    upd = api("/machine/update/status")
+    if upd and upd.get("busy"):
+        if good and cur != good["versions"]:
+            st["changed_at"] = time.time()  # the 5 minutes start when updating finishes
+            save_state(st)
+        return None
+    if not good or cur == good["versions"]:
+        st.pop("changed_at", None)
+        if busy_printing():
+            return None
+        ok, _why = healthy()
+        if ok and not good:
+            log("recorded the last known good versions")
+            save_config(st, cur)
+            set_health(st, "ok", "")
+        elif ok and time.time() - st.get("config_saved", 0) > CONFIG_REFRESH:
+            save_config(
+                st, cur
+            )  # keep the config copy current with the user's own edits
+        return None
+    if "changed_at" not in st:
+        st["changed_at"] = time.time()
+        save_state(st)
+        log(f"new versions ({summary(good['versions'], cur)}): checking they work")
+    ok, why = healthy()
+    if ok:
+        record_good(st, cur)
+        st.pop("changed_at", None)
+        save_state(st)
+        set_health(st, "ok", "Last update checked: everything started")
+        return "update checked: everything started"
+    waited = time.time() - st["changed_at"]
+    if waited < HEALTH_WAIT:
+        set_health(
+            st,
+            "checking",
+            f"Checking the update ({int((HEALTH_WAIT - waited) / 60) + 1} min left): {why}",
+        )
+        return f"checking the update: {why}"
+    if (
+        busy_printing()
+    ):  # e.g. only the touchscreen app is down: never restart Klipper mid-print
+        set_health(
+            st,
+            "checking",
+            f"Update problem ({why}): undo waits until the print is done",
+        )
+        return f"update problem, waiting for the print: {why}"
+    return undo(st, good, why, auto=True)
+
+
 # ---------------------------------------------------------------- main
 
 
 def step(st, check_only=False):
+    health = health_step(st, check_only)
+    rest = maintain(st, check_only)
+    return " | ".join(x for x in (health, rest) if x)
+
+
+def maintain(st, check_only=False):
     if api("/server/info") is None:
         return "Moonraker not reachable"
     if update_status().get("busy"):
@@ -365,6 +684,8 @@ def main():
         print(board_check(st, force=True))
         return
     log("update helper started")
+    if not os.path.exists(HEALTH):
+        set_health(st, "ok", "")
     last = None
     while True:
         try:

@@ -214,3 +214,34 @@ file (`ss_bench_start_cancel.gcode`: `PRINT_START BED=60 EXTRUDER=150`), bed ste
 | Pause/resume: part fan off and back; cancel: nozzle lifts | ✅ | Pause: park + fan 39 % → 0; resume: fan back to 39 %; cancel while printing: heaters off at once, lift 10 + 40 mm. No `_S1` error. User: "everything works as intended" |
 | Old file (M190/M109): Cancel on the touchscreen → "Canceling…", then emergency stop + restart after 3 s | ✅ | `Main(27)_PETG_4h44m`: backstop fired 16:01:49, firmware restart 16:01:51, ready again, heaters off |
 
+## Run 10: filament check before printing (D-090), 2026-10-08 (klipper-ui dev 546633d, fork dev a6a084d8)
+
+| Check | Result | Notes |
+|---|---|---|
+| PRINT_START with nothing loaded: waits, asks on the touchscreen and in Mainsail | ❌ → ✅ | First the question vanished: the touchscreen resets its pages when the print turns "paused". Now asked 1 s later from the timer. Buttons PLA / PETG / TPU in one row |
+| Answer PETG in the question | ✅ | Recorded, question closed, moved on to heating the bed (canceled before any motion) |
+| No answer within the limit (set to 3 s for the test) | ✅ | Canceled with a message, heaters off, question closed; limit back to 600 s |
+| Touchscreen Print, nothing loaded → "No filament loaded" → It's loaded → PETG → "Is the bed clear?" | ✅ | User; Not yet, nothing printed |
+| Touchscreen Print, PLA loaded, PETG file → "Different filament loaded" | ✅ | User; Go back. PETG recorded again afterwards |
+| Load filament from the question → back to Print | ⏳ | Not tried yet (same load flow as before + return to Print) |
+
+## Run 11: kernel/boot packages held (D-092 part 4), 2026-10-08 (klipper-ui dev 0812b02)
+
+| Check | Result | Notes |
+|---|---|---|
+| `install.sh --dry-run` lists the packages to hold | ✅ | 8: linux-image/dtb/u-boot (BTT vendor), armbian-bsp-cli, armbian-firmware, armbian-config, initramfs-tools(-core) |
+| User ran `install.sh --printer=s1`: packages held, list saved for uninstall | ✅ | `apt-mark showhold` + `/var/lib/starstack/held-packages` |
+| `apt-get -s upgrade` keeps them back | ✅ | 252 others would install |
+| Moonraker (PackageKit) "system" list skips them | ✅ | 256 → 252 after a refresh; none of the held packages listed |
+
+## Run 12: update health check, automatic undo, Undo button (D-092 part 1), 2026-10-08 (klipper-ui dev c45d69e..85e959e, fork dev f1ad0ca5)
+
+| Check | Result | Notes |
+|---|---|---|
+| User re-ran `install.sh --printer=s1`: helper runs with `SupplementaryGroups=moonraker-admin` | ✅ | |
+| First run records the last known good (5 repos + Mainsail v2.19.0 + 3 config files) | ✅ | 16:40:52 |
+| Good update (klipper-ui forward one commit) → checked, new good, "Undo last update" offered | ✅ | Checked within seconds |
+| Bad update (throwaway local commit breaking the macros, Klipper restarted → error) | ✅ | Noticed 16:42:10; after 5 min put klipper-ui back, restarted Moonraker and Klipper itself (16:47:13–20); Klipper ready, repo level with GitHub again |
+| Undo message on the console | ❌ → fix | Sent while Klipper was down, so only the Updates page showed it. Fixed in 85e959e (repeats it once Klipper is ready); needs the next `install.sh` run to reach the S1 |
+| "Undo last update" on the touchscreen (user) | ✅ | 23 s: back one version, Moonraker + Klipper restarted, Klipper ready; Undo row gone afterwards (one step) |
+

@@ -378,6 +378,8 @@ helper_install() {
   local tmp changed=0
   tmp=$(mktemp -d)
   sed -e "s|@USER@|$(id -un)|g" -e "s|@REPO@|$REPO|g" "$REPO/update/starstack-update.service" > "$tmp/unit"
+  # without Moonraker's polkit group systemd won't start the unit; undo then needs Moonraker running
+  getent group moonraker-admin >/dev/null || sed -i '/^SupplementaryGroups=moonraker-admin/d' "$tmp/unit"
   cmp -s "$REPO/update/starstack-update.py" "$UPD_LIB" || changed=1
   cmp -s "$tmp/unit" "$UPD_UNIT" || changed=1
   [ -d /var/lib/starstack ] || changed=1

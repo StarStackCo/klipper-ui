@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Release dev -> stable in both repos and tag the version (klipper-ui D-087).
-#   scripts/release.sh v1.0.0 "Short description"
+#   scripts/release.sh v0.2.0 "Short description"
+# Versions stay 0.x until the first unit ships (D-088); v1.0.0 needs FIRST_UNIT_SHIPPED=1.
 # For each repo with new commits on dev: opens the dev -> stable PR, waits for its checks (stops on
 # a failure), merges it, brings dev level with stable. Then tags both stable branches with the
 # version, so Mainsail and the touchscreen show it. Printers get it with "Update everything".
@@ -12,6 +13,9 @@ GH="$(command -v gh || echo "/c/Program Files/GitHub CLI/gh.exe")"
 VER="${1:?usage: release.sh vX.Y.Z \"description\"}"
 DESC="${2:?usage: release.sh vX.Y.Z \"description\"}"
 [[ "$VER" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "version must look like v1.2.3"; exit 2; }
+if [[ ! "$VER" =~ ^v0\. ]] && [ "${FIRST_UNIT_SHIPPED:-}" != 1 ]; then
+  echo "versions stay 0.x until the first unit ships (D-088)"; exit 2
+fi
 
 REPOS=("$ROOT|StarStackCo/klipper-ui|main" "$FORK|StarStackCo/KlipperScreen-starstack|starstack")
 

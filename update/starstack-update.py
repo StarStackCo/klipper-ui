@@ -67,6 +67,9 @@ GOOD_DIR = os.path.join(
 HEALTH = "/run/starstack/update-health"  # read by the touchscreen's Updates page
 UNDO_REQUEST = "/run/starstack/undo-request"  # written by its "Undo last update" button
 HEALTH_WAIT = 300  # seconds for everything to be healthy after an update (user: 5 min)
+HEALTH_STEADY = (
+    60  # ...and it must stay healthy this long before the update counts as good
+)
 CONFIG_REFRESH = 3600  # keep the good config copy up to date with the user's own edits
 POLL = 15
 SETTLE = 45  # seconds after an update or Klipper restart before touching the board
@@ -545,6 +548,7 @@ def undo(st, target, reason, auto):
     st["fw"] = {}
     st["settle_until"] = time.time() + SETTLE
     st.pop("changed_at", None)
+    st.pop("healthy_since", None)
     if not auto:  # the previous record becomes the good one; one step of undo only
         st["good"], st["prev"] = dict(target, config_dir=GOOD_DIR), None
         if os.path.isdir(GOOD_DIR):
@@ -604,6 +608,7 @@ def health_step(st, check_only=False):
         return None
     if not good or cur == good["versions"]:
         st.pop("changed_at", None)
+        st.pop("healthy_since", None)
         if busy_printing():
             return None
         ok, _why = healthy()
@@ -621,12 +626,26 @@ def health_step(st, check_only=False):
         save_state(st)
         log(f"new versions ({summary(good['versions'], cur)}): checking they work")
     ok, why = healthy()
-    if ok:
+    if not ok:
+        st.pop("healthy_since", None)
+    elif "healthy_since" not in st:
+        st["healthy_since"] = time.time()
+        save_state(st)
+    # healthy for a whole minute: right after the change the services may not have restarted yet
+    if ok and time.time() - st["healthy_since"] >= HEALTH_STEADY:
         record_good(st, cur)
         st.pop("changed_at", None)
+        st.pop("healthy_since", None)
         save_state(st)
         set_health(st, "ok", "Last update checked: everything started")
         return "update checked: everything started"
+    if ok:
+        set_health(
+            st,
+            "checking",
+            "Checking the update: everything started, making sure it stays up",
+        )
+        return "checking the update: healthy, waiting a minute"
     waited = time.time() - st["changed_at"]
     if waited < HEALTH_WAIT:
         set_health(

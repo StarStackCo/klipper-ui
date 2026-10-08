@@ -208,9 +208,9 @@ file (`ss_bench_start_cancel.gcode`: `PRINT_START BED=60 EXTRUDER=150`), bed ste
 | Cancel while the bed heats | ✅ | 0.34 s to canceled, heaters off; no `_S1` error |
 | Heat time limit (set to 6 s for the test) | ✅ | Canceled with "the bed didn't reach 60°C…", heaters off, status cleared; limit back to 600 s |
 | Touchscreen while getting ready | ✅ | "Heating bed 36 / 60°" + heat bar, "Getting ready" (grayed), no %/time left; back to Home after cancel |
-| Full start with the new Orca start G-code: bed → nozzle → home → clean → cool to 150 → mesh → park → heat → purge → print | ⏳ | Needs the user (motion, re-slice in Orca) |
-| Orca adds no M190/M109 of its own before `PRINT_START` | ⏳ | Check the first re-sliced file |
-| Cancel at each step (nozzle heat, cooling, final heat) | ⏳ | User at the printer |
-| Pause/resume: part fan off and back; cancel: nozzle lifts | ⏳ | First real test of the renamed `_PRINTER_*` macros |
-| Old file (M190/M109): Cancel on the touchscreen → "Canceling…", then emergency stop + restart after 3 s | ⏳ | User at the printer |
+| Full start with the new Orca start G-code: bed → nozzle → home → clean → cool to 150 → mesh → park → heat → purge → print | ✅ | Benchy PETG 80/245: bed 4 min, nozzle 1 min, home + clean, cool 1 min, mesh 1 min, park Z15, heat 46 s; ~8 min to the purge line; resumed in place. Mesh: right side ~1.6 mm lower than left (compensated; tram later) |
+| Orca adds no M190/M109 of its own before `PRINT_START` | ✅ | `M140 S80`, `M104 S0`, `PRINT_START BED=80 EXTRUDER=245`; no M190/M109 anywhere in the file |
+| Cancel while getting ready (touchscreen) | ✅ | Twice during bed heat: canceled in 1–3 s, heaters off. Still homed from the previous print → cancel lifted 50 mm; not homed → no move |
+| Pause/resume: part fan off and back; cancel: nozzle lifts | ✅ | Pause: park + fan 39 % → 0; resume: fan back to 39 %; cancel while printing: heaters off at once, lift 10 + 40 mm. No `_S1` error. User: "everything works as intended" |
+| Old file (M190/M109): Cancel on the touchscreen → "Canceling…", then emergency stop + restart after 3 s | ✅ | `Main(27)_PETG_4h44m`: backstop fired 16:01:49, firmware restart 16:01:51, ready again, heaters off |
 

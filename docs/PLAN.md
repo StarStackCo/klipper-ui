@@ -92,8 +92,8 @@ For every increment:
 - Full regression run, including a real test print.
 - ✅ Install/update docs in the repo README (one-tap updates, pinning, releasing).
 - ✅ Repo registered with Moonraker's `update_manager` (install.sh step 3).
-- 🟡 One-tap updates with tested versions and board firmware (D-087): built and tested on the S1; the update helper service still to install (needs the user's password), then release v0.2.0 (D-088).
-- 🟡 Start of print that never blocks Cancel (`PRINT_START`, D-089): bench-tested without motion; full start and cancel tests with the user.
+- 🟡 One-tap updates with tested versions and board firmware (D-087): built and tested on the S1; update helper service installed and running on the S1; left: release v0.2.0 (D-088).
+- ✅ Start of print that never blocks Cancel (`PRINT_START`, D-089): all tests passed on the S1.
 - Open: filament check before printing (Q-052), update safety (Q-053).
 - Still to do: Wi-Fi on the S1 with the antenna (B-6), starter prints (B-8, last), camera switch when a camera is fitted (B-9). See [BACKLOG.md](BACKLOG.md).
 

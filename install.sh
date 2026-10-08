@@ -9,12 +9,18 @@
 #   bash ~/klipper-ui/install.sh --no-usb        skip the USB stick import (step 6, needs sudo)
 #   bash ~/klipper-ui/install.sh --no-splash     skip the StarStack boot screen (step 7, needs sudo)
 #   bash ~/klipper-ui/install.sh --no-fastboot   skip the faster-boot changes (step 8, needs sudo)
+#   bash ~/klipper-ui/install.sh --no-update-helper   skip the update helper (step 9, needs sudo)
+#   bash ~/klipper-ui/install.sh --printer=s1    this is a StarStack S1: the update helper also keeps
+#                                                its board firmware current (remembered on re-runs)
 #
 # What it does (each step prints what it changed; backups are made once, never overwritten):
 #   1. Links the StarStack macros and Mainsail theme from this repo into ~/printer_data/config
 #      (so Mainsail's update manager updates them with one click)
 #   2. Checks printer.cfg has what the UI needs (and adds it with --fix-printer-cfg)
-#   3. Adds [update_manager klipper-ui] and points [update_manager KlipperScreen] at the StarStack fork
+#   3. Adds [update_manager klipper-ui] and points [update_manager KlipperScreen] at the StarStack fork,
+#      includes the tested Klipper/Moonraker versions (update/versions.conf, D-087) and removes the
+#      update entries of add-ons the printer doesn't use (timelapse, print_area_bed_mesh, and the
+#      webcam streamer and Wi-Fi keepalive when they're switched off)
 #   4. Switches ~/KlipperScreen to the StarStack fork (re-clones if the git folder is damaged),
 #      installs the Public Sans font and selects the starstack theme
 #   5. Applies Mainsail UI settings + macro groups + dashboard panel order (Moonraker database)
@@ -29,7 +35,10 @@
 #      crowsnest, OpenVPN, NFS, keyboard/console setup) and automatic OS updates; the
 #      touchscreen's X server no longer loads OpenGL (/etc/X11/xorg.conf.d). sudo; skip with
 #      --no-fastboot; --uninstall turns them back on. Needs a reboot
-#   9. Restarts Moonraker, Klipper and KlipperScreen
+#   9. Update helper (starstack-update.service, sudo; skip with --no-update-helper): one "Update
+#      everything" tap also installs newly tested Klipper/Moonraker versions and, with --printer,
+#      brings the board firmware to the same Klipper version (Katapult)
+#  10. Restarts Moonraker, Klipper and KlipperScreen
 # It refuses to run while a print is in progress.
 set -euo pipefail
 
@@ -40,16 +49,18 @@ KS_DIR="$HOME/KlipperScreen"
 KS_FORK="https://github.com/StarStackCo/KlipperScreen-starstack.git"
 KS_UP="https://github.com/KlipperScreen/KlipperScreen.git"
 UI_ORIGIN="https://github.com/StarStackCo/klipper-ui.git"
-DRY=0; MODE=install; FIX_CFG=0; USB=1; SPLASH=1; FASTBOOT=1
+DRY=0; MODE=install; FIX_CFG=0; USB=1; SPLASH=1; FASTBOOT=1; HELPER=1; PRINTER=""
 for a in "$@"; do
   case "$a" in
+    --no-update-helper) HELPER=0 ;;
+    --printer=*) PRINTER="${a#--printer=}" ;;
     --dry-run) DRY=1 ;;
     --uninstall) MODE=uninstall ;;
     --fix-printer-cfg) FIX_CFG=1 ;;
     --no-usb) USB=0 ;;
     --no-splash) SPLASH=0 ;;
     --no-fastboot) FASTBOOT=0 ;;
-    -h|--help) sed -n '2,35p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,41p' "$0"; exit 0 ;;
     *) echo "unknown option: $a"; exit 2 ;;
   esac
 done
@@ -78,16 +89,23 @@ unlink_restore() {
 
 moonraker_sections() {
   backup_once "$CFG/moonraker.conf"
-  [ "$DRY" = 1 ] && { echo "   (dry-run) update [update_manager klipper-ui] and [update_manager KlipperScreen]"; return; }
-  python3 - "$CFG/moonraker.conf" "$REPO" "$UI_ORIGIN" "$KS_FORK" <<'PY'
+  [ "$DRY" = 1 ] && { echo "   (dry-run) update [update_manager klipper-ui] and [update_manager KlipperScreen], include the tested versions, drop unused add-on entries"; return; }
+  # webcam streamer off: step 8 turns it off (no camera), or it already is
+  local cam_off=0
+  { [ "$FASTBOOT" = 1 ] || [ "$(systemctl is-enabled crowsnest 2>/dev/null)" != enabled ]; } && cam_off=1
+  python3 - "$CFG/moonraker.conf" "$REPO" "$UI_ORIGIN" "$KS_FORK" "$CFG/printer.cfg" "$cam_off" "$CFG/sonar.conf" <<'PY'
 import re, sys
-p, repo, ui_origin, ks_fork = sys.argv[1:]
+p, repo, ui_origin, ks_fork, printer_cfg, cam_off, sonar_conf = sys.argv[1:]
 s = open(p).read()
+try:
+    pcfg = open(printer_cfg).read()
+except OSError:
+    pcfg = ''
 def section(name):
     return re.search(r'^\[%s\]\n(.*?)(?=^\[|\Z)' % re.escape(name), s, re.S | re.M)
 ui = ('[update_manager klipper-ui]\n'
       '# STARSTACK-ADDED: StarStack macros + Mainsail theme (klipper-ui install.sh)\n'
-      'type: git_repo\npath: %s\norigin: %s\nprimary_branch: main\nmanaged_services: klipper\n\n' % (repo, ui_origin))
+      'type: git_repo\npath: %s\norigin: %s\nprimary_branch: main\nmanaged_services: klipper moonraker\n\n' % (repo, ui_origin))
 m = section('update_manager klipper-ui')
 s = s[:m.start()] + ui + s[m.end():] if m else s.rstrip('\n') + '\n\n' + ui
 m = section('update_manager KlipperScreen')
@@ -96,8 +114,29 @@ if m:
     body = ('# STARSTACK-ADDED: track the public StarStack fork (klipper-ui install.sh)\n'
             'origin: %s\nprimary_branch: starstack\n' % ks_fork) + body
     s = s[:m.start(1)] + body + s[m.end(1):]
+# Update entries of add-ons this printer doesn't load only offer untested updates (D-087)
+try:
+    sonar_off = re.search(r'^\s*enable:\s*false', open(sonar_conf).read(), re.M | re.I) is not None
+except OSError:
+    sonar_off = True
+unused = {'timelapse': 'timelapse.cfg' not in pcfg and not section('timelapse'),
+          'print_area_bed_mesh': 'print_area_bed_mesh' not in pcfg,
+          'crowsnest': cam_off == '1',  # the Camera switch (B-9) adds it back when a camera is fitted
+          'sonar': sonar_off}
+for name, drop in unused.items():
+    m = section('update_manager ' + name)
+    if m and drop:
+        s = s[:m.start()] + s[m.end():]
+        print('   moonraker.conf: removed [update_manager %s] (not used by this printer)' % name)
+# their installers' label comments ("# Crowsnest update_manager entry"), now above another section
+s = re.sub(r'^# (\w+) update_manager entry\n(?!\[update_manager \1\])', '', s, flags=re.M | re.I)
+# Tested Klipper/Moonraker versions (update/versions.conf): last, so its values win
+inc = '[include starstack-updates.conf]'
+if inc not in s:
+    s = s.rstrip('\n') + '\n\n' + inc + '\n'
+s = re.sub(r'\n{3,}', '\n\n', s)
 open(p, 'w').write(s)
-print('   moonraker.conf: [update_manager klipper-ui] + KlipperScreen -> StarStack fork')
+print('   moonraker.conf: [update_manager klipper-ui] + KlipperScreen -> StarStack fork, tested versions')
 PY
 }
 
@@ -328,6 +367,51 @@ fastboot_remove() {
   do_ "sudo systemctl daemon-reload"
 }
 
+# ---- 9. Update helper (D-087)
+UPD_LIB=/usr/local/lib/starstack/starstack-update.py
+UPD_UNIT=/etc/systemd/system/starstack-update.service
+UPD_PRINTER=/var/lib/starstack/printer  # which config/<printer>/firmware.conf the helper uses
+
+helper_install() {
+  local tmp changed=0
+  tmp=$(mktemp -d)
+  sed -e "s|@USER@|$(id -un)|g" -e "s|@REPO@|$REPO|g" "$REPO/update/starstack-update.service" > "$tmp/unit"
+  cmp -s "$REPO/update/starstack-update.py" "$UPD_LIB" || changed=1
+  cmp -s "$tmp/unit" "$UPD_UNIT" || changed=1
+  [ -d /var/lib/starstack ] || changed=1
+  if [ $changed = 1 ]; then
+    echo "   installing the update helper (sudo may ask for your password)"
+    do_ "sudo install -D -o root -g root -m 755 '$REPO/update/starstack-update.py' '$UPD_LIB'"
+    do_ "sudo install -o root -g root -m 644 '$tmp/unit' '$UPD_UNIT'"
+    [ -d /var/lib/starstack ] || do_ "sudo install -d -o $(id -un) -g $(id -gn) -m 755 /var/lib/starstack"
+    do_ "sudo systemctl daemon-reload && sudo systemctl enable starstack-update.service"
+  else
+    echo "   ok: update helper installed"
+  fi
+  rm -rf "$tmp"
+  # --printer=<name> is remembered; the helper only flashes boards with a config/<name>/firmware.conf
+  if [ -n "$PRINTER" ]; then
+    if [ -f "$REPO/config/$PRINTER/firmware.conf" ]; then
+      [ "$(cat "$UPD_PRINTER" 2>/dev/null)" = "$PRINTER" ] || do_ "echo '$PRINTER' > '$UPD_PRINTER'"
+    else
+      echo "   no config/$PRINTER/firmware.conf in klipper-ui: board firmware updates stay off"
+    fi
+  fi
+  if [ -s "$UPD_PRINTER" ]; then
+    echo "   board firmware: kept at the host's Klipper version ($(cat "$UPD_PRINTER"))"
+  else
+    echo "   board firmware: not managed (add --printer=s1 on a StarStack S1)"
+  fi
+  [ $changed = 1 ] && do_ "sudo systemctl restart starstack-update.service" || true
+}
+
+helper_remove() {
+  if [ -e "$UPD_UNIT" ] || [ -e "$UPD_LIB" ]; then
+    do_ "sudo systemctl disable --now starstack-update.service 2>/dev/null; sudo rm -f '$UPD_UNIT' '$UPD_LIB' && sudo systemctl daemon-reload"
+    echo "   update helper removed"
+  fi
+}
+
 if [ "$MODE" = uninstall ]; then
   say "Uninstall StarStack UI"
   unlink_restore starstack_macros.cfg
@@ -335,6 +419,9 @@ if [ "$MODE" = uninstall ]; then
   for f in moonraker.conf KlipperScreen.conf; do
     [ -e "$CFG/$f.pre-starstack" ] && do_ "cp '$CFG/$f.pre-starstack' '$CFG/$f'" && echo "   restored $f"
   done
+  # after moonraker.conf is restored: it no longer includes this file
+  [ -L "$CFG/starstack-updates.conf" ] && do_ "rm '$CFG/starstack-updates.conf'"
+  helper_remove
   if [ -d "$KS_DIR" ]; then
     do_ "git -C '$KS_DIR' remote set-url origin '$KS_UP' && git -C '$KS_DIR' fetch -q origin && git -C '$KS_DIR' checkout -q -f -B master origin/master"
   fi
@@ -347,23 +434,26 @@ if [ "$MODE" = uninstall ]; then
   exit 0
 fi
 
-say "1/9 Link StarStack macros + Mainsail theme"
+say "1/10 Link StarStack macros + Mainsail theme"
 link macros/starstack_macros.cfg starstack_macros.cfg
 link mainsail-theme/.theme .theme
-say "2/9 Check printer.cfg"
+link update/versions.conf starstack-updates.conf  # before step 3 includes it in moonraker.conf
+say "2/10 Check printer.cfg"
 printer_cfg_check
-say "3/9 Moonraker update manager"
+say "3/10 Moonraker update manager"
 moonraker_sections
-say "4/9 KlipperScreen -> StarStack fork"
+say "4/10 KlipperScreen -> StarStack fork"
 klipperscreen_fork
-say "5/9 Mainsail settings + macro groups + panel order"
+say "5/10 Mainsail settings + macro groups + panel order"
 if [ "$DRY" = 1 ]; then echo "   (dry-run) apply mainsail-theme/settings.json + macrogroups.json + dashboard.json"; else python3 "$REPO/tools/apply_mainsail.py" | sed 's/^/   /'; fi
-say "6/9 USB stick import"
+say "6/10 USB stick import"
 if [ "$USB" = 1 ]; then usb_install; else echo "   skipped (--no-usb)"; fi
-say "7/9 Boot screen"
+say "7/10 Boot screen"
 if [ "$SPLASH" = 1 ]; then splash_install; else echo "   skipped (--no-splash)"; fi
-say "8/9 Faster boot"
+say "8/10 Faster boot"
 if [ "$FASTBOOT" = 1 ]; then fastboot_install; else echo "   skipped (--no-fastboot)"; fi
-say "9/9 Restart services"
+say "9/10 Update helper"
+if [ "$HELPER" = 1 ]; then helper_install; else echo "   skipped (--no-update-helper)"; fi
+say "10/10 Restart services"
 restart_all
-say "Done. Updates now appear in Mainsail: Machine > Update Manager (klipper-ui, KlipperScreen)."
+say "Done. Update from the touchscreen (Settings > Updates > Update everything) or Mainsail (Machine > Update Manager)."

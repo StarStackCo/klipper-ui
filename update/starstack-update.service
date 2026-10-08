@@ -1,0 +1,18 @@
+# STARSTACK: update helper (klipper-ui D-087): finishes "Update everything" (tested versions,
+# board firmware). Installed by install.sh as /etc/systemd/system/starstack-update.service.
+[Unit]
+Description=StarStack update helper (tested versions, board firmware)
+After=moonraker.service
+Wants=moonraker.service
+
+[Service]
+Type=simple
+User=@USER@
+Environment=STARSTACK_REPO=@REPO@
+ExecStart=/usr/bin/python3 /usr/local/lib/starstack/starstack-update.py
+Restart=always
+RestartSec=10
+Nice=10
+
+[Install]
+WantedBy=multi-user.target

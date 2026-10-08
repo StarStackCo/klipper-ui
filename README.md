@@ -26,13 +26,16 @@ be installed (e.g. with KIAUH). Do this when the printer is idle.
 git clone https://github.com/StarStackCo/klipper-ui.git ~/klipper-ui
 bash ~/klipper-ui/install.sh --dry-run      # see what it will change
 bash ~/klipper-ui/install.sh                # install
+bash ~/klipper-ui/install.sh --printer=s1   # on a StarStack S1 (also keeps its board firmware current)
 ```
 
 The installer:
 1. links `starstack_macros.cfg` and the Mainsail `.theme` from `~/klipper-ui` into your config folder
 2. checks `printer.cfg` has `[include starstack_macros.cfg]`, `[save_variables]`, `[exclude_object]` and
    `[include mainsail.cfg]` (add `--fix-printer-cfg` to let it add them)
-3. adds `[update_manager klipper-ui]` and points `[update_manager KlipperScreen]` at the StarStack fork
+3. adds `[update_manager klipper-ui]`, points `[update_manager KlipperScreen]` at the StarStack fork,
+   includes the tested Klipper/Moonraker versions (`update/versions.conf`) and removes update entries for
+   add-ons the printer doesn't use
 4. switches KlipperScreen to the StarStack fork, installs the Public Sans font, selects the `starstack` theme
 5. applies the Mainsail settings, macro groups and dashboard panel order
 6. sets up the **USB stick import** (asks for your password once; skip with `--no-usb`): plugging a stick
@@ -47,17 +50,33 @@ The installer:
    touchscreen start without waiting for the network, unused services (webcam streamer, OpenVPN, NFS,
    console setup) and automatic OS updates are switched off, and the touchscreen skips OpenGL.
    `--uninstall` turns them back on. Update the OS from Mainsail's Update Manager instead
-9. restarts Moonraker, Klipper and KlipperScreen
+9. installs the **update helper** (asks for your password; skip with `--no-update-helper`): after an
+   update it applies newly tested Klipper/Moonraker versions and, with `--printer=s1`, rebuilds and flashes
+   the board firmware to match Klipper while the printer is idle
+10. restarts Moonraker, Klipper and KlipperScreen
 
 Every file it changes is backed up once as `<file>.pre-starstack`.
 
-**OrcaSlicer:** turn on *Label objects* (cancel object), thumbnails `48x48/PNG, 300x300/PNG`, and set
-*Change filament G-code* to `M600` for color changes (the S1 config also accepts `CHANGE_FILAMENT`).
+**OrcaSlicer:** turn on *Label objects* (cancel object), thumbnails `48x48/PNG, 300x300/PNG`, set
+*Change filament G-code* to `M600` for color changes (the S1 config also accepts `CHANGE_FILAMENT`), and
+use `PRINT_START` as the start G-code (S1: [`config/s1/orca-start-gcode.txt`](config/s1/orca-start-gcode.txt)).
+It heats without blocking, so Cancel works at once, and gives up on a heater that doesn't reach temperature.
 
 ## Update
 
-Mainsail › **Machine › Update Manager**: update **klipper-ui** (macros + theme) and **KlipperScreen**
-(touchscreen). Printers follow the stable branches (`main` here, `starstack` in the fork).
+One tap: touchscreen **Settings › (Advanced on) › Updates › Update everything** (or Mainsail › Machine › Update
+Manager › Update all). That updates klipper-ui (macros, theme, tested versions), the touchscreen,
+Mainsail, OS packages and Klipper/Moonraker, but never past the versions tested on the S1. The update
+helper then brings the board firmware to the same Klipper version by itself (Updates page: *Board
+firmware*). Printers follow the stable branches (`main` here, `starstack` in the fork).
+
+Releasing (from a PC, both repos clean on `dev` and pushed):
+
+| Step | Command |
+|---|---|
+| Move the S1 to newer Klipper/Moonraker and test it | `scripts/pin-versions.sh --latest`, then run the checklist |
+| Pin what's on the S1 now as "tested" | `scripts/pin-versions.sh` (commit the change to `update/versions.conf`) |
+| Release dev → stable in both repos, tag | `scripts/release.sh v0.2.0 "What changed"` (versions stay 0.x until the first unit ships, D-088) |
 
 ## Uninstall
 
@@ -91,6 +110,8 @@ From a PC with SSH access to the bench Pi (`scripts/pi.sh` logs every command to
 | `scripts/ks-screenshot.sh shot.png` | Capture the touchscreen |
 | `scripts/ks-tap.sh "click Settings" [shot.png]` | Drive the touchscreen (needs bench devtools: `touch ~/.starstack_dev`, off on the S1) |
 | `scripts/bench_test_macros.py` | Automated macro tests (bench config only) |
+| `scripts/pin-versions.sh [--latest]` | Pin the S1's Klipper/Moonraker as the tested versions (`--latest`: update the S1 first) |
+| `scripts/release.sh vX.Y.Z "text"` | Release dev → stable in both repos (PR, checks, merge) and tag |
 | `scripts/make_bench_print.py` | Demo print with thumbnail, objects, layers, color changes |
 
 Layout:
@@ -99,7 +120,8 @@ Layout:
 |---|---|
 | `macros/` | Klipper macros behind the buttons |
 | `mainsail-theme/` | Mainsail theme + settings |
-| `config/` | `s1/` the S1's printer.cfg (+ reference moonraker.conf), `bench/` bench-only printer.cfg (fake heaters, never for a real printer) |
+| `config/` | `s1/` the S1's printer.cfg, board firmware settings, Orca start G-code (+ reference moonraker.conf), `bench/` bench-only printer.cfg (fake heaters, never for a real printer) |
+| `update/` | Tested Klipper/Moonraker versions and the update helper (service) |
 | `splash/` | Boot screen: logo images, progress bar + "app didn't start" watchdog, systemd units |
 | `boot/` | Faster-boot changes (systemd edit, X config) |
 | `usb/` | USB stick import (udev rule, service, script) |

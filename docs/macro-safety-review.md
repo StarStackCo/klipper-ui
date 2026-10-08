@@ -1,6 +1,6 @@
-# Macro Safety Review: `macros/starstack_macros.cfg` v1
+# Macro Safety Review: `macros/starstack_macros.cfg` v1.1
 
-**Date:** 2026-10-04 · **Reviewer:** Claude (for user sign-off) · **Status:** approved and released; on the S1 since 2026-10-08. Updated 2026-10-08 for the S1 filament values (D-081) and the S1's own macros (below)
+**Date:** 2026-10-04 · **Reviewer:** Claude (for user sign-off) · **Status:** approved and released; on the S1 since 2026-10-08. Updated 2026-10-08 for the S1 filament values (D-081) and the S1's own macros (below); v1.1 adds `PRINT_START` (D-089)
 
 ## Global checks
 
@@ -8,7 +8,9 @@
 |---|---|---|
 | No macro changes `max_temp`, `min_temp`, `min_extrude_temp`, `verify_heater`, endstops or kinematics | ✅ | The file contains no `SET_HEATER`/`verify`/`SET_KINEMATIC_POSITION`/`FORCE_MOVE`/`SET_STEPPER_ENABLE`/`SET_VELOCITY_LIMIT` |
 | Highest temperature any macro requests | ✅ 240 °C nozzle / 80 °C bed | `_SS.materials`. Klipper rejects anything above `max_temp` anyway |
-| No blocking heat waits (M109, M190, TEMPERATURE_WAIT) | ✅ | Cold nozzle → start heating + message, never a stuck queue |
+| No blocking heat waits (M109, M190, TEMPERATURE_WAIT) | ✅ | Cold nozzle → start heating + message, never a stuck queue. `PRINT_START` waits with the file paused and a 1 s timer, so Cancel always runs at once (D-089) |
+| Heater that never gets to temperature | ✅ | Each `PRINT_START` heating step has 10 min (`start_heat_timeout`), then the print is canceled with a message. Klipper's `verify_heater` still catches real faults sooner |
+| Macro names Klipper can call | ✅ | `check_macros.py` rejects names like `_S1_X` (letters then a digit), which Klipper reads as command `_S1` (D-089) |
 | Cold extrusion | ✅ | `LOAD`/`UNLOAD` only extrude when within 5 °C of target. `PURGE_MORE` checks `can_extrude`. Klipper's `min_extrude_temp` still applies underneath |
 | Filament moves while printing | ✅ blocked | `print_stats.state == 'printing'` → error. Allowed when **paused** (runout / colour change) |
 | Heater left on after an abandoned filament change | ✅ | `_SS_FIL_TIMEOUT` turns the nozzle off after 300 s unless printing/paused. `FILAMENT_DONE` and `COOL_DOWN` cancel it. `[idle_timeout]` is a second layer |
@@ -32,6 +34,8 @@
 | `UNLOAD_FILAMENT` | Unload | Heat + 100 mm retract | Medium | Temperature gate, state gate, timeout |
 | `FILAMENT_DONE` | Done | Nozzle heater off (unless paused) | Low | — |
 | `_SS_RUNOUT` | (sensor) | Records state, message | Low | Klipper already paused |
+| `PRINT_START` (+ `_SS_START_STEP`, `_SS_START_MESH`, `_SS_START_TICK`) | Slicer start G-code | Bed/nozzle to the slicer's temperatures, home, `NOZZLE_CLEAN WAIT=0`, bed mesh, park at X0 Y0 Z15 | Medium | Only runs inside a print file. Needs both temperatures (else the print stops with an error). Pauses with `PAUSE_BASE` (no moves); resumes in place (`PAUSE_STATE` re-saved, so no move back to the pre-homing position). Time limit per heating step. Cancel works at any step |
+| `_SS_RESUME_GUARD` | RESUME (via the printer's resume macro) | Refuses RESUME while `PRINT_START` is getting ready | Low | Stops a resume into an unhomed, cold start |
 | `M600` | (slicer color change) | Calls Mainsail's `PAUSE` (retract + park) | Low | No heating or extrusion of its own. Ignored if already paused. Resume reheats via the UI or Mainsail's RESUME |
 
 ## Things to tune/verify on the real printer (Phase 3.5)
@@ -42,16 +46,16 @@
 ## S1 printer.cfg macros (`config/s1/printer.cfg`, D-081)
 
 These live in the printer config, not in the StarStack macros, because they are specific to the S1's hardware.
-They are allowed to wait for heat (`M109`), because they run inside the slicer's start G-code, not from a button.
+`NOZZLE_CLEAN` may wait for heat (`M109`) when run by hand; `PRINT_START` calls it with `WAIT=0` and waits without blocking.
 
 | Macro | Called by | What it can do | Risk | Mitigation |
 |---|---|---|---|---|
 | `[homing_override]` | G28 | Lift 3 mm, sensorless X/Y, move to X133 Y185, Z on the PZ probe | Medium | User's working macro, unchanged. Z motor current lowered while probing (probe `activate_gcode`) |
-| `NOZZLE_CLEAN` | Slicer start G-code | Wipe on the brush at Z 1.2, re-home Z, park at Z 0, wait for 150 °C | Medium | User's working macro, unchanged. Homes first if needed. Brush position confirmed by the user |
+| `NOZZLE_CLEAN` | `PRINT_START` (`WAIT=0`), or by hand | Wipe on the brush at Z 1.2, re-home Z, park at Z 0, wait for 150 °C (not with `WAIT=0`) | Medium | User's working macro; only the `WAIT` option added (D-089). Homes first if needed. Brush position confirmed by the user |
 | `_CLIENT_VARIABLE` | Mainsail PAUSE/RESUME/CANCEL | Park X0 Y180, lift 10 mm | Low | Mainsail's own macros, inside the axis limits |
-| `_S1_PAUSE_FAN` / `_S1_RESUME_FAN` | PAUSE / RESUME | Part fan off / back on | Low | — |
-| `_S1_CANCEL_LIFT` | CANCEL_PRINT | Lift up to 40 mm, never past Z max | Low | Only when Z is homed |
-| `[idle_timeout]` | 15 min idle | Paused: nozzle off only. Otherwise heaters and motors off | Low | Keeps the print in place while paused |
+| `_PRINTER_PAUSE_FAN` / `_PRINTER_RESUME_FAN` | PAUSE / RESUME | Part fan off / back on; resume first runs `_SS_RESUME_GUARD` | Low | Were `_S1_…`, which never ran (Klipper read them as `_S1`, D-089) |
+| `_PRINTER_CANCEL_LIFT` | CANCEL_PRINT | Lift up to 40 mm, never past Z max | Low | Only when Z is homed |
+| `[idle_timeout]` | 15 min idle | Paused: nozzle off only. Otherwise heaters and motors off. Does nothing while `PRINT_START` is getting ready | Low | Keeps the print in place while paused. `PRINT_START` has its own time limits |
 | `CHANGE_FILAMENT` | Slicer change filament G-code | Same as `M600` | Low | — |
 
 Config limits changed: `min_temp` -50 → 0 on nozzle and bed (stricter: a broken sensor now stops the printer).

@@ -128,6 +128,8 @@ for name, drop in unused.items():
     if m and drop:
         s = s[:m.start()] + s[m.end():]
         print('   moonraker.conf: removed [update_manager %s] (not used by this printer)' % name)
+# their installers' label comments ("# Crowsnest update_manager entry"), now above another section
+s = re.sub(r'^# (\w+) update_manager entry\n(?!\[update_manager \1\])', '', s, flags=re.M | re.I)
 # Tested Klipper/Moonraker versions (update/versions.conf): last, so its values win
 inc = '[include starstack-updates.conf]'
 if inc not in s:

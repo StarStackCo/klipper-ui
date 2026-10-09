@@ -126,3 +126,40 @@ Mainsail's console logs every step ("Power cut recovery: heating", "lifting Z", 
 A power-fail signal (KPPM on the CB1 or a mains detector on a FLY Micro4 input) lets Klipper act at
 the moment of the cut: heaters off, stop the file, retract 1 mm, lift 2 mm, save the exact line. That
 removes the mark and the re-printed stretch; the resume half of this design stays the same.
+
+## Crash detection and resume (D-099, user 2026-10-08)
+
+### Software/firmware errors: resume like a power cut
+Klipper stops mid-print (board disconnects, "Timer too close", Klipper or the CB1 crashes and
+restarts) while the printer hardware is fine. The checkpoint is still `active` and Klipper reports
+the stop reason, so the same recovery runs with the same rules: auto-resume if the bed is still
+within 10 °C of its target, otherwise ask; heat with no movement, lift Z, re-home X/Y, continue.
+**The same error twice in one print:** no more resumes, report it and keep the checkpoint for a
+manual decision.
+
+### Heater / thermal faults: never resumed
+Thermistor or heater errors ("Heater not heating at expected rate", "ADC out of range", ...) stay
+exactly as Klipper handles them today. The screen explains what to check, heaters stay off, no
+Resume is offered and the checkpoint is cleared.
+
+### Nozzle collisions: not detected
+The PZ nozzle probe is triggered by vibration while the head moves (user), so it can't be used to
+detect the nozzle hitting the part.
+
+### Layer shifts (skipped X/Y steps): StallGuard during printing
+The S1's X and Y drivers (TMC2209) run in StealthChop all the time, where the drivers' stall sensing
+works while printing, not only while homing. Klipper only uses it for homing, so a small add-on:
+- turns stall output on for printing moves above a minimum speed (`SET_TMC_FIELD ... TCOOLTHRS`,
+  restored for homing), and watches the DIAG pins (gpio15 X, gpio12 Y; shared with the homing
+  endstops via `[duplicate_pin_override]`);
+- **phase 1, log-only (user):** each stall event is only recorded (time, axis, speed, file line,
+  layer) for a few prints; the log is compared with the prints for real shifts vs false alarms and
+  the thresholds are tuned. Nothing is paused in this phase.
+- **phase 2, act:** on a stall: pause, lift Z, **re-home X/Y** (this puts the position right again, so
+  a shift caught early lines up for the rest of the print), then ask: "The printer may have skipped
+  steps on X. Check the print." → Resume / Cancel print.
+- **3 detections in one print:** cancel with "Skipped steps keep happening: check the belts and for
+  anything blocking the head."
+
+Tests: phase 1 on ordinary prints plus a deliberate shift (hold the bed/gantry briefly by hand at low
+speed: bench approval); phase 2 the same with the action on.

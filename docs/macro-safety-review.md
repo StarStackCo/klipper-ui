@@ -63,3 +63,12 @@ Nothing loosened.
 
 ## Bench limits
 The bench heaters are fake (Pi CPU temperature, ~40 °C), so on the bench we can test: the speed and flow macros, preheat/cool-down targets, every refusal path (cold, printing, unknown material), the timeout, and the remembered-material variable. The actual extrusion paths can only run on the real printer.
+
+## v1.2 additions (2026-10-08, D-096, D-097, D-101)
+
+| Check | Result | Evidence |
+|---|---|---|
+| Heat soak (`_SS_START_SOAK`, `SKIP_SOAK`) | ✅ | Only waits (1 s timer, file paused, Cancel works); heaters stay at the print's own targets. The soak step has no heat time limit because nothing is heating towards a target; the bed was already at temperature |
+| Filament `HEAT=1` | ✅ | Heat-only path sets the same material temperature and the same 5 min heater timeout; no move |
+| Unload tip push 3 mm at 1200 mm/min, load/purge 1 mm retract | ✅ | Small moves, only when the nozzle is at the material temperature (unchanged check) |
+| `SET_VELOCITY_LIMIT` / `M204` wrapped (`rename_existing`) | ✅ | Only ever **lowers** values (caps) while Silent is on, and passes every value through unchanged otherwise. Back to the config's `max_velocity` / `max_accel` / `square_corner_velocity` when another preset is picked: never above them |

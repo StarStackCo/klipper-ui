@@ -44,7 +44,7 @@
 
 | Item | Value |
 |---|---|
-| Speed presets | **Silent 50% · Normal 100% · Fast 125% · Draft 150%** (sets speed % only, `M220`. No acceleration changes) |
+| Speed presets | **Silent 50% · Normal 100% · Fast 125% · Draft 150%** (`M220`). Silent also caps speed, acceleration and corner speed so it is really quiet (D-101); the others set speed % only |
 | Flow | **−1% / +1% buttons**, hard limits **40%–120%** |
 | PLA | Nozzle 210 °C · Bed 60 °C |
 | PETG | Nozzle 240 °C · Bed 80 °C |

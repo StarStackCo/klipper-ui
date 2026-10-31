@@ -244,4 +244,21 @@ file (`ss_bench_start_cancel.gcode`: `PRINT_START BED=60 EXTRUDER=150`), bed ste
 | Bad update (throwaway local commit breaking the macros, Klipper restarted → error) | ✅ | Noticed 16:42:10; after 5 min put klipper-ui back, restarted Moonraker and Klipper itself (16:47:13–20); Klipper ready, repo level with GitHub again |
 | Undo message on the console | ❌ → fix | Sent while Klipper was down, so only the Updates page showed it. Fixed in 85e959e (repeats it once Klipper is ready); needs the next `install.sh` run to reach the S1 |
 | "Undo last update" on the touchscreen (user) | ✅ | 23 s: back one version, Moonraker + Klipper restarted, Klipper ready; Undo row gone afterwards (one step) |
+| v0.3.1 installed (user ran `install.sh --printer=s1`); klipper-ui stepped back to v0.3.0 and forward to v0.3.1, Klipper restarted each time | ✅ | "healthy, waiting a minute", then checked 62 s later both times; S1 left on v0.3.1, clean, Klipper ready |
 
+## Run 13: dev batch on the S1 (D-094..D-097, D-101), 2026-10-31 (klipper-ui dev 7413669, fork dev 9f3ed0f3)
+
+| Check | Result | Notes |
+|---|---|---|
+| Klipper loads the v1.2 macros | ❌ → ✅ | `M204` renamed to `_SS_ACCEL_BASE` stopped Klipper ("rename of different types"); now `M204.1`, and `check_macros.py` catches it |
+| Silent caps (no motion): SPEED_SILENT → 100 mm/s, accel 800, corners 3; file's ACCEL=2000 and M204 S1500 capped to 800; ACCEL=500 kept; SPEED_NORMAL → 200 / 2000 / 6 | ✅ | |
+| Touchscreen: quick taps register, no ghost opens (D-094) | ✅ | User |
+| Pause double tap → Pausing…, stays paused; Resume double tap → Resuming… (D-095) | ✅ | User |
+| PETG start from a cold bed: soak countdown, Skip soak, mesh after the soak; warm-bed reprint skips it (D-096) | ✅ | User: heat soak worked. A restart right after a canceled start skipped it (bed within 10 °C): kept as designed (user) |
+| Change filament on pause, load, unload: each move once, 1 mm retract, 40 mm purge, clean tip (D-097) | ✅ | User: change filament worked |
+| Silent on a real print: travel and gyroid quieter; Normal speeds back up (D-101) | ✅ | User: "Silent works very well". Draft = 1.5× but infill/travel stay at the 200 mm/s limit (→ 400, D-103) |
+| Speed limit 400 mm/s live, Draft, accel 2000: 45 s of live speed | ✅ | Peak 205 mm/s, 99 % under 183: acceleration, not the limit, sets the speed on this part |
+| Accel 4000 held for 5 min (2000 sections bumped, outer walls left at 500), Draft, 400 mm/s | ✅ | Peak 300 mm/s (Draft infill 200 × 1.5), 99 % under 260, 18 % of the time above 100 mm/s (was 8 %). No layer shifts (user). X squeaks on long moves: check belt tracking and rails |
+| printer.cfg v1.3 installed: limit 400 mm/s | ✅ | Backup `printer.cfg.pre-d103` |
+| Silent part fan (D-103): any fan-on → 30 %; Normal restores the last asked speed | ✅ | M106 S255 → 30 %, S128 → 30 %, Normal → 50 %, M107 → off |
+| Default speed (D-104): Settings row, restored after a canceled/finished print | ✅ | User: Silent as default, canceled print came back to Silent |

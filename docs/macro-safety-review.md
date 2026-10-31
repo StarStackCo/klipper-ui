@@ -6,7 +6,7 @@
 
 | Check | Result | Evidence |
 |---|---|---|
-| No macro changes `max_temp`, `min_temp`, `min_extrude_temp`, `verify_heater`, endstops or kinematics | ✅ | The file contains no `SET_HEATER`/`verify`/`SET_KINEMATIC_POSITION`/`FORCE_MOVE`/`SET_STEPPER_ENABLE`/`SET_VELOCITY_LIMIT` |
+| No macro changes `max_temp`, `min_temp`, `min_extrude_temp`, `verify_heater`, endstops or kinematics | ✅ | The file contains no `SET_HEATER`/`verify`/`SET_KINEMATIC_POSITION`/`FORCE_MOVE`/`SET_STEPPER_ENABLE`. `SET_VELOCITY_LIMIT` and `M204` appear only in the Silent wrappers, which can only lower the limits (v1.2, D-101) |
 | Highest temperature any macro requests | ✅ 240 °C nozzle / 80 °C bed | `_SS.materials`. Klipper rejects anything above `max_temp` anyway |
 | No blocking heat waits (M109, M190, TEMPERATURE_WAIT) | ✅ | Cold nozzle → start heating + message, never a stuck queue. `PRINT_START` waits with the file paused and a 1 s timer, so Cancel always runs at once (D-089) |
 | Heater that never gets to temperature | ✅ | Each `PRINT_START` heating step has 10 min (`start_heat_timeout`), then the print is canceled with a message. Klipper's `verify_heater` still catches real faults sooner |
@@ -16,7 +16,7 @@
 | Heater left on after an abandoned filament change | ✅ | `_SS_FIL_TIMEOUT` turns the nozzle off after 300 s unless printing/paused. `FILAMENT_DONE` and `COOL_DOWN` cancel it. `[idle_timeout]` is a second layer |
 | Max extrude length per move | ✅ 100 mm | Unload 100 mm, load 50 + purge 60 (two moves). Below `max_extrude_only_distance` (S1: 500, bench: 150) |
 | Flow limits | ✅ 40–120 % | `SET_FLOW` clamps. `FLOW_ADJUST` goes through `SET_FLOW` |
-| Speed presets | ✅ | `M220` only (50/100/125/150 %). Klipper's `max_velocity`/`max_accel` still cap the real speed |
+| Speed presets | ✅ | `M220` (50/100/125/150 %). Silent also caps velocity, acceleration and corner speed below the config values; the others restore the config values, never above them (D-101) |
 | Preheat / cool down during a print | ✅ blocked | Prevents a mis-tap from changing or killing a running print (use Tune instead) |
 | G-code state left changed | ✅ | Every extrude is wrapped in `SAVE_GCODE_STATE`/`RESTORE_GCODE_STATE` (relative E mode doesn't leak into prints) |
 | Runout | ✅ | `pause_on_runout` pauses first (Klipper), then `_SS_RUNOUT` records "NONE" loaded and shows a message |
@@ -25,7 +25,7 @@
 
 | Macro | Button | What it can do | Risk | Mitigation |
 |---|---|---|---|---|
-| `SPEED_SILENT/NORMAL/FAST/DRAFT` | Speed chips | M220 50–150 % | Low | Machine limits still apply |
+| `SPEED_SILENT/NORMAL/FAST/DRAFT` | Speed chips | M220 50–150 %; Silent caps velocity/accel/corners (D-101) | Low | Machine limits still apply; caps only lower them |
 | `SET_FLOW`, `FLOW_ADJUST` | Flow ±1/±5 | M221 | Low | Clamped 40–120 % |
 | `PREHEAT[_PLA/_PETG/_TPU]` | Preheat | M104/M140 ≤ 240/80 (TPU bed 50, D-082) | Low | Blocked while printing. idle_timeout |
 | `COOL_DOWN` | Cool down | Heaters + fan off | Low | Blocked while printing |
@@ -63,3 +63,13 @@ Nothing loosened.
 
 ## Bench limits
 The bench heaters are fake (Pi CPU temperature, ~40 °C), so on the bench we can test: the speed and flow macros, preheat/cool-down targets, every refusal path (cold, printing, unknown material), the timeout, and the remembered-material variable. The actual extrusion paths can only run on the real printer.
+
+## v1.2 additions (2026-10-08, D-096, D-097, D-101)
+
+| Check | Result | Evidence |
+|---|---|---|
+| Heat soak (`_SS_START_SOAK`, `SKIP_SOAK`) | ✅ | Only waits (1 s timer, file paused, Cancel works); heaters stay at the print's own targets. The soak step has no heat time limit because nothing is heating towards a target; the bed was already at temperature |
+| Filament `HEAT=1` | ✅ | Heat-only path sets the same material temperature and the same 5 min heater timeout; no move |
+| Unload tip push 3 mm at 1200 mm/min, load/purge 1 mm retract | ✅ | Small moves, only when the nozzle is at the material temperature (unchanged check) |
+| `SET_VELOCITY_LIMIT` / `M204` wrapped (`rename_existing`) | ✅ | Only ever **lowers** values (caps) while Silent is on, and passes every value through unchanged otherwise. Back to the config's `max_velocity` / `max_accel` / `square_corner_velocity` when another preset is picked: never above them |
+| `M106` wrapped (`rename_existing: M106.1`, D-103) | ✅ | Only changes the part fan's speed while Silent is on (any on → 30 %); off stays off, so first layers and `M107` are untouched. Outside Silent it passes the speed through unchanged |

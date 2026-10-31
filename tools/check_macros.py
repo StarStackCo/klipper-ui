@@ -58,6 +58,12 @@ for path in sorted(glob.glob(os.path.join(ROOT, "macros", "*.cfg"))):
             continue
         if sec.startswith("gcode_macro "):
             check_name(name, sec)
+            renamed = cp.get(sec, "rename_existing", fallback="").strip().upper()
+            macro = sec.split(None, 1)[1].upper()
+            if renamed and bool(TRADITIONAL.match(macro)) != bool(TRADITIONAL.match(renamed)):
+                # Klipper refuses to start: "G-Code macro rename of different types" (M204 -> M204.1)
+                errors.append(f"{name} [{sec}]: rename_existing '{renamed}' must be the same kind of "
+                              f"name as {macro} (classic G-code like M204.1, or a plain name)")
         for key, value in cp.items(sec):
             if key.startswith("variable_"):
                 try:

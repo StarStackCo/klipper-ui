@@ -72,3 +72,4 @@ The bench heaters are fake (Pi CPU temperature, ~40 °C), so on the bench we can
 | Filament `HEAT=1` | ✅ | Heat-only path sets the same material temperature and the same 5 min heater timeout; no move |
 | Unload tip push 3 mm at 1200 mm/min, load/purge 1 mm retract | ✅ | Small moves, only when the nozzle is at the material temperature (unchanged check) |
 | `SET_VELOCITY_LIMIT` / `M204` wrapped (`rename_existing`) | ✅ | Only ever **lowers** values (caps) while Silent is on, and passes every value through unchanged otherwise. Back to the config's `max_velocity` / `max_accel` / `square_corner_velocity` when another preset is picked: never above them |
+| `M106` wrapped (`rename_existing: M106.1`, D-103) | ✅ | Only changes the part fan's speed while Silent is on (any on → 30 %); off stays off, so first layers and `M107` are untouched. Outside Silent it passes the speed through unchanged |

@@ -252,8 +252,10 @@ file (`ss_bench_start_cancel.gcode`: `PRINT_START BED=60 EXTRUDER=150`), bed ste
 |---|---|---|
 | Klipper loads the v1.2 macros | ❌ → ✅ | `M204` renamed to `_SS_ACCEL_BASE` stopped Klipper ("rename of different types"); now `M204.1`, and `check_macros.py` catches it |
 | Silent caps (no motion): SPEED_SILENT → 100 mm/s, accel 800, corners 3; file's ACCEL=2000 and M204 S1500 capped to 800; ACCEL=500 kept; SPEED_NORMAL → 200 / 2000 / 6 | ✅ | |
-| Touchscreen: quick taps register, no ghost opens (D-094) | ⏳ | User |
-| Pause double tap → Pausing…, stays paused; Resume double tap → Resuming… (D-095) | ✅ (Resume) | User: Resume works; pause double tap still to confirm |
+| Touchscreen: quick taps register, no ghost opens (D-094) | ✅ | User |
+| Pause double tap → Pausing…, stays paused; Resume double tap → Resuming… (D-095) | ✅ | User |
 | PETG start from a cold bed: soak countdown, Skip soak, mesh after the soak; warm-bed reprint skips it (D-096) | ✅ | User: heat soak worked. A restart right after a canceled start skipped it (bed within 10 °C): kept as designed (user) |
 | Change filament on pause, load, unload: each move once, 1 mm retract, 40 mm purge, clean tip (D-097) | ✅ | User: change filament worked |
 | Silent on a real print: travel and gyroid quieter; Normal speeds back up (D-101) | ✅ | User: "Silent works very well". Draft = 1.5× but infill/travel stay at the 200 mm/s limit (→ 400, D-103) |
+| Speed limit 400 mm/s live, Draft, accel 2000: 45 s of live speed | ✅ | Peak 205 mm/s, 99 % under 183: acceleration, not the limit, sets the speed on this part |
+| Accel 4000 held for 5 min (2000 sections bumped, outer walls left at 500), Draft, 400 mm/s | ✅ | Peak 300 mm/s (Draft infill 200 × 1.5), 99 % under 260, 18 % of the time above 100 mm/s (was 8 %). No layer shifts (user). X squeaks on long moves: check belt tracking and rails |

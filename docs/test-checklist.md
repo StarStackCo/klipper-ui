@@ -261,4 +261,4 @@ file (`ss_bench_start_cancel.gcode`: `PRINT_START BED=60 EXTRUDER=150`), bed ste
 | Accel 4000 held for 5 min (2000 sections bumped, outer walls left at 500), Draft, 400 mm/s | ✅ | Peak 300 mm/s (Draft infill 200 × 1.5), 99 % under 260, 18 % of the time above 100 mm/s (was 8 %). No layer shifts (user). X squeaks on long moves: check belt tracking and rails |
 | printer.cfg v1.3 installed: limit 400 mm/s | ✅ | Backup `printer.cfg.pre-d103` |
 | Silent part fan (D-103): any fan-on → 30 %; Normal restores the last asked speed | ✅ | M106 S255 → 30 %, S128 → 30 %, Normal → 50 %, M107 → off |
-| Default speed (D-104): Settings row, restored after a canceled/finished print | ⏳ | User: set Silent, start and cancel a print |
+| Default speed (D-104): Settings row, restored after a canceled/finished print | ✅ | User: Silent as default, canceled print came back to Silent |

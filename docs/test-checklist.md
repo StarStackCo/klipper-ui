@@ -246,3 +246,14 @@ file (`ss_bench_start_cancel.gcode`: `PRINT_START BED=60 EXTRUDER=150`), bed ste
 | "Undo last update" on the touchscreen (user) | ✅ | 23 s: back one version, Moonraker + Klipper restarted, Klipper ready; Undo row gone afterwards (one step) |
 | v0.3.1 installed (user ran `install.sh --printer=s1`); klipper-ui stepped back to v0.3.0 and forward to v0.3.1, Klipper restarted each time | ✅ | "healthy, waiting a minute", then checked 62 s later both times; S1 left on v0.3.1, clean, Klipper ready |
 
+## Run 13: dev batch on the S1 (D-094..D-097, D-101), 2026-10-31 (klipper-ui dev 7413669, fork dev 9f3ed0f3)
+
+| Check | Result | Notes |
+|---|---|---|
+| Klipper loads the v1.2 macros | ❌ → ✅ | `M204` renamed to `_SS_ACCEL_BASE` stopped Klipper ("rename of different types"); now `M204.1`, and `check_macros.py` catches it |
+| Silent caps (no motion): SPEED_SILENT → 100 mm/s, accel 800, corners 3; file's ACCEL=2000 and M204 S1500 capped to 800; ACCEL=500 kept; SPEED_NORMAL → 200 / 2000 / 6 | ✅ | |
+| Touchscreen: quick taps register, no ghost opens (D-094) | ⏳ | User |
+| Pause double tap → Pausing…, stays paused; Resume double tap → Resuming… (D-095) | ⏳ | User |
+| PETG start from a cold bed: soak countdown, Skip soak, mesh after the soak; warm-bed reprint skips it (D-096) | ⏳ | User |
+| Change filament on pause, load, unload: each move once, 1 mm retract, 40 mm purge, clean tip (D-097) | ⏳ | User |
+| Silent on a real print: travel and gyroid quieter; Normal speeds back up (D-101) | ⏳ | User |

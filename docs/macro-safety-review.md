@@ -83,3 +83,4 @@ The bench heaters are fake (Pi CPU temperature, ~40 °C), so on the bench we can
 | File check before heating | ✅ | Reads the file's labeled part outlines only; refuses (cancels) when any point lies outside the axis limits. Files without labels are not checked |
 | Uneven bed | ✅ | Reads the new mesh only: over 1.5 mm a warning, over 3 mm cancel. Changes no mesh or Z setting |
 | Error record (`_SS_ERROR_SET`, `_SS_ERROR_CLEAR`) | ✅ | Text for the screen and a 10-entry history in save_variables; no printer action |
+| Nozzle / printer / material checks (D-106) | ✅ | Read PRINT_START's parameters and saved variables only; refuse (cancel) or pause and ask before anything heats. `SET_NOZZLE` and `ACCEPT_MATERIAL` only store a value |

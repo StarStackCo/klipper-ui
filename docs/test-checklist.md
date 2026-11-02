@@ -282,3 +282,6 @@ Run by Claude through Moonraker and the bench devtools (switched on for this run
 | Retry: Z homing fails once (`start_fail_test=home_z_once`) | ❌ → ✅ | First run recovered but logged "Macro _SS_START_RUN called recursively" (homing called the clean step inside the same macro); fixed (404757b): the tick starts the next step. Rerun: fail → "trying again (1/2)" → re-home → clean → cool, no stray errors |
 | Retry: Z homing fails every time (`start_fail_test=home_z`) | ✅ | 1/2, 2/2, then canceled by itself (~30 s), heaters off, red error page with Klipper's line, Print again shown |
 | Clean-up | ✅ | Test switch off, error cleared, devtools removed, touchscreen restarted |
+| Real start (Benchy, PETG, cold bed): soak, mesh 1.60 mm → uneven-bed warning | ⚠️ → fixed | Warning sent as a red error pop-up; the print was canceled from the touchscreen 15 s later (looked like a failure). Now a plain console message + "Bed uneven 1.60 mm" in the Home status line + amber card after the print |
+| Retry: nozzle clean fails once (`clean_once`) | ✅ | Clean failed → trying again (1/2) → re-home → clean → cool |
+| Retry: bed mesh fails once (`mesh_once`) | ✅ | Mesh failed → re-home → straight back to the mesh (no clean) → mesh done → heating for the print |

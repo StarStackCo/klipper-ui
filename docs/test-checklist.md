@@ -262,3 +262,21 @@ file (`ss_bench_start_cancel.gcode`: `PRINT_START BED=60 EXTRUDER=150`), bed ste
 | printer.cfg v1.3 installed: limit 400 mm/s | ✅ | Backup `printer.cfg.pre-d103` |
 | Silent part fan (D-103): any fan-on → 30 %; Normal restores the last asked speed | ✅ | M106 S255 → 30 %, S128 → 30 %, Normal → 50 %, M107 → off |
 | Default speed (D-104): Settings row, restored after a canceled/finished print | ✅ | User: Silent as default, canceled print came back to Silent |
+
+## Run 14: upstream merge, error handling, file checks (D-105, D-106), 2026-11-02 (klipper-ui dev 50cfa9e, fork bench 8f-series on 34610cea upstream)
+
+Run by Claude through Moonraker and the bench devtools (switched on for this run), with screenshots.
+
+| Check | Result | Notes |
+|---|---|---|
+| Pages after the upstream merge: Home, Print, Controls, Settings 1–5, Screen & language, Default speed, Installed nozzle, Updates, About, Wi-Fi | ✅ | No log errors. Top-bar page title on Settings sub-pages ("Screen", "Updates", "About"): not new, Settings always passed the title (opened directly: no title) |
+| Settings jumped back to page 1 after every sub-page | ❌ → ✅ | Now returns to the page it was opened from; from the rail still page 1 |
+| Updates: "1 updates" | ❌ → ✅ | "1 update" |
+| File for a 0.6 mm nozzle (0.4 installed) | ✅ | Canceled at once, both heaters stayed off, red error page, console line |
+| File for another printer ("Bambu Lab X1C") | ✅ | Same |
+| File with a part outside the bed | ✅ | Same; Klipper shows part names in capitals (FAR_PART) |
+| Error page "Klipper:" line | ❌ → ✅ | Showed the previous StarStack error; now blank when Klipper reported nothing |
+| Error page "Print again" on refused files | ❌ → ✅ | Hidden for outside-the-bed, nozzle and printer refusals |
+| PLA file, PETG loaded | ✅ | Waits before heating; question on the touchscreen and in Mainsail; Home: "This file is for PLA" + Change filament |
+| Print anyway (Mainsail answer, then the new Home button) | ✅ | Bed starts heating, answer used up; Cancel: heaters off |
+| Retry: Z homing fails once / every time | ⏳ | Needs homing: user to confirm the bed is clear |

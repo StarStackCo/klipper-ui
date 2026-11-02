@@ -84,3 +84,4 @@ The bench heaters are fake (Pi CPU temperature, ~40 °C), so on the bench we can
 | Uneven bed | ✅ | Reads the new mesh only: over 1.5 mm a warning, over 3 mm cancel. Changes no mesh or Z setting |
 | Error record (`_SS_ERROR_SET`, `_SS_ERROR_CLEAR`) | ✅ | Text for the screen and a 10-entry history in save_variables; no printer action |
 | Nozzle / printer / material checks (D-106) | ✅ | Read PRINT_START's parameters and saved variables only; refuse (cancel) or pause and ask before anything heats. `SET_NOZZLE` and `ACCEPT_MATERIAL` only store a value |
+| Layer-shift logging (D-108): `SET_TMC_FIELD … TCOOLTHRS` | ✅ | Only enables the drivers' stall output above 30 mm/s while printing (no current, microstep or mode change) and sets it back to 0 at the end; Klipper's own homing sets and restores it around every homing. `_SS_STALL` only records; no motion, no pause |

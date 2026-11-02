@@ -78,7 +78,7 @@
     "long_retractions_when_cut": [
         "0"
     ],
-    "machine_end_gcode": "{if max_layer_z < max_print_height}G1 Z{z_offset+min(max_layer_z+10, max_print_height)} F720 ; Move print head up{endif}\nG1 X0 Y180 F3600 ; park\n{if max_layer_z < max_print_height}G1 Z{z_offset+min(max_layer_z+40, max_print_height)} F720 ; Move print head further up{endif}\n{if max_layer_z +40< 100}G1 Z100 F720 ; Move print head further up{endif}\nM221 S100 ; reset flow\nM104 S0 ; turn off temperature\nM140 S0 ; turn off heatbed\nM107 ; turn off fan\nM84 ; disable motors\nM117 Print Complete\n;\n;PRINT_END",
+    "machine_end_gcode": "{if max_layer_z < max_print_height}G1 Z{z_offset+min(max_layer_z+10, max_print_height)} F300 ; Move print head up{endif}\nG1 X0 Y180 F3600 ; park\n{if max_layer_z < max_print_height}G1 Z{z_offset+min(max_layer_z+40, max_print_height)} F300 ; Move print head further up{endif}\n{if max_layer_z +40< 100}G1 Z100 F300 ; Move print head further up{endif}\nM221 S100 ; reset flow\nM104 S0 ; turn off temperature\nM140 S0 ; turn off heatbed\nM107 ; turn off fan\nM84 ; disable motors\nM117 Print Complete\n;\n;PRINT_END",
     "machine_load_filament_time": "0",
     "machine_max_acceleration_e": [
         "250",

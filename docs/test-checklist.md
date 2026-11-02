@@ -279,4 +279,6 @@ Run by Claude through Moonraker and the bench devtools (switched on for this run
 | Error page "Print again" on refused files | ❌ → ✅ | Hidden for outside-the-bed, nozzle and printer refusals |
 | PLA file, PETG loaded | ✅ | Waits before heating; question on the touchscreen and in Mainsail; Home: "This file is for PLA" + Change filament |
 | Print anyway (Mainsail answer, then the new Home button) | ✅ | Bed starts heating, answer used up; Cancel: heaters off |
-| Retry: Z homing fails once / every time | ⏳ | Needs homing: user to confirm the bed is clear |
+| Retry: Z homing fails once (`start_fail_test=home_z_once`) | ❌ → ✅ | First run recovered but logged "Macro _SS_START_RUN called recursively" (homing called the clean step inside the same macro); fixed (404757b): the tick starts the next step. Rerun: fail → "trying again (1/2)" → re-home → clean → cool, no stray errors |
+| Retry: Z homing fails every time (`start_fail_test=home_z`) | ✅ | 1/2, 2/2, then canceled by itself (~30 s), heaters off, red error page with Klipper's line, Print again shown |
+| Clean-up | ✅ | Test switch off, error cleared, devtools removed, touchscreen restarted |

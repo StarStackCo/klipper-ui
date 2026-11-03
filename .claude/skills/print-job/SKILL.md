@@ -16,7 +16,8 @@ clean, bed mesh with error handling, layer-shift logging. It only runs if the fi
 the StarStack Orca profile. On 2026-11-03 a chat sliced two Saber files with a `machine.json` it
 wrote itself (named "StarStack S1", but with a generic start G-code): they heated with plain
 `M190`/`M104` and skipped every check. **Never write or edit printer, process or filament JSON by
-hand, and never use an `.orca_printer` from Downloads. Use the repo profile.**
+hand, and never use an `.orca_printer` from Downloads. Use the repo profile.** Per-part changes
+(walls, infill, brim, layer height) are allowed as object settings; see "Per-part settings" below.
 
 ## Rules
 - **Ask before starting a print, every time.** Say the file, material, time and plate, and wait for
@@ -45,6 +46,29 @@ Gotchas (Orca 2.4.2 CLI):
 - No thumbnails are made from the command line (the screen shows a file icon). Fine.
 - Multi-color or multi-filament jobs: one `--load-filaments` entry per filament, `;`-separated.
 - Check the plate fits (220×220 bed) and objects don't touch; `--arrange 1` places them.
+
+### Per-part settings (allowed)
+Sam approved this on 2026-11-03: a job may change settings for particular parts (walls, infill
+density or pattern, brim, layer height and the like) as **Orca object settings**, never by editing
+the preset JSON. The presets stay exactly as the repo has them, so `PRINT_START` and the check are
+unaffected, and opening the job in Orca shows the changes on each object in the object list instead
+of as a modified preset. Only set what differs from the preset. From the command line, list the
+parts in an assemble list instead of passing STLs:
+```json
+{"plates": [{"plate_name": "black", "need_arrange": true, "objects": [
+  {"path": "grip_core.stl", "count": 1, "filaments": [1],
+   "print_params": {"wall_loops": "6", "sparse_infill_density": "40%",
+                    "brim_type": "outer_only", "brim_width": "6"}}]}]}
+```
+```bash
+"/c/Program Files/OrcaSlicer/orca-slicer.exe" --slice 0 \
+  --load-settings "$W/machine.json;$W/process.json" --load-filaments "$W/filament.json" \
+  --load-assemble-list "$W/assemble.json" --outputdir "$W/out" --export-3mf job.gcode.3mf
+```
+- Values are strings, as in the preset JSON. `need_arrange: true` places the parts.
+- Orca names each object after the path it was given, so copy the STLs into `$W` and use bare file
+  names (`grip_core.stl` becomes `grip_core_1`, where a full path would become the object's name).
+- Then run the step 2 check as usual. Example: `Documents/Claude/Verdigris Relic Saber/slice/slice.py`.
 
 ## 2. Check the G-code (must say OK)
 ```bash

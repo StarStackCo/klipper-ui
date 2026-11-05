@@ -23,6 +23,13 @@ hand, and never use an `.orca_printer` from Downloads. Use the repo profile.** P
 - **Ask before starting a print, every time.** Say the file, material, time and plate, and wait for
   a yes. The user must confirm **the plate is clear** and **which filament is loaded**.
 - Uploading without starting is fine when the user asked for the file to be on the printer.
+- Queuing is fine when the user asked for that job next: it can't start without a tap on the
+  touchscreen, so it needs no separate yes from chat (see step 4).
+- **Ask the material, brand and colour before slicing** if the user hasn't said. The preset depends
+  on them, and printed sizes differ by material, so a wrong guess can mean redoing the slice and
+  the part sizes (a Saber plate was sliced as Matte PLA for a roll that was Hatchbox PETG).
+- **Never delete files on the printer.** To replace a file, upload under the same name. If the
+  material changes, use a new name that says so, and tell the user which old files not to print.
 - Downloads of models need the user's permission (file, source, size), per chat.
 - Show every SSH command and reply (`klipper-ui/scripts/pi.sh '<cmd>'` logs them).
 - Home network only; never handle passwords or keys.
@@ -45,7 +52,8 @@ Gotchas (Orca 2.4.2 CLI):
 - Some 3MF files crash the CLI: extract the meshes to STL and slice those.
 - No thumbnails are made from the command line (the screen shows a file icon). Fine.
 - Multi-color or multi-filament jobs: one `--load-filaments` entry per filament, `;`-separated.
-- Check the plate fits (220×220 bed) and objects don't touch; `--arrange 1` places them.
+- Check the plate fits (180×175 mm bed, 164 mm tall, per the repo profile) and objects don't touch;
+  `--arrange 1` places them.
 
 ### Per-part settings (allowed)
 Sam approved this on 2026-11-03: a job may change settings for particular parts (walls, infill
@@ -68,6 +76,10 @@ parts in an assemble list instead of passing STLs:
 - Values are strings, as in the preset JSON. `need_arrange: true` places the parts.
 - Orca names each object after the path it was given, so copy the STLs into `$W` and use bare file
   names (`grip_core.stl` becomes `grip_core_1`, where a full path would become the object's name).
+- **Decide brims part by part, not for the whole plate.** Sam peels every brim off by hand and asked
+  (2026-11-05) for none where it isn't needed. Give a brim to tall parts and small footprints. Skip
+  short parts with good bed contact, such as thin flat rings. On a plate where other parts have a
+  brim, set `"brim_type": "no_brim"` on those objects.
 - Then run the step 2 check as usual. Example: `Documents/Claude/Verdigris Relic Saber/slice/slice.py`.
 
 ## 2. Check the G-code (must say OK)
@@ -86,13 +98,16 @@ curl -s http://192.168.0.102:7125/server/job_queue/status
 - `print_stats.state`: `printing`/`paused` = busy; `complete`/`cancelled`/`standby` = free (but the
   plate may still hold the last print).
 - `save_variables.variables.loaded_material`: the filament the printer thinks is loaded. If it
-  differs from the file's, tell the user (the printer will also stop and ask).
+  differs from the file's, tell the user (the printer will also stop and ask). It only holds the
+  material type (`PLA`, `PETG`), not the colour or brand, so the user has to confirm the roll.
 
 ## 4. Upload, then queue or start
 Upload only (always safe):
 ```bash
 curl -s -F "file=@$W/out/Saber hilt PETG.gcode" http://192.168.0.102:7125/server/files/upload
 ```
+The reply says `create_file` even when it replaced an existing file. To confirm a replacement,
+compare the size and time in `/server/files/list?root=gcodes`.
 - **Printer busy and the user wants it next:** add it to the queue. It never starts by itself; the
   touchscreen asks "Plate is clear, start" when the current print ends (D-111).
   `curl -s -X POST "http://192.168.0.102:7125/server/job_queue/job?filenames=Saber%20hilt%20PETG.gcode"`
@@ -100,9 +115,23 @@ curl -s -F "file=@$W/out/Saber hilt PETG.gcode" http://192.168.0.102:7125/server
   `curl -s -X POST "http://192.168.0.102:7125/printer/print/start?filename=Saber%20hilt%20PETG.gcode"`
 - Don't use `print=true` on the upload: on a free printer it starts at once, without the
   questions above.
+
+### Using the queue
+- Tell the user what's queued and that they start it on the touchscreen. Check with
+  `/server/job_queue/status` after adding.
+- **Only queue a job behind one on the same roll.** The printer only knows the material type, not
+  the colour, so a prompt could print a job in the wrong colour after a swap. If the next job needs
+  another roll, keep it out of the queue and ask before starting it once the roll is changed.
+- **Take out anything no longer wanted.** A job left in the queue is offered at the end of the next
+  print, and a tap starts it. `<id>` is the `job_id` from the status reply.
+  `curl -s -X DELETE "http://192.168.0.102:7125/server/job_queue/job?job_ids=<id>"`
+- **Starting a queued job from chat:** take it out of the queue first, then use `print/start`, so it
+  can't run twice.
 - The queue lives in Moonraker's memory: a Moonraker restart or power cut empties it.
 
 ## 5. After starting
 Report the file, the estimated time and that `PRINT_START` is running (`gcode_macro PRINT_START`
 `stage` goes filament → material → bed → nozzle → home → clean → cool → soak → mesh → final, then
-empty). If the print stops at the start, the touchscreen shows why (error card, D-105).
+empty). `print_stats.state` reads `paused` while heating; that's normal if `stage` is set and
+`display_status.message` shows the heating. If the print stops at the start, the touchscreen shows
+why (error card, D-105).

@@ -188,7 +188,7 @@ klipperscreen_fork() {
   [ -e "$kc" ] || do_ "touch '$kc'"
   if ! grep -q '^theme: starstack' "$kc" 2>/dev/null; then
     backup_once "$kc"
-    do_ "printf '# STARSTACK-ADDED: StarStack theme (klipper-ui install.sh)\n[main]\ntheme: starstack\n\n' | cat - '$kc' > '$kc.tmp' && mv '$kc.tmp' '$kc'"
+    do_ "printf '# STARSTACK-ADDED: StarStack theme (klipper-ui install.sh)\n[main]\ntheme: starstack\n24htime: False\n\n' | cat - '$kc' > '$kc.tmp' && mv '$kc.tmp' '$kc'"
   fi
   echo "   theme: starstack, fonts installed"
 }

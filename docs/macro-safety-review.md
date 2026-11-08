@@ -6,7 +6,7 @@
 
 | Check | Result | Evidence |
 |---|---|---|
-| No macro changes `max_temp`, `min_temp`, `min_extrude_temp`, `verify_heater`, endstops or kinematics | ✅ | The file contains no `SET_HEATER`/`verify`/`SET_KINEMATIC_POSITION`/`FORCE_MOVE`/`SET_STEPPER_ENABLE`. `SET_VELOCITY_LIMIT` and `M204` appear only in the Silent wrappers, which can only lower the limits (v1.2, D-101) |
+| No macro changes `max_temp`, `min_temp`, `min_extrude_temp`, `verify_heater`, endstops or kinematics | ✅ | The file contains no `SET_HEATER`/`verify`/`SET_KINEMATIC_POSITION`. `FORCE_MOVE` and `SET_STEPPER_ENABLE` only on the extruder (walk-away load grabs 15 mm cold, well short of the hot end; motor off so the gear turns by hand), checked by `tools/check_macros.py` (D-116). `SET_VELOCITY_LIMIT` and `M204` appear only in the Silent wrappers, which can only lower the limits (v1.2, D-101) |
 | Highest temperature any macro requests | ✅ 240 °C nozzle / 80 °C bed | `_SS.materials`. Klipper rejects anything above `max_temp` anyway |
 | No blocking heat waits (M109, M190, TEMPERATURE_WAIT) | ✅ | Cold nozzle → start heating + message, never a stuck queue. `PRINT_START` waits with the file paused and a 1 s timer, so Cancel always runs at once (D-089) |
 | Heater that never gets to temperature | ✅ | Each `PRINT_START` heating step has 10 min (`start_heat_timeout`), then the print is canceled with a message. Klipper's `verify_heater` still catches real faults sooner |

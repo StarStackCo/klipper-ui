@@ -5,7 +5,7 @@ description: Slice a model for the StarStack S1 with OrcaSlicer, check the G-cod
 
 # Printing on the StarStack S1
 
-Source of this skill: `C:\Users\Sam\Documents\klipper-ui\.claude\skills\print-job\SKILL.md`
+Source of this skill: `C:\Users\Sam\Documents\StarStack\klipper-ui\.claude\skills\print-job\SKILL.md`
 (`~/.claude/skills/print-job/` is a junction to this folder, so every chat on this computer loads
 this same file; D-119). Decisions:
 `klipper-ui/docs/DECISIONS.md` D-089 (start G-code), D-106 (checks), D-107 (Orca profile), D-111
@@ -43,7 +43,7 @@ Orca: `C:\Program Files\OrcaSlicer\orca-slicer.exe` (2.4.2). Profile: `klipper-u
 
 ```bash
 W="$TEMP/orcat/job1"   # short path: Orca fails on long Windows paths
-python C:/Users/Sam/Documents/klipper-ui/tools/orca_profile.py cli "$W" "0.20mm Balanced" "PLA" "High Temp Plate"
+python C:/Users/Sam/Documents/StarStack/klipper-ui/tools/orca_profile.py cli "$W" "0.20mm Balanced" "PLA" "High Temp Plate"
 "/c/Program Files/OrcaSlicer/orca-slicer.exe" --slice 0 --arrange 1 \
   --load-settings "$W/machine.json;$W/process.json" --load-filaments "$W/filament.json" \
   --outputdir "$W/out" model1.stl model2.stl
@@ -85,7 +85,7 @@ parts in an assemble list instead of passing STLs:
 
 ## 2. Check the G-code (must say OK)
 ```bash
-python C:/Users/Sam/Documents/klipper-ui/tools/orca_profile.py check "$W/out/plate_1.gcode"
+python C:/Users/Sam/Documents/StarStack/klipper-ui/tools/orca_profile.py check "$W/out/plate_1.gcode"
 ```
 It needs a `PRINT_START ... MATERIAL= NOZZLE= PRINTER="StarStack S1"` line and the printer preset
 "StarStack S1". NOT OK means slice again with step 1; never patch the G-code by hand.

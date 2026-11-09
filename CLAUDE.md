@@ -12,6 +12,9 @@ Read `docs/DECISIONS.md` (decisions, questions, build/deploy log; older ones in 
 `docs/macro-safety-review.md`, `docs/requirements.md`, `docs/BACKLOG.md`, `README.md` (install, update,
 release, scripts).
 
+The touchscreen fork sits beside this repo (`../KlipperScreen-starstack`, D-121). Before reading or
+changing anything there, read `../KlipperScreen-starstack/CLAUDE.md` first; its rules apply there (D-123).
+
 ## Workflow (from the docs)
 - Work on `dev`. `main` is what printers install; it changes only by a PR from `dev` after the bench
   checklist passes (README). Debug builds go on branch `bench`, never `dev` (D-061).

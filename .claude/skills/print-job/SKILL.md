@@ -6,7 +6,8 @@ description: Slice a model for the StarStack S1 with OrcaSlicer, check the G-cod
 # Printing on the StarStack S1
 
 Source of this skill: `C:\Users\Sam\Documents\klipper-ui\.claude\skills\print-job\SKILL.md`
-(a copy lives in `~/.claude/skills/print-job/` so every chat on this computer finds it). Decisions:
+(`~/.claude/skills/print-job/` is a junction to this folder, so every chat on this computer loads
+this same file; D-119). Decisions:
 `klipper-ui/docs/DECISIONS.md` D-089 (start G-code), D-106 (checks), D-107 (Orca profile), D-111
 (job queue).
 

@@ -1,4 +1,4 @@
-"""Extruder load test (D-120, B-16): can the TMC2209 StallGuard reading (SG_RESULT) tell filament,
+"""Extruder load test (D-125, B-16): can the TMC2209 StallGuard reading (SG_RESULT) tell filament,
 no filament and a jam apart? Extrudes at rising flow and reads SG_RESULT during each move.
 Lower SG_RESULT = more load. Needs a hot nozzle and an idle printer. Run from the PC:
     python tools/sg_test.py LABEL [--host 192.168.0.102] [--flows 2,5,8,12,16,20]

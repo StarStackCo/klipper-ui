@@ -31,7 +31,7 @@
 | `COOL_DOWN` | Cool down | Heaters + fan off | Low | Blocked while printing |
 | `LOAD_FILAMENT` | Load | Heat + 110 mm extrude (50 + 60 purge) | Medium | Temperature gate, state gate, timeout |
 | `PURGE_MORE` | Purge more | 60 mm extrude | Low | `can_extrude`, state gate |
-| `UNLOAD_FILAMENT` | Unload | Heat + 100 mm retract | Medium | Temperature gate, state gate, timeout |
+| `UNLOAD_FILAMENT` | Unload | Heat, tip forming (`_SS_FORM_TIP`, D-125), 100 mm retract | Medium | Temperature gate, state gate, timeout |
 | `FILAMENT_DONE` | Done | Nozzle heater off (unless paused) | Low | — |
 | `_SS_RUNOUT` | (sensor) | Records state, message | Low | Klipper already paused |
 | `PRINT_START` (+ `_SS_START_STEP`, `_SS_START_MESH`, `_SS_START_TICK`) | Slicer start G-code | Bed/nozzle to the slicer's temperatures, home, `NOZZLE_CLEAN WAIT=0`, bed mesh, park at X0 Y0 Z15 | Medium | Only runs inside a print file. Needs both temperatures (else the print stops with an error). Pauses with `PAUSE_BASE` (no moves); resumes in place (`PAUSE_STATE` re-saved, so no move back to the pre-homing position). Time limit per heating step. Cancel works at any step |
@@ -70,7 +70,7 @@ The bench heaters are fake (Pi CPU temperature, ~40 °C), so on the bench we can
 |---|---|---|
 | Heat soak (`_SS_START_SOAK`, `SKIP_SOAK`) | ✅ | Only waits (1 s timer, file paused, Cancel works); heaters stay at the print's own targets. The soak step has no heat time limit because nothing is heating towards a target; the bed was already at temperature |
 | Filament `HEAT=1` | ✅ | Heat-only path sets the same material temperature and the same 5 min heater timeout; no move |
-| Unload tip push 3 mm at 1200 mm/min, load/purge 1 mm retract | ✅ | Small moves, only when the nozzle is at the material temperature (unchanged check) |
+| Unload tip forming `_SS_FORM_TIP` (D-125): 5 mm ram, 15 mm pull, cooling moves of 5 mm; load/purge 1 mm retract | ✅ | Small moves, run only from `UNLOAD_FILAMENT` after its temperature check (and in the tip tests on a hot nozzle); Klipper's `min_extrude_temp` still applies. Test overrides are plain numbers within `max_extrude_only_distance` |
 | `SET_VELOCITY_LIMIT` / `M204` wrapped (`rename_existing`) | ✅ | Only ever **lowers** values (caps) while Silent is on, and passes every value through unchanged otherwise. Back to the config's `max_velocity` / `max_accel` / `square_corner_velocity` when another preset is picked: never above them |
 | `M106` wrapped (`rename_existing: M106.1`, D-103) | ✅ | Only changes the part fan's speed while Silent is on (any on → 30 %); off stays off, so first layers and `M107` are untouched. Outside Silent it passes the speed through unchanged |
 

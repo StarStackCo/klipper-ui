@@ -57,7 +57,7 @@ Legend: **N** = Normal mode · **A** = Advanced mode only · 🔒 = locked while
 ### Home: idle
 | Action | Mode | Where | Notes |
 |---|---|---|---|
-| Reprint last job | N ⚠️ | T M | Confirm: **"Print this file?"** (plate-clear only for queued jobs, D-119) |
+| Reprint last job | N ⚠️ | T M | Confirm: **"Print this file?"** (plate-clear only for queued jobs, D-124) |
 | Recent prints (thumbnails), tap to reprint | N ⚠️ | T M | Same Print confirmation |
 | Preheat PLA / PETG / TPU | N | T M | One tap. Uses the table in section 4 |
 | Cool down | N | T M | |

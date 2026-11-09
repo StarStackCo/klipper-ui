@@ -11,8 +11,11 @@ only works on a PC that has the same parents. This tool makes every preset compl
       CONFIG_BLOCK; other filaments take their parent from Orca's system profiles on this PC.
   python tools/orca_profile.py pack
       Write config/s1/orca/StarStack-S1.orca_printer (File > Import > Import Preset Bundle).
-  python tools/orca_profile.py cli DIR
+  python tools/orca_profile.py cli DIR [process] [filament] [plate]
       Write machine/process/filament JSON with "type" for orca-slicer --load-settings into DIR.
+  python tools/orca_profile.py check SLICED.gcode
+      Before uploading: the file must start through PRINT_START (checks, soak, clean, mesh,
+      layer-shift logging) and be sliced for the StarStack S1. Exit code 1 if not.
 """
 
 import glob
@@ -192,9 +195,40 @@ def cli(dest, process="0.25mm Draft", filament="Hatchbox PETG", plate="High Temp
     print(f"wrote machine/process/filament JSON for {process} + {filament} into {dest}")
 
 
+def check(gcode):
+    """A file sliced with another printer profile skips the whole StarStack start (2026-11-03: two
+    Saber files from a hand-made machine.json heated with plain M190/M104 instead)."""
+    start = None
+    for line in open(gcode, encoding="utf-8", errors="replace"):
+        if line.startswith("PRINT_START"):
+            start = line.strip()
+            break
+    block = read_block(gcode)
+    printer = block.get("printer_settings_id", "").strip('"')
+    problems = []
+    if not start:
+        problems.append("no PRINT_START line: sliced without the StarStack start G-code")
+    else:
+        for param in ("MATERIAL=", "NOZZLE=", "PRINTER="):
+            if param not in start:
+                problems.append(f"PRINT_START has no {param} (old start G-code)")
+    if printer != "StarStack S1":
+        problems.append(f"printer preset is {printer!r}, not 'StarStack S1'")
+    print(start or "(no PRINT_START)")
+    print(f"printer {printer!r}, process {block.get('print_settings_id', '')}, "
+          f"filament {block.get('filament_settings_id', '')}")
+    if problems:
+        print("NOT OK:\n  " + "\n  ".join(problems))
+        print("Slice again with the repo profile: python tools/orca_profile.py cli DIR")
+        sys.exit(1)
+    print("OK")
+
+
 if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else ""
-    if cmd == "build" and len(sys.argv) == 4:
+    if cmd == "check" and len(sys.argv) == 3:
+        check(sys.argv[2])
+    elif cmd == "build" and len(sys.argv) == 4:
         build(sys.argv[2], sys.argv[3])
     elif cmd == "pack":
         pack()

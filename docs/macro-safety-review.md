@@ -6,7 +6,7 @@
 
 | Check | Result | Evidence |
 |---|---|---|
-| No macro changes `max_temp`, `min_temp`, `min_extrude_temp`, `verify_heater`, endstops or kinematics | ✅ | The file contains no `SET_HEATER`/`verify`/`SET_KINEMATIC_POSITION`/`FORCE_MOVE`/`SET_STEPPER_ENABLE`. `SET_VELOCITY_LIMIT` and `M204` appear only in the Silent wrappers, which can only lower the limits (v1.2, D-101) |
+| No macro changes `max_temp`, `min_temp`, `min_extrude_temp`, `verify_heater`, endstops or kinematics | ✅ | The file contains no `SET_HEATER`/`verify`/`SET_KINEMATIC_POSITION`. `FORCE_MOVE` and `SET_STEPPER_ENABLE` only on the extruder (walk-away load grabs 15 mm cold, well short of the hot end; motor off so the gear turns by hand), checked by `tools/check_macros.py` (D-116). `SET_VELOCITY_LIMIT` and `M204` appear only in the Silent wrappers, which can only lower the limits (v1.2, D-101) |
 | Highest temperature any macro requests | ✅ 240 °C nozzle / 80 °C bed | `_SS.materials`. Klipper rejects anything above `max_temp` anyway |
 | No blocking heat waits (M109, M190, TEMPERATURE_WAIT) | ✅ | Cold nozzle → start heating + message, never a stuck queue. `PRINT_START` waits with the file paused and a 1 s timer, so Cancel always runs at once (D-089) |
 | Heater that never gets to temperature | ✅ | Each `PRINT_START` heating step has 10 min (`start_heat_timeout`), then the print is canceled with a message. Klipper's `verify_heater` still catches real faults sooner |
@@ -31,7 +31,7 @@
 | `COOL_DOWN` | Cool down | Heaters + fan off | Low | Blocked while printing |
 | `LOAD_FILAMENT` | Load | Heat + 110 mm extrude (50 + 60 purge) | Medium | Temperature gate, state gate, timeout |
 | `PURGE_MORE` | Purge more | 60 mm extrude | Low | `can_extrude`, state gate |
-| `UNLOAD_FILAMENT` | Unload | Heat + 100 mm retract | Medium | Temperature gate, state gate, timeout |
+| `UNLOAD_FILAMENT` | Unload | Heat, tip forming (`_SS_FORM_TIP`, D-125), 100 mm retract | Medium | Temperature gate, state gate, timeout |
 | `FILAMENT_DONE` | Done | Nozzle heater off (unless paused) | Low | — |
 | `_SS_RUNOUT` | (sensor) | Records state, message | Low | Klipper already paused |
 | `PRINT_START` (+ `_SS_START_STEP`, `_SS_START_MESH`, `_SS_START_TICK`) | Slicer start G-code | Bed/nozzle to the slicer's temperatures, home, `NOZZLE_CLEAN WAIT=0`, bed mesh, park at X0 Y0 Z15 | Medium | Only runs inside a print file. Needs both temperatures (else the print stops with an error). Pauses with `PAUSE_BASE` (no moves); resumes in place (`PAUSE_STATE` re-saved, so no move back to the pre-homing position). Time limit per heating step. Cancel works at any step |
@@ -70,7 +70,7 @@ The bench heaters are fake (Pi CPU temperature, ~40 °C), so on the bench we can
 |---|---|---|
 | Heat soak (`_SS_START_SOAK`, `SKIP_SOAK`) | ✅ | Only waits (1 s timer, file paused, Cancel works); heaters stay at the print's own targets. The soak step has no heat time limit because nothing is heating towards a target; the bed was already at temperature |
 | Filament `HEAT=1` | ✅ | Heat-only path sets the same material temperature and the same 5 min heater timeout; no move |
-| Unload tip push 3 mm at 1200 mm/min, load/purge 1 mm retract | ✅ | Small moves, only when the nozzle is at the material temperature (unchanged check) |
+| Unload tip forming `_SS_FORM_TIP` (D-125): 5 mm ram, 15 mm pull, cooling moves of 5 mm; load/purge 1 mm retract | ✅ | Small moves, run only from `UNLOAD_FILAMENT` after its temperature check (and in the tip tests on a hot nozzle); Klipper's `min_extrude_temp` still applies. Test overrides are plain numbers within `max_extrude_only_distance` |
 | `SET_VELOCITY_LIMIT` / `M204` wrapped (`rename_existing`) | ✅ | Only ever **lowers** values (caps) while Silent is on, and passes every value through unchanged otherwise. Back to the config's `max_velocity` / `max_accel` / `square_corner_velocity` when another preset is picked: never above them |
 | `M106` wrapped (`rename_existing: M106.1`, D-103) | ✅ | Only changes the part fan's speed while Silent is on (any on → 30 %); off stays off, so first layers and `M107` are untouched. Outside Silent it passes the speed through unchanged |
 
@@ -84,4 +84,3 @@ The bench heaters are fake (Pi CPU temperature, ~40 °C), so on the bench we can
 | Uneven bed | ✅ | Reads the new mesh only: over 1.5 mm a warning, over 3 mm cancel. Changes no mesh or Z setting |
 | Error record (`_SS_ERROR_SET`, `_SS_ERROR_CLEAR`) | ✅ | Text for the screen and a 10-entry history in save_variables; no printer action |
 | Nozzle / printer / material checks (D-106) | ✅ | Read PRINT_START's parameters and saved variables only; refuse (cancel) or pause and ask before anything heats. `SET_NOZZLE` and `ACCEPT_MATERIAL` only store a value |
-| Layer-shift logging (D-108): `SET_TMC_FIELD … TCOOLTHRS` | ✅ | Only enables the drivers' stall output above 30 mm/s while printing (no current, microstep or mode change) and sets it back to 0 at the end; Klipper's own homing sets and restores it around every homing. `_SS_STALL` only records; no motion, no pause |

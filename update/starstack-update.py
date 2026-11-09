@@ -74,6 +74,7 @@ CONFIG_REFRESH = 3600  # keep the good config copy up to date with the user's ow
 POLL = 15
 SETTLE = 45  # seconds after an update or Klipper restart before touching the board
 MAX_TRIES = 2  # flash attempts per Klipper version
+WAIT_PRINTING = "wait: printing"  # flash() found a print started during the build
 
 
 def log(msg):
@@ -293,6 +294,9 @@ def flash(build_cfg, host):
     dev = board_device()
     if not dev:
         return "the board's USB device wasn't found"
+    # the build takes minutes: a print may have started since board_check looked (audit #1)
+    if busy_printing():
+        return WAIT_PRINTING
     set_status("updating", "Flashing the board", host)
     api("/machine/services/stop?service=klipper", "POST")
     time.sleep(3)
@@ -343,6 +347,11 @@ def board_check(st, check_only=False, force=False):
     save_state(st)
     log(f"board firmware {mcu or '(' + state + ')'} -> {host}")
     err = flash(build_cfg, host)
+    if err == WAIT_PRINTING:  # nothing was flashed: don't count it as a try, retry after the print
+        st["fw"] = tries
+        save_state(st)
+        set_status("ok", "", host, mcu or "")
+        return "printing started during the build: board update waits"
     state, msg, host2, mcu2 = versions()
     if err is None and not mismatch(state, msg, host2, mcu2):
         st["fw"] = {"host": host2, "count": 0}
@@ -504,6 +513,9 @@ def undo(st, target, reason, auto):
         if name == "mainsail":
             continue
         path, sha = GIT_REPOS[name], target["versions"][name]
+        if git(path, "status", "--porcelain"):  # someone's uncommitted work: never wipe it
+            log(f"{name}: has local changes, not put back")
+            continue
         branch = target.get("branches", {}).get(name)
         if branch and git(path, "branch", "--show-current") != branch:
             git(path, "checkout", "-q", branch)
@@ -663,6 +675,11 @@ def health_step(st, check_only=False):
             f"Update problem ({why}): undo waits until the print is done",
         )
         return f"update problem, waiting for the print: {why}"
+    if (api("/printer/info") or {}).get("state") == "shutdown":
+        # a fault while running (e.g. "Timer too close", a heater error), not a startup failure:
+        # an update doesn't cause that, so don't undo it; it counts again after a restart
+        set_health(st, "checking", f"Klipper shut down ({why}): not caused by the update")
+        return f"update problem looks unrelated (Klipper shut down): {why}"
     return undo(st, good, why, auto=True)
 
 

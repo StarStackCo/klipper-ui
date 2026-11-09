@@ -285,3 +285,38 @@ Run by Claude through Moonraker and the bench devtools (switched on for this run
 | Real start (Benchy, PETG, cold bed): soak, mesh 1.60 mm → uneven-bed warning | ⚠️ → fixed | Warning sent as a red error pop-up; the print was canceled from the touchscreen 15 s later (looked like a failure). Now a plain console message + "Bed uneven 1.60 mm" in the Home status line + amber card after the print |
 | Retry: nozzle clean fails once (`clean_once`) | ✅ | Clean failed → trying again (1/2) → re-home → clean → cool |
 | Retry: bed mesh fails once (`mesh_once`) | ✅ | Mesh failed → re-home → straight back to the mesh (no clean) → mesh done → heating for the print |
+
+## Run 15: dev update, unload tip forming and extruder load test (D-117, D-118, D-124, D-125), 2026-11-09 (klipper-ui dev f554fab, fork dev 79d217be)
+
+After the Main Body(2) PLA print. Load tests run by Claude with `tools/sg_test.py` (data in `docs/data/sg_test.json`); tip and touchscreen checks by the user.
+
+| Check | Result | Notes |
+|---|---|---|
+| S1 on dev: Klipper ready, touchscreen up, no log errors | ✅ | Klipper side by the other session (printer.cfg.pre-d118); touchscreen bench → dev |
+| `sg_test.py` runs | ❌ → ✅ | Status query URL-encoded the `&`, so Moonraker returned neither object; fixed before anything was sent |
+| Load test, PLA loaded, 210 °C, 2/5/8/12/16/20 mm³/s | ✅ | SG_RESULT avg 16 / 46 / 69 / 88 / 107 / 123. Reads in steps of 32; rises with speed |
+| Load test, PLA held back by hand (light drag, kept feeding) | ✅ | 16 / 45 / 65 / 81 / 106 / 125: same as loaded within noise |
+| Load test, no filament | ✅ | 16 / 48 / 70 / 94 / 124 / 152: differs from loaded only above 12 mm³/s, by about one step |
+| Klipper restart undoes the test's driver settings | ✅ | TPWMTHRS back to 0xfffff, TCOOLTHRS 0. GCONF shows StealthChop on at standstill: `stealthchop_threshold: 0` in Klipper means SpreadCycle whenever the motor moves |
+| PLA unload tip (D-125 starting values) | ✅ | User: "a lot better, point looks good" |
+| Print confirmation (D-124): "Print this file?" | ❌ → D-126 | User: it should say the file's name |
+| Home Change filament | ❌ → D-126 | User: it should start the unload straight away |
+| D-126 Print question: "Print Main Body(2)?" with material and time (fork dev 2e77b4a5) | ✅ | User |
+| D-126 Home Change filament unloads at once, then asks for the new one | ✅ | User; log: UNLOAD 11:15:20 right after the tap, then LOAD PLA 11:15:52 |
+| Walk-away load of PLA (Grab) | ✅ | User; loaded and purged, heater off |
+
+## Run 16: release check for v0.5.0 → next (D-107..D-127), 2026-11-09 (klipper-ui dev, fork dev 2e77b4a5)
+
+Run by Claude from the S1's history and logs; covers what the week of real printing exercised. Items not exercised are named.
+
+| Check | Result | Notes |
+|---|---|---|
+| Prints since v0.5.0 (2026-11-02 19:00) | ✅ | 42 jobs: 29 completed, 10 canceled, 3 shutdowns; 74.3 print hours |
+| Shutdowns explained | ✅ | 11-05 Saber PETG: "Timer too close" from the stall log (D-115, logging removed D-118); 64 lines in that day's log, none since. 11-08 Main Body ×2: cancel-while-heating backstop (D-089), now shown as "Print canceled" (D-116) |
+| Ghost taps (D-112): touches under 45 ms passed on since the 11-05 fix | ✅ | 0 in 4 days (292 passed, 190 ignored). The two before the fix (23 and 24 ms, 11-05 00:26 and 12:37) opened the adjust page; the 11-06 opening followed a 72 ms press |
+| Job queue (D-111) | ✅ | Deploy log 2026-11-03: idle and printing tests on the S1, user checked reorder and remove |
+| Clock and job line (D-114, built part) | ✅ / not exercised | 12-hour clock in today's screenshots; finish time seen in real prints (user). "Don't show again" on a warning card not exercised |
+| Filament flow (D-116, D-117, D-125, D-126) | ✅ | Run 15: walk-away load, one-tap Change filament, PLA tip. Prime and Purge more not exercised this week. PETG and TPU tips untested (user: later) |
+| Klipper ready, no "Unknown command" or "Timer too close" since today's restart | ✅ | |
+| Update Manager | ✅ | Klipper v0.13.0-501, Moonraker v0.10.0-2, Mainsail v2.19.0, mainsail-config v1.2.1-1, KlipperScreen and klipper-ui: all valid, clean, no warnings; 257 OS packages pending |
+| Update helper changes (D-118) | not exercised | Root-installed: reach the S1 only when the user runs `install.sh` with sudo |

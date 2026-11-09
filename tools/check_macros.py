@@ -15,8 +15,12 @@ import jinja2
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ENV = jinja2.Environment("{%", "%}", "{", "}")          # same delimiters as Klipper
-FORBIDDEN = re.compile(r"^\s*(SET_HEATER_TEMPERATURE\s+.*TARGET=\s*[3-9]\d\d|FORCE_MOVE|SET_KINEMATIC_POSITION|"
-                       r"SET_STEPPER_ENABLE|SET_VELOCITY_LIMIT|M109|M190|TEMPERATURE_WAIT)", re.I | re.M)
+# FORCE_MOVE and SET_STEPPER_ENABLE are allowed on the extruder only (walk-away load, hand-turning
+# the gear, D-116): never on X, Y or Z, where they would lose the position or drop the bed.
+FORBIDDEN = re.compile(r"^\s*(SET_HEATER_TEMPERATURE\s+.*TARGET=\s*[3-9]\d\d|"
+                       r"FORCE_MOVE(?!\s+STEPPER=extruder\s)|SET_KINEMATIC_POSITION|"
+                       r"SET_STEPPER_ENABLE(?!\s+STEPPER=extruder\s)|SET_VELOCITY_LIMIT|M109|M190|"
+                       r"TEMPERATURE_WAIT)", re.I | re.M)
 TRADITIONAL = re.compile(r"^[A-Z]\d+(\.\d+)?$")    # G28, M600, T0: Klipper's classic G-code
 MISREAD = re.compile(r"^[A-Z_]+\d")                 # letters then a digit: Klipper splits it there
 errors = []

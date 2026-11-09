@@ -19,6 +19,7 @@ import json
 import os
 import shutil
 import sys
+import tempfile
 import time
 
 # Print files only. NOT ".g": Duet/RepRap firmware keeps its config macros (config.g, tpre0.g, ...)
@@ -62,8 +63,10 @@ def stick_files(root):
     for dirpath, dirnames, filenames in os.walk(root):
         dirnames[:] = sorted(d for d in dirnames if not d.startswith(".") and d not in SKIP_DIRS)
         for name in sorted(filenames):
-            if not name.startswith(".") and name.lower().endswith(EXTS):
-                yield os.path.join(dirpath, name)
+            path = os.path.join(dirpath, name)
+            # a symlink could point at any file the printer user can read (audit #3)
+            if not name.startswith(".") and name.lower().endswith(EXTS) and not os.path.islink(path):
+                yield path
 
 
 def main():
@@ -86,7 +89,9 @@ def main():
         if shutil.disk_usage(os.path.dirname(target)).free < size + FREE_MARGIN:
             failed.append({"file": rel, "reason": "not enough space"})
             continue
-        tmp = os.path.join(tmp_dir, "copy.part")
+        # one temp name per copy: two partitions of one stick are imported at the same time (audit #4)
+        fd, tmp = tempfile.mkstemp(dir=tmp_dir, suffix=".part")
+        os.close(fd)
         try:
             shutil.copyfile(src, tmp)  # new modification time: copied files count as newest
             os.replace(tmp, target)
@@ -107,8 +112,8 @@ def main():
     }
     state_dir = os.path.join(gcodes, ".starstack")
     os.makedirs(state_dir, exist_ok=True)
-    tmp = os.path.join(state_dir, ".usb_import.json.part")
-    with open(tmp, "w", encoding="utf-8") as f:
+    fd, tmp = tempfile.mkstemp(dir=state_dir, prefix=".usb_import.", suffix=".part")
+    with os.fdopen(fd, "w", encoding="utf-8") as f:
         json.dump(report, f, indent=1)
     os.replace(tmp, os.path.join(state_dir, "usb_import.json"))
     print(f"USB import: {len(copied)} copied, {skipped} already on the printer, {len(failed)} failed")

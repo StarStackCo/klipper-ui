@@ -12,6 +12,9 @@ Read `docs/DECISIONS.md` (decisions, questions, build/deploy log; older ones in 
 `docs/macro-safety-review.md`, `docs/requirements.md`, `docs/BACKLOG.md`, `README.md` (install, update,
 release, scripts).
 
+The touchscreen fork sits beside this repo (`../KlipperScreen-starstack`, D-121). Before reading or
+changing anything there, read `../KlipperScreen-starstack/CLAUDE.md` first; its rules apply there (D-123).
+
 ## Workflow (from the docs)
 - Work on `dev`. `main` is what printers install; it changes only by a PR from `dev` after the bench
   checklist passes (README). Debug builds go on branch `bench`, never `dev` (D-061).
@@ -20,7 +23,7 @@ release, scripts).
 - Macro changes: `python tools/check_macros.py` (CI runs it too) and an update to the macro safety review.
 - Reach the Pi only through `scripts/pi.sh` (logs to `logs/`) and show every command and reply in chat.
   Claude never handles passwords, keys or tokens; the user types sudo and Wi-Fi passwords (D-007, D-008).
-- Skills: `printer-config` (any config, macro or tuning change), `release` (dev to stable).
+- Skills: `printer-config` (any config, macro or tuning change), `release` (dev to stable), `print-job` (slice, check, upload, queue or start a print; `~/.claude/skills/print-job/` on this PC is a junction to this folder, so every chat loads this one file; D-119).
 
 ## Recording work
 - A decision is a `D-NNN` row at the top of the Decisions table in DECISIONS.md, same columns; questions are

@@ -304,3 +304,19 @@ After the Main Body(2) PLA print. Load tests run by Claude with `tools/sg_test.p
 | D-126 Print question: "Print Main Body(2)?" with material and time (fork dev 2e77b4a5) | ✅ | User |
 | D-126 Home Change filament unloads at once, then asks for the new one | ✅ | User; log: UNLOAD 11:15:20 right after the tap, then LOAD PLA 11:15:52 |
 | Walk-away load of PLA (Grab) | ✅ | User; loaded and purged, heater off |
+
+## Run 16: release check for v0.5.0 → next (D-107..D-127), 2026-11-09 (klipper-ui dev, fork dev 2e77b4a5)
+
+Run by Claude from the S1's history and logs; covers what the week of real printing exercised. Items not exercised are named.
+
+| Check | Result | Notes |
+|---|---|---|
+| Prints since v0.5.0 (2026-11-02 19:00) | ✅ | 42 jobs: 29 completed, 10 canceled, 3 shutdowns; 74.3 print hours |
+| Shutdowns explained | ✅ | 11-05 Saber PETG: "Timer too close" from the stall log (D-115, logging removed D-118); 64 lines in that day's log, none since. 11-08 Main Body ×2: cancel-while-heating backstop (D-089), now shown as "Print canceled" (D-116) |
+| Ghost taps (D-112): touches under 45 ms passed on since the 11-05 fix | ✅ | 0 in 4 days (292 passed, 190 ignored). The two before the fix (23 and 24 ms, 11-05 00:26 and 12:37) opened the adjust page; the 11-06 opening followed a 72 ms press |
+| Job queue (D-111) | ✅ | Deploy log 2026-11-03: idle and printing tests on the S1, user checked reorder and remove |
+| Clock and job line (D-114, built part) | ✅ / not exercised | 12-hour clock in today's screenshots; finish time seen in real prints (user). "Don't show again" on a warning card not exercised |
+| Filament flow (D-116, D-117, D-125, D-126) | ✅ | Run 15: walk-away load, one-tap Change filament, PLA tip. Prime and Purge more not exercised this week. PETG and TPU tips untested (user: later) |
+| Klipper ready, no "Unknown command" or "Timer too close" since today's restart | ✅ | |
+| Update Manager | ✅ | Klipper v0.13.0-501, Moonraker v0.10.0-2, Mainsail v2.19.0, mainsail-config v1.2.1-1, KlipperScreen and klipper-ui: all valid, clean, no warnings; 257 OS packages pending |
+| Update helper changes (D-118) | not exercised | Root-installed: reach the S1 only when the user runs `install.sh` with sudo |

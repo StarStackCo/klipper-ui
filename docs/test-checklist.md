@@ -301,3 +301,6 @@ After the Main Body(2) PLA print. Load tests run by Claude with `tools/sg_test.p
 | PLA unload tip (D-125 starting values) | ✅ | User: "a lot better, point looks good" |
 | Print confirmation (D-124): "Print this file?" | ❌ → D-126 | User: it should say the file's name |
 | Home Change filament | ❌ → D-126 | User: it should start the unload straight away |
+| D-126 Print question: "Print Main Body(2)?" with material and time (fork dev 2e77b4a5) | ✅ | User |
+| D-126 Home Change filament unloads at once, then asks for the new one | ✅ | User; log: UNLOAD 11:15:20 right after the tap, then LOAD PLA 11:15:52 |
+| Walk-away load of PLA (Grab) | ✅ | User; loaded and purged, heater off |

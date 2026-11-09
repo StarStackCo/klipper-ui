@@ -57,8 +57,8 @@ Legend: **N** = Normal mode · **A** = Advanced mode only · 🔒 = locked while
 ### Home: idle
 | Action | Mode | Where | Notes |
 |---|---|---|---|
-| Reprint last job | N ⚠️ | T M | Confirm: **"Is the bed clear?"** |
-| Recent prints (thumbnails), tap to reprint | N ⚠️ | T M | Same bed-clear confirmation |
+| Reprint last job | N ⚠️ | T M | Confirm: **"Print this file?"** (plate-clear only for queued jobs, D-119) |
+| Recent prints (thumbnails), tap to reprint | N ⚠️ | T M | Same Print confirmation |
 | Preheat PLA / PETG / TPU | N | T M | One tap. Uses the table in section 4 |
 | Cool down | N | T M | |
 | Printer status (temps, state, idle-timeout countdown if heaters are on) | N | T M | |

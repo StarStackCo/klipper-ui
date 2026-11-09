@@ -285,3 +285,19 @@ Run by Claude through Moonraker and the bench devtools (switched on for this run
 | Real start (Benchy, PETG, cold bed): soak, mesh 1.60 mm → uneven-bed warning | ⚠️ → fixed | Warning sent as a red error pop-up; the print was canceled from the touchscreen 15 s later (looked like a failure). Now a plain console message + "Bed uneven 1.60 mm" in the Home status line + amber card after the print |
 | Retry: nozzle clean fails once (`clean_once`) | ✅ | Clean failed → trying again (1/2) → re-home → clean → cool |
 | Retry: bed mesh fails once (`mesh_once`) | ✅ | Mesh failed → re-home → straight back to the mesh (no clean) → mesh done → heating for the print |
+
+## Run 15: dev update, unload tip forming and extruder load test (D-117, D-118, D-124, D-125), 2026-11-09 (klipper-ui dev f554fab, fork dev 79d217be)
+
+After the Main Body(2) PLA print. Load tests run by Claude with `tools/sg_test.py` (data in `docs/data/sg_test.json`); tip and touchscreen checks by the user.
+
+| Check | Result | Notes |
+|---|---|---|
+| S1 on dev: Klipper ready, touchscreen up, no log errors | ✅ | Klipper side by the other session (printer.cfg.pre-d118); touchscreen bench → dev |
+| `sg_test.py` runs | ❌ → ✅ | Status query URL-encoded the `&`, so Moonraker returned neither object; fixed before anything was sent |
+| Load test, PLA loaded, 210 °C, 2/5/8/12/16/20 mm³/s | ✅ | SG_RESULT avg 16 / 46 / 69 / 88 / 107 / 123. Reads in steps of 32; rises with speed |
+| Load test, PLA held back by hand (light drag, kept feeding) | ✅ | 16 / 45 / 65 / 81 / 106 / 125: same as loaded within noise |
+| Load test, no filament | ✅ | 16 / 48 / 70 / 94 / 124 / 152: differs from loaded only above 12 mm³/s, by about one step |
+| Klipper restart undoes the test's driver settings | ✅ | TPWMTHRS back to 0xfffff, TCOOLTHRS 0. GCONF shows StealthChop on at standstill: `stealthchop_threshold: 0` in Klipper means SpreadCycle whenever the motor moves |
+| PLA unload tip (D-125 starting values) | ✅ | User: "a lot better, point looks good" |
+| Print confirmation (D-124): "Print this file?" | ❌ → D-126 | User: it should say the file's name |
+| Home Change filament | ❌ → D-126 | User: it should start the unload straight away |

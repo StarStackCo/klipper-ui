@@ -9,7 +9,6 @@ import json
 import os
 import re
 import time
-import urllib.parse
 import urllib.request
 
 AREA = 3.14159 * 0.875**2  # mm² of 1.75 mm filament
@@ -48,8 +47,7 @@ def main():
     ap.add_argument("--host", default="192.168.0.102")
     ap.add_argument("--flows", default="2,5,8,12,16,20", help="mm³/s")
     a = ap.parse_args()
-    q = "/printer/objects/query?" + urllib.parse.quote("print_stats&extruder")
-    st = call(a.host, q)["status"]
+    st = call(a.host, "/printer/objects/query?print_stats&extruder")["status"]
     print(f"state {st['print_stats']['state']}, nozzle {st['extruder']['temperature']:.0f}°C")
     if st["print_stats"]["state"] in ("printing", "paused"):
         raise SystemExit("printer busy: not testing")

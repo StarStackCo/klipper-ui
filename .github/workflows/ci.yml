@@ -16,13 +16,15 @@ jobs:
         with:
           python-version: "3.11"
       - name: Install tools
-        run: pip install jinja2==3.1.4 flake8==7.1.1
+        run: pip install jinja2==3.1.4 flake8==7.1.1 pytest==8.3.3
       - name: Macros parse, compile and follow the safety rules
         run: python tools/check_macros.py
       - name: JSON files are valid
         run: for f in mainsail-theme/*.json; do python -m json.tool "$f" >/dev/null && echo "ok $f"; done
       - name: Python errors
-        run: flake8 --select=F --max-line-length=120 tools scripts
+        run: flake8 --select=F --max-line-length=120 tools scripts update tests
+      - name: Tests
+        run: python -m pytest -q tests
       - name: Shell scripts (errors only)
         run: shellcheck --severity=error install.sh scripts/*.sh
   secrets:

@@ -31,6 +31,9 @@ changing anything there, read `../KlipperScreen-starstack/CLAUDE.md` first; its 
   this folder. Commit only your own changes: uncommitted files you didn't touch belong to another session.
 - Inside a branch, new log entries use `D-NEW`, `Q-NEW`, `B-NEW` and `Run NEW` with a short topic. The real
   number is given when the branch merges into `dev`, one branch at a time (`python tools/check_ids.py --next D`).
+- Before a branch merges into `dev` (D-NEW review step): a subagent with fresh context reviews
+  `git diff dev...<branch>` against `REVIEW.md`; a fork branch gets the same, against the fork's CLAUDE.md.
+  Show the user the count. Fix every Important finding, or the user accepts it, before merging.
 - One session at a time talks to the Pi (`pi.sh`, deploys, restarts). Before using it, ask the user whether
   another session is.
 

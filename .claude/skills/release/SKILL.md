@@ -13,14 +13,17 @@ release reaches every printer on its next "Update everything". The script is `sc
 1. **Get the user's OK** for the release and the version number (D-003).
 2. **Checklist first.** Everything going out has a passing Run in `docs/test-checklist.md` on the S1. Items
    still marked 🟡 in DECISIONS.md are not released.
-3. **Tested versions.** If Klipper or Moonraker should move: `scripts/pin-versions.sh --latest`, run the
+3. **Review what goes out** (D-NEW review step). A subagent with fresh context reviews `git diff main...dev`
+   against `REVIEW.md`, and the fork's `git diff starstack...dev` against the fork's CLAUDE.md. Show the user
+   the count; every Important finding is fixed on `dev` or accepted by the user before the script runs.
+4. **Tested versions.** If Klipper or Moonraker should move: `scripts/pin-versions.sh --latest`, run the
    checklist, then `scripts/pin-versions.sh` and commit `update/versions.conf` on `dev`.
-4. **Both repos clean, on `dev`, pushed.** The script refuses otherwise. Check the fork too: its local `dev`
+5. **Both repos clean, on `dev`, pushed.** The script refuses otherwise. Check the fork too: its local `dev`
    can hold commits that only went to `bench`.
-5. **Run** `scripts/release.sh vX.Y.Z "what changed"` from klipper-ui. For each repo with new commits it
+6. **Run** `scripts/release.sh vX.Y.Z "what changed"` from klipper-ui. For each repo with new commits it
    opens the PR, waits for CI, merges, levels `dev` with stable, then tags klipper-ui `main`.
-6. **Log it**: a build/deploy log row in `docs/DECISIONS.md` (PR numbers, tag, stable commits).
-7. **Put the S1 on the release** with the user: Update everything (touchscreen or Mainsail), then watch the
+7. **Log it**: a build/deploy log row in `docs/DECISIONS.md` (PR numbers, tag, stable commits).
+8. **Put the S1 on the release** with the user: Update everything (touchscreen or Mainsail), then watch the
    update helper's check (`journalctl -u starstack-update` via `scripts/pi.sh`) until it records the update
    as good, and confirm the Update Manager shows every repo valid and clean.
 

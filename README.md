@@ -108,6 +108,9 @@ From a PC with SSH access to the bench Pi (`scripts/pi.sh` logs every command to
 | Script | What |
 |---|---|
 | `scripts/pi-install.sh [--branch dev] [--dry-run]` | Update `~/klipper-ui` on the Pi and run the installer |
+| `scripts/status.sh` | Read-only: Klipper and print state, temperatures, repo branches, klippy errors since the last start |
+| `scripts/deploy-cfg.sh D-NNN [--cfg [file]] [--install [--branch dev]] [--dry-run]` | Deploy printer.cfg (keeps the Pi's SAVE_CONFIG block, backup `printer.cfg.pre-dnnn`) and/or run the installer, refusing during a print; then checks Klipper is ready and prints the deploy log row |
+| `python tools/check_ids.py [--next D]` | Duplicate D/Q/B numbers fail CI; `--next D` gives the next free one |
 | `scripts/ks-update.sh [--branch dev] [shot.png]` | Push the touchscreen fork branch, update the Pi, restart, screenshot |
 | `scripts/ks-screenshot.sh shot.png` | Capture the touchscreen |
 | `scripts/ks-tap.sh "click Settings" [shot.png]` | Drive the touchscreen (needs bench devtools: `touch ~/.starstack_dev`, off on the S1) |

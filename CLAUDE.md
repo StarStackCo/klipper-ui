@@ -20,6 +20,7 @@ changing anything there, read `../KlipperScreen-starstack/CLAUDE.md` first; its 
   checklist passes (README). Debug builds go on branch `bench`, never `dev` (D-061).
 - Nothing is deployed to the printer or pushed without the user's OK for that step (D-003). Stop and ask
   when anything is unclear (PLAN section 7). Least invasive layer first: theme, then macros, then code (PLAN 3).
+- Reviews (yours, `/code-review`, a subagent's) follow `REVIEW.md`.
 - Macro changes: `python tools/check_macros.py` (CI runs it too) and an update to the macro safety review.
 - Reach the Pi only through `scripts/pi.sh` (logs to `logs/`) and show every command and reply in chat.
   Claude never handles passwords, keys or tokens; the user types sudo and Wi-Fi passwords (D-007, D-008).
@@ -30,6 +31,9 @@ changing anything there, read `../KlipperScreen-starstack/CLAUDE.md` first; its 
   this folder. Commit only your own changes: uncommitted files you didn't touch belong to another session.
 - Inside a branch, new log entries use `D-NEW`, `Q-NEW`, `B-NEW` and `Run NEW` with a short topic. The real
   number is given when the branch merges into `dev`, one branch at a time (`python tools/check_ids.py --next D`).
+- Before a branch merges into `dev` (D-136): a subagent with fresh context reviews
+  `git diff dev...<branch>` against `REVIEW.md`; a fork branch gets the same, against the fork's CLAUDE.md.
+  Show the user the count. Fix every Important finding, or the user accepts it, before merging.
 - One session at a time talks to the Pi (`pi.sh`, deploys, restarts). Before using it, ask the user whether
   another session is.
 

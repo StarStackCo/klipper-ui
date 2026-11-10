@@ -22,7 +22,8 @@
 #      update entries of add-ons the printer doesn't use (timelapse, print_area_bed_mesh, and the
 #      webcam streamer and Wi-Fi keepalive when they're switched off)
 #   4. Switches ~/KlipperScreen to the StarStack fork (re-clones if the git folder is damaged),
-#      installs the Public Sans font and selects the starstack theme
+#      installs the Public Sans font and selects the starstack theme; sudo: a polkit rule so the
+#      touchscreen's first power-up setup can set the time zone (nothing else)
 #   5. Applies Mainsail UI settings + macro groups + dashboard panel order (Moonraker database)
 #   6. USB stick import: plugging in a stick copies new G-code files into the print jobs folder
 #      (udev rule + service, asks for your password once via sudo; skip with --no-usb)
@@ -369,6 +370,36 @@ fastboot_remove() {
   do_ "sudo systemctl daemon-reload"
 }
 
+# ---- 4b. Time zone from the touchscreen (first power-up setup, D-NEW setup)
+TZ_RULE=/etc/polkit-1/rules.d/50-starstack-timezone.rules
+
+tz_install() {  # polkit: the printer user may set the time zone (only that), no password
+  local tmp
+  if [ ! -d /etc/polkit-1/rules.d ]; then
+    echo "   no polkit rules folder: the touchscreen can't set the time zone"; return
+  fi
+  tmp=$(mktemp)
+  cat > "$tmp" <<RULE
+// StarStack klipper-ui install.sh: the touchscreen's setup sets the time zone without a password
+polkit.addRule(function(action, subject) {
+    if (action.id == "org.freedesktop.timedate1.set-timezone" && subject.user == "$(id -un)") {
+        return polkit.Result.YES;
+    }
+});
+RULE
+  if cmp -s "$tmp" "$TZ_RULE"; then
+    echo "   ok: touchscreen can set the time zone"
+  else
+    do_ "sudo install -o root -g root -m 644 '$tmp' '$TZ_RULE'"
+    echo "   touchscreen can set the time zone (polkit rule)"
+  fi
+  rm -f "$tmp"
+}
+
+tz_remove() {
+  [ -e "$TZ_RULE" ] && do_ "sudo rm -f '$TZ_RULE'" && echo "   time zone rule removed" || true
+}
+
 # ---- 9. Update helper (D-087)
 UPD_LIB=/usr/local/lib/starstack/starstack-update.py
 UPD_UNIT=/etc/systemd/system/starstack-update.service
@@ -453,6 +484,7 @@ if [ "$MODE" = uninstall ]; then
   [ -L "$CFG/starstack-updates.conf" ] && do_ "rm '$CFG/starstack-updates.conf'"
   held_remove
   helper_remove
+  tz_remove
   if [ -d "$KS_DIR" ]; then
     do_ "git -C '$KS_DIR' remote set-url origin '$KS_UP' && git -C '$KS_DIR' fetch -q origin && git -C '$KS_DIR' checkout -q -f -B master origin/master"
   fi
@@ -475,6 +507,7 @@ say "3/10 Moonraker update manager"
 moonraker_sections
 say "4/10 KlipperScreen -> StarStack fork"
 klipperscreen_fork
+tz_install
 say "5/10 Mainsail settings + macro groups + panel order"
 if [ "$DRY" = 1 ]; then echo "   (dry-run) apply mainsail-theme/settings.json + macrogroups.json + dashboard.json"; else python3 "$REPO/tools/apply_mainsail.py" | sed 's/^/   /'; fi
 say "6/10 USB stick import"

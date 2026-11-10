@@ -44,7 +44,7 @@ changing anything there, read `../KlipperScreen-starstack/CLAUDE.md` first; its 
 - `config/s1/` is the old prototype, not the production S1 (D-102).
 - Moonraker `trusted_clients` must list every private range, never one subnet (D-102).
 - Mainsail isn't pinned (B-12) and anyone on the network can control the printer (B-13).
-- The S1 bed mesh shows the right side about 1.6 mm low; tram later (test-checklist Run 9).
+- The S1 bed is about 1 mm out of level, left side low (mesh at probe speed 5 mm/s, paper-checked, Run 17); tram later. Meshes before D-134 had false triggers: don't tram from them.
 - The PZ probe triggers from vibration while moving, so it can't detect collisions (D-099).
 - Power loss recovery and crash detection are design only (D-098, D-099, `docs/power-loss-recovery.md`).
 

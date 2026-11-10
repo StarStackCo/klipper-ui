@@ -369,3 +369,16 @@ Run by the user on the touchscreen (Settings > Setup and tour), three passes; fi
 | Tour, filament, first print | ✅ | First print is `3DBenchy Overture PLA.gcode` (re-sliced, PRINT_START). The first try used the old `3DBenchy_PLA_1h6m.gcode` (blocking `M190`): Cancel queued behind it and the backstop e-stopped (B-25); the setup now offers only PRINT_START files |
 | Cancel on the new first print | ✅ | Cancels cleanly, no restart (user: "everything works") |
 
+## Run 19: setup clock, hot nozzle and tap page layout (D-137), 2026-11-10 (fork first-power-up 68d8367a, S1)
+
+Run by Claude with the bench dev tool (`~/.starstack_dev`, removed afterwards), after the user reported: zone tap didn't change the clock, tap page text pushed off the side, a hot nozzle still asked for a tap.
+
+| Check | Result | Notes |
+|---|---|---|
+| Zone page fits, chosen zone marked | ✅ | Screenshot: Eastern solid blue with a check, 6 buttons and Back / Skip / Next on screen |
+| Clock follows a zone change at once | ✅ | Central picked: top-right clock 02:00 PM → 01:01 PM straight away (KlipperScreen only redrew on a new minute). Set back to Eastern (`timedatectl`: America/New_York) |
+| Hot nozzle: wait page | ✅ | Nozzle 51°C: "Wait for the nozzle to cool", live temperature, no tap request, No reaction grayed; Stop / Skip / No reaction all on screen |
+| Switches to the tap by itself | ✅ | At 44°C: "Tap the nozzle", "It's not hot: 44°C", "Waiting for your tap" |
+| Stop from the tap page | ✅ | Heaters 0, fan 0 afterwards |
+| STOP button color on the tap page | info | Red (active) while the page polls the probe. Not checked why: probably `idle_timeout` reads Printing while the endstop queries run (not recorded). Nothing heats or moves. If so, `busy()` in the fork's `ss_setup.py` would also read busy then; today only Start check uses it |
+

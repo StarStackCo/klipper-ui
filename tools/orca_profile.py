@@ -16,13 +16,23 @@ only works on a PC that has the same parents. This tool makes every preset compl
   python tools/orca_profile.py check SLICED.gcode
       Before uploading: the file must start through PRINT_START (checks, soak, clean, mesh,
       layer-shift logging) and be sliced for the StarStack S1. Exit code 1 if not.
+  python tools/orca_profile.py install
+      Repo → this PC's Orca (orca-install.bat). Orca must be closed. Backs up Orca's user folder
+      first, then writes every repo preset; presets that are not in the repo are left alone.
+  python tools/orca_profile.py export [NAME ...]
+      This PC's Orca → repo (orca-export.bat). Exports the presets the repo already has, plus any
+      NAME given (a new preset), made self-contained. Check `git diff` before committing.
 """
 
+import datetime
 import glob
 import json
 import os
 import re
+import shutil
+import subprocess
 import sys
+import time
 import zipfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -195,6 +205,91 @@ def cli(dest, process="0.25mm Draft", filament="Hatchbox PETG", plate="High Temp
     print(f"wrote machine/process/filament JSON for {process} + {filament} into {dest}")
 
 
+USER = os.path.join(os.environ.get("APPDATA", ""), "OrcaSlicer", "user", "default")
+GUI = {"printer": "machine", "process": "process", "filament": "filament"}  # Orca's folder names
+# a preset with no parent lives in <kind>/base/, one with a parent in <kind>/ (Orca 2.4.2)
+
+
+def orca_running():
+    out = subprocess.run(["tasklist", "/FI", "IMAGENAME eq orca-slicer.exe"],
+                         capture_output=True, text=True).stdout
+    return "orca-slicer.exe" in out.lower()
+
+
+def gui_files(folder, name):
+    """Where Orca keeps a user preset of this name (both spots, either may exist)."""
+    return [os.path.join(USER, GUI[folder], "base", name + ".json"),
+            os.path.join(USER, GUI[folder], name + ".json")]
+
+
+def install():
+    if not os.path.isdir(USER):
+        raise SystemExit(f"Orca user folder not found: {USER} (open and close Orca once first)")
+    if orca_running():
+        raise SystemExit("Close OrcaSlicer first: it rewrites its presets when it exits.")
+    backup = USER + "-backup-" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    shutil.copytree(USER, backup)
+    print(f"backup: {backup}")
+    now = int(time.time())
+    for folder, path in presets():
+        name = os.path.splitext(os.path.basename(path))[0]
+        base, child = gui_files(folder, name)
+        for old in (child, child[:-5] + ".info"):  # an older copy with a parent would clash by name
+            if os.path.exists(old):
+                os.remove(old)
+        os.makedirs(os.path.dirname(base), exist_ok=True)
+        shutil.copyfile(path, base)
+        with open(base[:-5] + ".info", "w", encoding="utf-8", newline="\n") as f:
+            f.write(f"sync_info = \nuser_id = \nsetting_id = \nbase_id = \nupdated_time = {now}\n")
+        print(f"{folder:9} {name}")
+    print("Done. Open Orca and pick printer 'StarStack S1'.")
+
+
+def export(extra=()):
+    if orca_running():
+        print("Note: Orca is open; unsaved edits there are not exported (save them first).")
+    names = {(f, os.path.splitext(os.path.basename(p))[0]) for f, p in presets()}
+    for n in extra:  # a new preset: find its kind in the GUI folders
+        found = [f for f in KINDS if any(os.path.exists(p) for p in gui_files(f, n))]
+        if not found:
+            raise SystemExit(f"no Orca user preset named {n!r}")
+        names.add((found[0], n))
+    user = {}
+    for path in glob.glob(os.path.join(USER, "*", "**", "*.json"), recursive=True):
+        data = json.load(open(path, encoding="utf-8"))
+        user[data.get("name")] = data
+    # same rule as check(): an old start G-code skips the whole StarStack start
+    if "PRINT_START" not in user.get("StarStack S1", {}).get("machine_start_gcode", "PRINT_START"):
+        raise SystemExit("Orca's StarStack S1 start G-code has no PRINT_START (stale Orca?). "
+                         "Run install first; nothing was exported.")
+    idx = None
+    for folder, name in sorted(names):
+        src = next((p for p in gui_files(folder, name) if os.path.exists(p)), None)
+        if not src:
+            print(f"{folder:9} {name}: not in this PC's Orca, repo copy kept")
+            continue
+        data = json.load(open(src, encoding="utf-8"))
+        full = {}
+        if data.get("inherits"):
+            if idx is None:
+                idx = system_index()
+                idx.update(user)  # a parent may be another user preset
+            full = resolve(data["inherits"], idx)
+        full.update(data)
+        for key in ("instantiation", "setting_id", "base_id", "type", "is_custom_defined"):
+            full.pop(key, None)
+        full.update({"name": name, "inherits": "", "from": "User"})
+        if folder != "printer":
+            full.update({"compatible_printers": ["StarStack S1"], "compatible_printers_condition": ""})
+        out = os.path.join(OUT, folder, name + ".json")
+        old = json.load(open(out, encoding="utf-8")) if os.path.exists(out) else {}
+        changed = sum(old.get(k) != full.get(k) for k in set(old) | set(full))
+        json.dump(dict(sorted(full.items())), open(out, "w", encoding="utf-8", newline="\n"),
+                  indent=4, ensure_ascii=False)
+        print(f"{folder:9} {name:22} {changed:3} settings changed" + ("" if old else " (new)"))
+    pack()
+
+
 def check(gcode):
     """A file sliced with another printer profile skips the whole StarStack start (2026-11-03: two
     Saber files from a hand-made machine.json heated with plain M190/M104 instead)."""
@@ -232,6 +327,10 @@ if __name__ == "__main__":
         build(sys.argv[2], sys.argv[3])
     elif cmd == "pack":
         pack()
+    elif cmd == "install":
+        install()
+    elif cmd == "export":
+        export(sys.argv[2:])
     elif cmd == "cli" and len(sys.argv) >= 3:
         cli(*sys.argv[2:])
     else:

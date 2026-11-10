@@ -64,6 +64,13 @@ Every file it changes is backed up once as `<file>.pre-starstack`.
 use `PRINT_START` as the start G-code (S1: [`config/s1/orca-start-gcode.txt`](config/s1/orca-start-gcode.txt)).
 It heats without blocking, so Cancel works at once, and gives up on a heater that doesn't reach temperature.
 
+**Keeping Orca the same on every PC (D-128).** The repo's [`config/s1/orca/`](config/s1/orca/) is the master
+copy. To get it: close Orca, double-click `orca-install.bat` (pulls, backs up
+`%APPDATA%\OrcaSlicer\user\default`, writes the S1 presets; other presets are left alone). After changing a
+preset in Orca: save it, double-click `orca-export.bat` (add a new preset by name:
+`orca-export.bat "My PLA"`), review the list, answer `y` to commit and push, then run `orca-install.bat` on
+the other PC.
+
 ## Update
 
 One tap: touchscreen **Settings › (Advanced on) › Updates › Update everything** (or Mainsail › Machine › Update

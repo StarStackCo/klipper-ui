@@ -351,3 +351,21 @@ Run by Claude through Moonraker (same `G28` / `BED_MESH_CALIBRATE` the touchscre
 | Next print `Main Body(2)_PLA_7h11m` 22:45 | ❌ | `PRINT_START` Z homing: "No trigger on stepper_z after full movement" 3 times (nozzle hot, homing at `homing_speed` 20 mm/s), canceled by the D-105 retries after 2 min (B-24). Restarted 23:21: homed, mesh 0 retries, printing. Its mesh (Y10/Y90/Y170 rows): -0.222 0.191 0.419 / -0.416 0.190 0.518 / -0.506 0.236 0.587, same X10→X170 rise as the D-134 meshes (0.64 / 0.93 / 1.09 vs 0.66 / 0.93 / 1.02) |
 | Since the D-134 restart (21:26) | ✅ / ❌ | 0 mesh retries in every mesh; 3 "No trigger" lines, all from the 22:45 homing |
 | Not exercised | | `PROBE_CALIBRATE` |
+
+## Run NEW setup: first power-up setup on the S1 (D-NEW setup), 2026-11-10 (fork first-power-up 3f9ed6fe, S1)
+
+Run by the user on the touchscreen (Settings > Setup and tour), three passes; fixes between them were installed with `ks-update.sh --branch first-power-up`.
+
+| Check | Result | Notes |
+|---|---|---|
+| Welcome: Start only | ✅ | Skip setup removed (user) |
+| Time zone: tap sets the Pi's zone, chosen zone shows | ❌ → ✅ | Taps worked from the start (Pi went Denver, then New_York) but the outline never drew, then the page read a stale `/etc/timezone` (Europe/London). Now solid blue with a check, read from `/etc/localtime`. Other zone / 12-hour / 24-hour row removed (it made the page scroll), buttons 50 px |
+| Time zone without a password | ✅ | polkit rule (installed by hand, user typed sudo); `timedatectl --no-ask-password set-timezone` as biqu |
+| Wi-Fi: Done returns to the setup | ✅ | |
+| Rail during setup: STOP only, then icons shown but not tappable from the tour, tour highlights each | ❌ → ✅ | First version: nav icons vanished on every page (no_show_all hid the image); fixed |
+| Nozzle tap (cold PZ) registers | ❌ → ✅ | PZ LED lit but nothing registered: the endstop is `stepper_z`, code read `z`. One endstop query takes ~300 ms on the S1, polled back to back |
+| "The probe works" OK page, then heating; "Next: homing" OK page, then G28 | ✅ | Added at the user's request |
+| Heaters, part fan question, homing, "Self-tests complete" | ✅ | |
+| Tour, filament, first print | ✅ | First print is `3DBenchy Overture PLA.gcode` (re-sliced, PRINT_START). The first try used the old `3DBenchy_PLA_1h6m.gcode` (blocking `M190`): Cancel queued behind it and the backstop e-stopped (B-NEW cancel feedback); the setup now offers only PRINT_START files |
+| Cancel on the new first print | ✅ | Cancels cleanly, no restart (user: "everything works") |
+

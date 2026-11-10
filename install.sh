@@ -371,11 +371,12 @@ fastboot_remove() {
 }
 
 # ---- 4b. Time zone from the touchscreen (first power-up setup, D-137)
-TZ_RULE=/etc/polkit-1/rules.d/50-starstack-timezone.rules
+TZ_DIR=/etc/polkit-1/rules.d
+TZ_RULE=$TZ_DIR/50-starstack-timezone.rules
 
 tz_install() {  # polkit: the printer user may set the time zone (only that), no password
-  local tmp
-  if [ ! -d /etc/polkit-1/rules.d ]; then
+  local tmp have
+  if [ ! -d "$TZ_DIR" ]; then
     echo "   no polkit rules folder: the touchscreen can't set the time zone"; return
   fi
   tmp=$(mktemp)
@@ -387,18 +388,40 @@ polkit.addRule(function(action, subject) {
     }
 });
 RULE
-  # sudo: polkit's rules folder can be root-only, and then a plain cmp/test always says "missing"
-  if sudo cmp -s "$tmp" "$TZ_RULE"; then
+  have=$(tz_rule_state "$tmp")
+  if [ "$have" = same ]; then
     echo "   ok: touchscreen can set the time zone"
+  elif [ "$have" = unknown ]; then
+    # the rules folder is root-only and sudo needs a password nobody can type here (pi.sh, --dry-run)
+    echo "   time zone rule not checked (needs sudo): run install.sh yourself to add it"
   else
+    echo "   adding the time zone rule (sudo may ask for your password)"
     do_ "sudo install -o root -g root -m 644 '$tmp' '$TZ_RULE'"
     echo "   touchscreen can set the time zone (polkit rule)"
   fi
   rm -f "$tmp"
 }
 
-tz_remove() {
-  sudo test -e "$TZ_RULE" && do_ "sudo rm -f '$TZ_RULE'" && echo "   time zone rule removed" || true
+# same | differs (missing or changed) | unknown. Never prompts: plain read when the folder is
+# readable, else sudo -n; --dry-run never uses sudo.
+tz_rule_state() {
+  if [ -r "$TZ_DIR" ] && [ -x "$TZ_DIR" ]; then
+    cmp -s "$1" "$TZ_RULE" && echo same || echo differs
+  elif [ "$DRY" != 1 ] && sudo -n true 2>/dev/null; then
+    sudo -n cmp -s "$1" "$TZ_RULE" && echo same || echo differs
+  else
+    echo unknown
+  fi
+}
+
+tz_remove() {  # same rule as tz_rule_state: never prompts for a password
+  if [ -r "$TZ_DIR" ] && [ -x "$TZ_DIR" ]; then
+    [ -e "$TZ_RULE" ] && do_ "sudo rm -f '$TZ_RULE'" && echo "   time zone rule removed" || true
+  elif [ "$DRY" != 1 ] && sudo -n true 2>/dev/null; then
+    sudo -n test -e "$TZ_RULE" && do_ "sudo rm -f '$TZ_RULE'" && echo "   time zone rule removed" || true
+  else
+    echo "   time zone rule not checked (needs sudo): remove $TZ_RULE yourself if it's there"
+  fi
 }
 
 # ---- 9. Update helper (D-087)

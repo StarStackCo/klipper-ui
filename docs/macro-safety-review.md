@@ -8,7 +8,7 @@
 |---|---|---|
 | No macro changes `max_temp`, `min_temp`, `min_extrude_temp`, `verify_heater`, endstops or kinematics | ✅ | The file contains no `SET_HEATER`/`verify`/`SET_KINEMATIC_POSITION`. `FORCE_MOVE` and `SET_STEPPER_ENABLE` only on the extruder (walk-away load grabs 15 mm cold, well short of the hot end; motor off so the gear turns by hand), checked by `tools/check_macros.py` (D-116). `SET_VELOCITY_LIMIT` and `M204` appear only in the Silent wrappers, which can only lower the limits (v1.2, D-101) |
 | Highest temperature any macro requests | ✅ 240 °C nozzle / 80 °C bed | `_SS.materials`. Klipper rejects anything above `max_temp` anyway |
-| No blocking heat waits (M109, M190, TEMPERATURE_WAIT) | ✅ | Cold nozzle → start heating + message, never a stuck queue. `PRINT_START` waits with the file paused and a 1 s timer, so Cancel always runs at once (D-089) |
+| No blocking heat waits (M109, M190, TEMPERATURE_WAIT) | ✅ | Cold nozzle → start heating + message, never a stuck queue. `PRINT_START` waits with the file paused and a 1 s timer, so Cancel always runs at once (D-089). Exceptions, all in the S1 `printer.cfg` and idle only: `NOZZLE_CLEAN` by hand (`M109`) and `_PROBE_HOT` (`TEMPERATURE_WAIT` for a steady 150 °C before idle Z homing or bed mesh, B-19); both skip the wait during a print or pause |
 | Heater that never gets to temperature | ✅ | Each `PRINT_START` heating step has 10 min (`start_heat_timeout`), then the print is canceled with a message. Klipper's `verify_heater` still catches real faults sooner |
 | Macro names Klipper can call | ✅ | `check_macros.py` rejects names like `_S1_X` (letters then a digit), which Klipper reads as command `_S1` (D-089) |
 | Cold extrusion | ✅ | `LOAD`/`UNLOAD` only extrude when within 5 °C of target. `PURGE_MORE` checks `can_extrude`. Klipper's `min_extrude_temp` still applies underneath |
@@ -47,10 +47,13 @@
 
 These live in the printer config, not in the StarStack macros, because they are specific to the S1's hardware.
 `NOZZLE_CLEAN` may wait for heat (`M109`) when run by hand; `PRINT_START` calls it with `WAIT=0` and waits without blocking.
+`_PROBE_HOT` may wait for heat only when no print is running or paused (B-19, D-131).
 
 | Macro | Called by | What it can do | Risk | Mitigation |
 |---|---|---|---|---|
-| `[homing_override]` | G28 | Lift 3 mm, sensorless X/Y, move to X133 Y185, Z on the PZ probe | Medium | User's working macro, unchanged. Z motor current lowered while probing (probe `activate_gcode`) |
+| `[homing_override]` | G28 | Lift 3 mm, sensorless X/Y, move to X133 Y185, Z on the PZ probe | Medium | User's working macro, unchanged. Z motor current lowered while probing (probe `activate_gcode`). Z homing calls `_PROBE_HOT` first and `_PROBE_HOT_END` after (D-131) |
+| `_PROBE_HOT` / `_PROBE_HOT_END` | Z homing, `BED_MESH_CALIBRATE` | Idle: nozzle to `clean_temp` 150 °C (heats a cold nozzle, cools a preheat), wait for 148 to 152 °C, hold 15 s, then put the old target back | Low | Never while printing or paused. Highest target it sets is 150 °C. If homing fails, `_PROBE_HOT_END` doesn't run and the nozzle stays at 150 °C until `[idle_timeout]` (15 min). `verify_heater` still applies |
+| `BED_MESH_CALIBRATE` (wraps `BED_MESH_CALIBRATE_BASE`) | Touchscreen, Mainsail, `PRINT_START` | Same mesh, with `_PROBE_HOT` around it; `METHOD=manual` passes straight through | Low | Passes every parameter on (`rawparams`), so `ADAPTIVE=1` still works. Inside a print it adds nothing (D-131) |
 | `NOZZLE_CLEAN` | `PRINT_START` (`WAIT=0`), or by hand | Wipe on the brush at Z 1.2, re-home Z, park at Z 0, wait for 150 °C (not with `WAIT=0`) | Medium | User's working macro; only the `WAIT` option added (D-089). Homes first if needed. Brush position confirmed by the user |
 | `_CLIENT_VARIABLE` | Mainsail PAUSE/RESUME/CANCEL | Park X0 Y180, lift 10 mm | Low | Mainsail's own macros, inside the axis limits |
 | `_PRINTER_PAUSE_FAN` / `_PRINTER_RESUME_FAN` | PAUSE / RESUME | Part fan off / back on; resume first runs `_SS_RESUME_GUARD` | Low | Were `_S1_…`, which never ran (Klipper read them as `_S1`, D-089) |

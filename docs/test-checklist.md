@@ -320,3 +320,19 @@ Run by Claude from the S1's history and logs; covers what the week of real print
 | Klipper ready, no "Unknown command" or "Timer too close" since today's restart | ✅ | |
 | Update Manager | ✅ | Klipper v0.13.0-501, Moonraker v0.10.0-2, Mainsail v2.19.0, mainsail-config v1.2.1-1, KlipperScreen and klipper-ui: all valid, clean, no warnings; 257 OS packages pending |
 | Update helper changes (D-118) | not exercised | Root-installed: reach the S1 only when the user runs `install.sh` with sudo |
+
+## Run 17: cold homing heats first (D-131, B-19), 2026-11-09 (klipper-ui dev after a5e8118, S1)
+
+Run by Claude through Moonraker (same `G28` / `BED_MESH_CALIBRATE` the touchscreen and Mainsail send), user approved heating and motion.
+
+| Check | Result | Notes |
+|---|---|---|
+| Home all from cold (24 °C) | ✅ | "Heating nozzle to 150°C to probe", 24 → 147 °C in about 32 s, Z homed, target back to 0; 52 s in all (first version) |
+| Bed mesh, nozzle at 135 °C and heating (first version, waited for 145 °C only) | ❌ | 5 retries at X10 Y10: first sample 1.94 mm, each next one about 2.5 mm higher (probe fires in mid-air after the 3 mm retract); nozzle left at 150 °C, as designed after a failure |
+| Bed mesh, nozzle steady at 150 °C for minutes | ✅ | First try, no retries, 60 s. Mesh 1.94 front left to -1.00 right: 2.9 mm, near D-105's 3 mm stop. Target 150 left as it was |
+| Home + bed mesh from 99.5 °C, second version (148 to 152 °C, 15 s hold) | ❌ | Homing ✅; mesh started at a steady 150 °C and still failed: 5 retries, same pattern (1.98, then 4.3 to 13.8 mm). Test meant to start under 40 °C; the cool-down check let 99.5 °C through |
+| Probe retries in earlier logs | info | 11-06: 0 retries in 10 meshes; 11-07: 0 in 6; 11-08: 17 retries, 2 failed; 11-09 before this run: 9 retries. Probe config unchanged since 10-07 |
+| `PROBE_ACCURACY SAMPLES=10` at the homing point X133 Y185, nozzle steady 150 °C, `LIFT_SPEED` 10 / 8 / 5 / 3 | ✅ | 40 of 40 clean, no mid-air triggers. Range 0.019 / 0.007 / 0.003 / 0.011 mm, std dev 0.006 / 0.002 / 0.001 / 0.003 mm. Lift speed isn't the cause; every failure (today and 11-09's retries) was on the left edge, X10 Y10 and X10 Y170. Nozzle and mount not checked by hand yet |
+| `PROBE_ACCURACY SAMPLES=10` on the left edge, nozzle steady 150 °C, travel at Z 10 | ❌ | X10 Y10 lift 10: 10 of 10 good, -0.075 mm (range 0.006). X10 Y10 lift 5: 6 of 10 false triggers (2.5 to 11.9 mm). X10 Y170 lift 10: 4 of 10 false (2.3 to 4.9 mm), real -0.27 mm. False triggers are random, not tied to lift speed |
+| The "passing" mesh above | ❌ wrong | It read +1.94 mm at X10 Y10 three times; the real contact there is -0.07 mm. The mesh's 2.9 mm tilt is false triggers, not the bed. Meshes since about 11-08 (prints included) may be wrong the same way; don't tram from them |
+| Not exercised | | Mainsail home button (same `G28`), cooling down from a preheat, `PROBE_ACCURACY` / `PROBE_CALIBRATE` |

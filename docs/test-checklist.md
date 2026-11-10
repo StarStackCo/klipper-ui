@@ -345,4 +345,5 @@ Run by Claude through Moonraker (same `G28` / `BED_MESH_CALIBRATE` the touchscre
 | `PROBE_ACCURACY` 10 samples at 5 mm/s | ✅ | X133 Y185: 0 false, range 0.030, mean 0.018. X10 Y10: 0 false, range 0.037, mean -0.630. X10 Y170: 0 false, range 0.003, mean -0.842 |
 | Left edge reads lower at 5 mm/s than at 20 | ✅ resolved | X10 Y10 -0.63 at 5 mm/s vs -0.06 at 20 mm/s; settled by the paper test below |
 | **Paper test** (user), nozzle cold (44 °C), mesh cleared, homed at 150 °C | ✅ | Homing point X133 Y185: free at Z 0.100, drag at 0.075. X10 Y10: free at -0.50, drag at -0.55. So X10 Y10 sits 0.600 to 0.625 mm below the homing point: the 5 mm/s probe (-0.63) is right, 20 mm/s (-0.06) was wrong. The D-134 mesh is trustworthy: bed about 1 mm out of level, left side low (X10 -0.64 to -0.85, X170 +0.02 to +0.16) |
-| Not exercised | | Mainsail home button (same `G28`), cooling down from a preheat, `PROBE_ACCURACY` / `PROBE_CALIBRATE` |
+| Mainsail's Home All button, nozzle cold (24.8 °C), clicked in the browser pane | ✅ | "Nozzle to 150°C to probe", 24.8 → 151.5 °C, 15 s hold, Z homed, target back to 0 after about 60 s; no "No trigger" in klippy.log |
+| Not exercised | | Cooling down from a preheat to probe, a real print at probe speed 5 mm/s, `PROBE_CALIBRATE` |

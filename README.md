@@ -64,6 +64,13 @@ Every file it changes is backed up once as `<file>.pre-starstack`.
 use `PRINT_START` as the start G-code (S1: [`config/s1/orca-start-gcode.txt`](config/s1/orca-start-gcode.txt)).
 It heats without blocking, so Cancel works at once, and gives up on a heater that doesn't reach temperature.
 
+**Keeping Orca the same on every PC (D-128).** The repo's [`config/s1/orca/`](config/s1/orca/) is the master
+copy. To get it: close Orca, double-click `orca-install.bat` (pulls, backs up
+`%APPDATA%\OrcaSlicer\user\default`, writes the S1 presets; other presets are left alone). After changing a
+preset in Orca: save it, double-click `orca-export.bat` (add a new preset by name:
+`orca-export.bat "My PLA"`), review the list, answer `y` to commit and push, then run `orca-install.bat` on
+the other PC.
+
 ## Update
 
 One tap: touchscreen **Settings › (Advanced on) › Updates › Update everything** (or Mainsail › Machine › Update
@@ -108,6 +115,9 @@ From a PC with SSH access to the bench Pi (`scripts/pi.sh` logs every command to
 | Script | What |
 |---|---|
 | `scripts/pi-install.sh [--branch dev] [--dry-run]` | Update `~/klipper-ui` on the Pi and run the installer |
+| `scripts/status.sh` | Read-only: Klipper and print state, temperatures, repo branches, klippy errors since the last start |
+| `scripts/deploy-cfg.sh D-NNN [--cfg [file]] [--install [--branch dev]] [--dry-run]` | Deploy printer.cfg (keeps the Pi's SAVE_CONFIG block, backup `printer.cfg.pre-dnnn`) and/or run the installer, refusing during a print; then checks Klipper is ready and prints the deploy log row |
+| `python tools/check_ids.py [--next D]` | Duplicate D/Q/B numbers fail CI; `--next D` gives the next free one |
 | `scripts/ks-update.sh [--branch dev] [shot.png]` | Push the touchscreen fork branch, update the Pi, restart, screenshot |
 | `scripts/ks-screenshot.sh shot.png` | Capture the touchscreen |
 | `scripts/ks-tap.sh "click Settings" [shot.png]` | Drive the touchscreen (needs bench devtools: `touch ~/.starstack_dev`, off on the S1) |

@@ -320,3 +320,34 @@ Run by Claude from the S1's history and logs; covers what the week of real print
 | Klipper ready, no "Unknown command" or "Timer too close" since today's restart | ✅ | |
 | Update Manager | ✅ | Klipper v0.13.0-501, Moonraker v0.10.0-2, Mainsail v2.19.0, mainsail-config v1.2.1-1, KlipperScreen and klipper-ui: all valid, clean, no warnings; 257 OS packages pending |
 | Update helper changes (D-118) | not exercised | Root-installed: reach the S1 only when the user runs `install.sh` with sudo |
+
+## Run 17: cold homing heats first (D-131, B-19), 2026-11-09 (klipper-ui dev after a5e8118, S1)
+
+Run by Claude through Moonraker (same `G28` / `BED_MESH_CALIBRATE` the touchscreen and Mainsail send), user approved heating and motion.
+
+| Check | Result | Notes |
+|---|---|---|
+| Home all from cold (24 °C) | ✅ | "Heating nozzle to 150°C to probe", 24 → 147 °C in about 32 s, Z homed, target back to 0; 52 s in all (first version) |
+| Bed mesh, nozzle at 135 °C and heating (first version, waited for 145 °C only) | ❌ | 5 retries at X10 Y10: first sample 1.94 mm, each next one about 2.5 mm higher (probe fires in mid-air after the 3 mm retract); nozzle left at 150 °C, as designed after a failure |
+| Bed mesh, nozzle steady at 150 °C for minutes | ✅ | First try, no retries, 60 s. Mesh 1.94 front left to -1.00 right: 2.9 mm, near D-105's 3 mm stop. Target 150 left as it was |
+| Home + bed mesh from 99.5 °C, second version (148 to 152 °C, 15 s hold) | ❌ | Homing ✅; mesh started at a steady 150 °C and still failed: 5 retries, same pattern (1.98, then 4.3 to 13.8 mm). Test meant to start under 40 °C; the cool-down check let 99.5 °C through |
+| Probe retries in earlier logs | info | 11-06: 0 retries in 10 meshes; 11-07: 0 in 6; 11-08: 17 retries, 2 failed; 11-09 before this run: 9 retries. Probe config unchanged since 10-07 |
+| `PROBE_ACCURACY SAMPLES=10` at the homing point X133 Y185, nozzle steady 150 °C, `LIFT_SPEED` 10 / 8 / 5 / 3 | ✅ | 40 of 40 clean, no mid-air triggers. Range 0.019 / 0.007 / 0.003 / 0.011 mm, std dev 0.006 / 0.002 / 0.001 / 0.003 mm. Lift speed isn't the cause; every failure (today and 11-09's retries) was on the left edge, X10 Y10 and X10 Y170. Nozzle and mount not checked by hand yet |
+| `PROBE_ACCURACY SAMPLES=10` on the left edge, nozzle steady 150 °C, travel at Z 10 | ❌ | X10 Y10 lift 10: 10 of 10 good, -0.075 mm (range 0.006). X10 Y10 lift 5: 6 of 10 false triggers (2.5 to 11.9 mm). X10 Y170 lift 10: 4 of 10 false (2.3 to 4.9 mm), real -0.27 mm. False triggers are random, not tied to lift speed |
+| The "passing" mesh above | ❌ wrong | It read +1.94 mm at X10 Y10 three times; the real contact there is -0.07 mm. The mesh's 2.9 mm tilt is false triggers, not the bed. Meshes since about 11-08 (prints included) may be wrong the same way; don't tram from them |
+| **After the user gave the toolhead cable more slack** (it was tight with Z down and the head far left) | | |
+| Cold home + mesh from 37 °C (the touchscreen's `G28` then `BED_MESH_CALIBRATE`) | ✅ / ❌ | Homing ✅ (heated, settled, homed); mesh failed, 5 retries; 136 s. Nozzle left at 150 °C after the failure, as designed |
+| `PROBE_ACCURACY` 10 samples, 150 °C steady, lift 10 / 5 mm/s | ❌ left edge | X133 Y185: 0 / 0 false (range 0.008 / 0.006, mean 0.00). X10 Y10: 4 / 2 false (2.27 to 9.31), good samples -0.06. X10 Y170: 4 / 1 false (2.35 to 12.11), good samples -0.25. Slack didn't fix it; false triggers mostly at 2.4 to 2.5 mm, about 0.4 mm into the descent after the 3 mm retract (B-23) |
+| Second mesh, 150 °C steady | ❌ | 5 retries, failed |
+| `PROBE_ACCURACY` 10 samples, lift 10, by **descent speed** (`PROBE_SPEED`), 150 °C steady | 5 mm/s ✅ | X10 Y10 / X10 Y170 false triggers: 20 mm/s (config now) 3 / 2; 10 mm/s 9 / 9 (every sample, Z resonance band, D-109); **5 mm/s 0 / 0 (range 0.002 / 0.005)**; 2.5 mm/s 0 at Y10, then "No trigger on probe after full movement" at Y170 (too slow for the piezo). At the homing point 2.5 mm/s triggered 0.8 mm into the bed, and the next set read -0.61 mm instead of 0, so Z likely skipped: re-home before using the printer. Points after that failure are not counted |
+| **D-134 deployed (`[probe] speed: 5`)**: cold home + mesh from 39 °C | ✅ | 144 s, 0 retries, nozzle target back to 0. Mesh rows (Y10, Y90, Y170 × X10, X90, X170): -0.644 -0.200 0.020 / -0.807 -0.232 0.127 / -0.853 -0.174 0.162, range 1.01 mm. **B-19 done** |
+| Hot mesh, 150 °C steady | ✅ | 73 s, 0 retries, every point within 0.03 mm of the cold mesh |
+| `PROBE_ACCURACY` 10 samples at 5 mm/s | ✅ | X133 Y185: 0 false, range 0.030, mean 0.018. X10 Y10: 0 false, range 0.037, mean -0.630. X10 Y170: 0 false, range 0.003, mean -0.842 |
+| Left edge reads lower at 5 mm/s than at 20 | ✅ resolved | X10 Y10 -0.63 at 5 mm/s vs -0.06 at 20 mm/s; settled by the paper test below |
+| **Paper test** (user), nozzle cold (44 °C), mesh cleared, homed at 150 °C | ✅ | Homing point X133 Y185: free at Z 0.100, drag at 0.075. X10 Y10: free at -0.50, drag at -0.55. So X10 Y10 sits 0.600 to 0.625 mm below the homing point: the 5 mm/s probe (-0.63) is right, 20 mm/s (-0.06) was wrong. The D-134 mesh is trustworthy: bed about 1 mm out of level, left side low (X10 -0.64 to -0.85, X170 +0.02 to +0.16) |
+| Mainsail's Home All button, nozzle cold (24.8 °C), clicked in the browser pane | ✅ | "Nozzle to 150°C to probe", 24.8 → 151.5 °C, 15 s hold, Z homed, target back to 0 after about 60 s; no "No trigger" in klippy.log |
+| Idle home from a 210 °C preheat | ✅ | Cooled to 150 °C in 62 s, held, homed, target back to 210 °C; 77 s; no "No trigger" |
+| Real print `Mesh test squares PLA` (Overture PLA, five 30 mm squares at the corners and middle, 2 layers), 2026-11-09 22:29 | ✅ | Every `PRINT_START` stage ran (bed, nozzle 185, home, clean, cool 150, mesh 74 s, final 205); completed in 14 min; 0 probe retries. **User: all five squares even** (corners and middle), so the 5 mm/s mesh gives an even first layer |
+| Next print `Main Body(2)_PLA_7h11m` 22:45 | ❌ | `PRINT_START` Z homing: "No trigger on stepper_z after full movement" 3 times (nozzle hot, homing at `homing_speed` 20 mm/s), canceled by the D-105 retries after 2 min (B-24). Restarted 23:21: homed, mesh 0 retries, printing. Its mesh (Y10/Y90/Y170 rows): -0.222 0.191 0.419 / -0.416 0.190 0.518 / -0.506 0.236 0.587, same X10→X170 rise as the D-134 meshes (0.64 / 0.93 / 1.09 vs 0.66 / 0.93 / 1.02) |
+| Since the D-134 restart (21:26) | ✅ / ❌ | 0 mesh retries in every mesh; 3 "No trigger" lines, all from the 22:45 homing |
+| Not exercised | | `PROBE_CALIBRATE` |

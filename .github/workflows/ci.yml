@@ -19,6 +19,8 @@ jobs:
         run: pip install jinja2==3.1.4 flake8==7.1.1 pytest==8.3.3
       - name: Macros parse, compile and follow the safety rules
         run: python tools/check_macros.py
+      - name: Decision, question and backlog numbers are unique
+        run: python tools/check_ids.py
       - name: JSON files are valid
         run: for f in mainsail-theme/*.json; do python -m json.tool "$f" >/dev/null && echo "ok $f"; done
       - name: Python errors

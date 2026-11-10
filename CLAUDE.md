@@ -25,6 +25,14 @@ changing anything there, read `../KlipperScreen-starstack/CLAUDE.md` first; its 
   Claude never handles passwords, keys or tokens; the user types sudo and Wi-Fi passwords (D-007, D-008).
 - Skills: `printer-config` (any config, macro or tuning change), `release` (dev to stable), `print-job` (slice, check, upload, queue or start a print; `~/.claude/skills/print-job/` on this PC is a junction to this folder, so every chat loads this one file; D-119).
 
+## Parallel sessions (D-133)
+- A session that edits files runs in its own worktree on a branch from `dev`; only read-only sessions share
+  this folder. Commit only your own changes: uncommitted files you didn't touch belong to another session.
+- Inside a branch, new log entries use `D-NEW`, `Q-NEW`, `B-NEW` and `Run NEW` with a short topic. The real
+  number is given when the branch merges into `dev`, one branch at a time (`python tools/check_ids.py --next D`).
+- One session at a time talks to the Pi (`pi.sh`, deploys, restarts). Before using it, ask the user whether
+  another session is.
+
 ## Recording work
 - A decision is a `D-NNN` row at the top of the Decisions table in DECISIONS.md, same columns; questions are
   `Q-NNN` rows; later work is a `B-NN` row in BACKLOG.md.
@@ -36,7 +44,7 @@ changing anything there, read `../KlipperScreen-starstack/CLAUDE.md` first; its 
 - `config/s1/` is the old prototype, not the production S1 (D-102).
 - Moonraker `trusted_clients` must list every private range, never one subnet (D-102).
 - Mainsail isn't pinned (B-12) and anyone on the network can control the printer (B-13).
-- The S1 bed mesh shows the right side about 1.6 mm low; tram later (test-checklist Run 9).
+- The S1 bed is about 1 mm out of level, left side low (mesh at probe speed 5 mm/s, paper-checked, Run 17); tram later. Meshes before D-134 had false triggers: don't tram from them.
 - The PZ probe triggers from vibration while moving, so it can't detect collisions (D-099).
 - Power loss recovery and crash detection are design only (D-098, D-099, `docs/power-loss-recovery.md`).
 

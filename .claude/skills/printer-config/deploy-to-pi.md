@@ -10,6 +10,12 @@ Every step needs the user's OK first (D-003). Show each SSH command and its repl
   a password (D-007, D-008).
 - Screenshots of the touchscreen: `scripts/ks-screenshot.sh <file.png>`.
 
+## The short way
+`scripts/deploy-cfg.sh D-NNN --cfg` (printer.cfg) and/or `--install --branch dev` (macros, theme) does the
+steps below: refuses during a print, backs up, keeps the SAVE_CONFIG block, restarts, checks `ready` and
+klippy errors, prints the deploy log row. Try `--dry-run` first. `scripts/status.sh` is the read-only check.
+Still get the user's OK first, and still run the checklist and fill in the row's regression result.
+
 ## Before
 1. `print_stats.state` must not be `printing` or `paused` if the step restarts Klipper, Moonraker or the
    touchscreen. Macros only reload with a Klipper restart, so a macro fix waits for the print to end.

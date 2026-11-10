@@ -369,7 +369,7 @@ Run by the user on the touchscreen (Settings > Setup and tour), three passes; fi
 | Tour, filament, first print | ✅ | First print is `3DBenchy Overture PLA.gcode` (re-sliced, PRINT_START). The first try used the old `3DBenchy_PLA_1h6m.gcode` (blocking `M190`): Cancel queued behind it and the backstop e-stopped (B-25); the setup now offers only PRINT_START files |
 | Cancel on the new first print | ✅ | Cancels cleanly, no restart (user: "everything works") |
 
-## Run NEW tap: setup clock, hot nozzle and tap page layout (D-137), 2026-11-10 (fork first-power-up 68d8367a, S1)
+## Run 19: setup clock, hot nozzle and tap page layout (D-137), 2026-11-10 (fork first-power-up 68d8367a, S1)
 
 Run by Claude with the bench dev tool (`~/.starstack_dev`, removed afterwards), after the user reported: zone tap didn't change the clock, tap page text pushed off the side, a hot nozzle still asked for a tap.
 

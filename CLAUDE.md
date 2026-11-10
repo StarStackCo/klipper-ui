@@ -29,10 +29,13 @@ changing anything there, read `../KlipperScreen-starstack/CLAUDE.md` first; its 
 ## Parallel sessions (D-133)
 - A session that edits files runs in its own worktree on a branch from `dev`; only read-only sessions share
   this folder. Commit only your own changes: uncommitted files you didn't touch belong to another session.
+  Make it with `git worktree add -b <name> .claude/worktrees/<name> dev`, or the worktree tool, which
+  `.claude/settings.json` sets to branch from the session's HEAD: `dev` when started here, since this folder
+  stays on `dev` (the tool's default is `main`, the last release; D-138).
 - Inside a branch, new log entries use `D-NEW`, `Q-NEW`, `B-NEW` and `Run NEW` with a short topic. The real
   number is given when the branch merges into `dev`, one branch at a time (`python tools/check_ids.py --next D`).
 - Before a branch merges into `dev` (D-136): a subagent with fresh context reviews
-  `git diff dev...<branch>` against `REVIEW.md`; a fork branch gets the same, against the fork's CLAUDE.md.
+  `git diff dev...<branch>` against `REVIEW.md`; a fork branch gets the same, against the fork's `REVIEW.md`.
   Show the user the count. Fix every Important finding, or the user accepts it, before merging.
 - One session at a time talks to the Pi (`pi.sh`, deploys, restarts). Before using it, ask the user whether
   another session is.

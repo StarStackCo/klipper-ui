@@ -19,7 +19,7 @@ release reaches every printer on its next "Update everything". The script is `sc
    can hold commits that only went to `bench`.
 5. **Review what goes out** (D-136), last, so nothing lands after it. `git fetch` both repos, then
    a subagent with fresh context reviews `git diff origin/main...origin/dev` against `REVIEW.md`, and the
-   fork's `git diff origin/starstack...origin/dev` against the fork's CLAUDE.md. Use the `origin/` names:
+   fork's `git diff origin/starstack...origin/dev` against the fork's `REVIEW.md`. Use the `origin/` names:
    the script never updates local `main` or `starstack`, so they are far behind. Show the user the count;
    every Important finding is fixed on `dev` (back to step 4) or accepted by the user.
 6. **Run** `scripts/release.sh vX.Y.Z "what changed"` from klipper-ui. For each repo with new commits it

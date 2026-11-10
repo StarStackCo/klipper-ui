@@ -208,6 +208,10 @@ def cli(dest, process="0.25mm Draft", filament="Hatchbox PETG", plate="High Temp
 USER = os.path.join(os.environ.get("APPDATA", ""), "OrcaSlicer", "user", "default")
 GUI = {"printer": "machine", "process": "process", "filament": "filament"}  # Orca's folder names
 # a preset with no parent lives in <kind>/base/, one with a parent in <kind>/ (Orca 2.4.2)
+# Per-PC printer connection (D-130): never in the repo (an API key would be pushed), and install keeps
+# this PC's values (the repo copy has none, so install used to wipe the printer's address).
+LOCAL_KEYS = ("print_host", "print_host_webui", "printhost_apikey", "printhost_cafile",
+              "printhost_user", "printhost_password", "printhost_port")
 
 
 def orca_running():
@@ -234,14 +238,26 @@ def install():
     for folder, path in presets():
         name = os.path.splitext(os.path.basename(path))[0]
         base, child = gui_files(folder, name)
+        data = json.load(open(path, encoding="utf-8"))
+        for key in LOCAL_KEYS:
+            data.pop(key, None)
+        local = {}
+        if folder == "printer":  # this PC's connection, from whichever copy has it; the copy with a
+            # parent wins: it was the one Orca used before the first install (laptop: base had a stale IP)
+            for old in (base, child):
+                if os.path.exists(old):
+                    prev = json.load(open(old, encoding="utf-8"))
+                    local.update({k: prev[k] for k in LOCAL_KEYS if prev.get(k) not in (None, "", [])})
+            data.update(local)
         for old in (child, child[:-5] + ".info"):  # an older copy with a parent would clash by name
             if os.path.exists(old):
                 os.remove(old)
         os.makedirs(os.path.dirname(base), exist_ok=True)
-        shutil.copyfile(path, base)
+        json.dump(dict(sorted(data.items())), open(base, "w", encoding="utf-8", newline="\n"),
+                  indent=4, ensure_ascii=False)
         with open(base[:-5] + ".info", "w", encoding="utf-8", newline="\n") as f:
             f.write(f"sync_info = \nuser_id = \nsetting_id = \nbase_id = \nupdated_time = {now}\n")
-        print(f"{folder:9} {name}")
+        print(f"{folder:9} {name}" + (f" (kept this PC's {', '.join(sorted(local))})" if local else ""))
     print("Done. Open Orca and pick printer 'StarStack S1'.")
 
 
@@ -276,7 +292,7 @@ def export(extra=()):
                 idx.update(user)  # a parent may be another user preset
             full = resolve(data["inherits"], idx)
         full.update(data)
-        for key in ("instantiation", "setting_id", "base_id", "type", "is_custom_defined"):
+        for key in ("instantiation", "setting_id", "base_id", "type", "is_custom_defined") + LOCAL_KEYS:
             full.pop(key, None)
         full.update({"name": name, "inherits": "", "from": "User"})
         if folder != "printer":

@@ -394,6 +394,9 @@ RULE
   elif [ "$have" = unknown ]; then
     # the rules folder is root-only and sudo needs a password nobody can type here (pi.sh, --dry-run)
     echo "   time zone rule not checked (needs sudo): run install.sh yourself to add it"
+  elif [ "$DRY" != 1 ] && [ ! -t 0 ] && ! sudo -n true 2>/dev/null; then
+    # no terminal to type the password (pi.sh): a plain sudo would fail and set -e stop the install
+    echo "   time zone rule not added (sudo needs a password): run install.sh yourself to add it"
   else
     echo "   adding the time zone rule (sudo may ask for your password)"
     do_ "sudo install -o root -g root -m 644 '$tmp' '$TZ_RULE'"

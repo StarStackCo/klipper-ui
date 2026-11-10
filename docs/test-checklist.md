@@ -352,7 +352,7 @@ Run by Claude through Moonraker (same `G28` / `BED_MESH_CALIBRATE` the touchscre
 | Since the D-134 restart (21:26) | ✅ / ❌ | 0 mesh retries in every mesh; 3 "No trigger" lines, all from the 22:45 homing |
 | Not exercised | | `PROBE_CALIBRATE` |
 
-## Run NEW setup: first power-up setup on the S1 (D-NEW setup), 2026-11-10 (fork first-power-up 3f9ed6fe, S1)
+## Run 18: first power-up setup on the S1 (D-137), 2026-11-10 (fork first-power-up 3f9ed6fe, S1)
 
 Run by the user on the touchscreen (Settings > Setup and tour), three passes; fixes between them were installed with `ks-update.sh --branch first-power-up`.
 
@@ -366,6 +366,6 @@ Run by the user on the touchscreen (Settings > Setup and tour), three passes; fi
 | Nozzle tap (cold PZ) registers | ❌ → ✅ | PZ LED lit but nothing registered: the endstop is `stepper_z`, code read `z`. One endstop query takes ~300 ms on the S1, polled back to back |
 | "The probe works" OK page, then heating; "Next: homing" OK page, then G28 | ✅ | Added at the user's request |
 | Heaters, part fan question, homing, "Self-tests complete" | ✅ | |
-| Tour, filament, first print | ✅ | First print is `3DBenchy Overture PLA.gcode` (re-sliced, PRINT_START). The first try used the old `3DBenchy_PLA_1h6m.gcode` (blocking `M190`): Cancel queued behind it and the backstop e-stopped (B-NEW cancel feedback); the setup now offers only PRINT_START files |
+| Tour, filament, first print | ✅ | First print is `3DBenchy Overture PLA.gcode` (re-sliced, PRINT_START). The first try used the old `3DBenchy_PLA_1h6m.gcode` (blocking `M190`): Cancel queued behind it and the backstop e-stopped (B-25); the setup now offers only PRINT_START files |
 | Cancel on the new first print | ✅ | Cancels cleanly, no restart (user: "everything works") |
 

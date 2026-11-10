@@ -370,7 +370,7 @@ fastboot_remove() {
   do_ "sudo systemctl daemon-reload"
 }
 
-# ---- 4b. Time zone from the touchscreen (first power-up setup, D-NEW setup)
+# ---- 4b. Time zone from the touchscreen (first power-up setup, D-137)
 TZ_RULE=/etc/polkit-1/rules.d/50-starstack-timezone.rules
 
 tz_install() {  # polkit: the printer user may set the time zone (only that), no password
@@ -387,7 +387,8 @@ polkit.addRule(function(action, subject) {
     }
 });
 RULE
-  if cmp -s "$tmp" "$TZ_RULE"; then
+  # sudo: polkit's rules folder can be root-only, and then a plain cmp/test always says "missing"
+  if sudo cmp -s "$tmp" "$TZ_RULE"; then
     echo "   ok: touchscreen can set the time zone"
   else
     do_ "sudo install -o root -g root -m 644 '$tmp' '$TZ_RULE'"
@@ -397,7 +398,7 @@ RULE
 }
 
 tz_remove() {
-  [ -e "$TZ_RULE" ] && do_ "sudo rm -f '$TZ_RULE'" && echo "   time zone rule removed" || true
+  sudo test -e "$TZ_RULE" && do_ "sudo rm -f '$TZ_RULE'" && echo "   time zone rule removed" || true
 }
 
 # ---- 9. Update helper (D-087)

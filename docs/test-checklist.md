@@ -380,5 +380,5 @@ Run by Claude with the bench dev tool (`~/.starstack_dev`, removed afterwards), 
 | Hot nozzle: wait page | ✅ | Nozzle 51°C: "Wait for the nozzle to cool", live temperature, no tap request, No reaction grayed; Stop / Skip / No reaction all on screen |
 | Switches to the tap by itself | ✅ | At 44°C: "Tap the nozzle", "It's not hot: 44°C", "Waiting for your tap" |
 | Stop from the tap page | ✅ | Heaters 0, fan 0 afterwards |
-| STOP button color on the tap page | info | Red (active) while the page polls the probe: the endstop queries keep `idle_timeout` at Printing. Cosmetic, nothing heats or moves |
+| STOP button color on the tap page | info | Red (active) while the page polls the probe. Not checked why: probably `idle_timeout` reads Printing while the endstop queries run (not recorded). Nothing heats or moves. If so, `busy()` in the fork's `ss_setup.py` would also read busy then; today only Start check uses it |
 

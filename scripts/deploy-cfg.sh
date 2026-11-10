@@ -26,7 +26,7 @@ done
 [ -n "$ID" ] || { echo "usage: $0 D-NNN [--cfg [file]] [--install [--branch dev]] [--dry-run]"; exit 2; }
 [ -n "$CFG" ] || [ $INSTALL = 1 ] || { echo "nothing to deploy: give --cfg and/or --install"; exit 2; }
 [ -z "$CFG" ] || [ -f "$CFG" ] || { echo "no such file: $CFG"; exit 2; }
-BAK="printer.cfg.pre-$(echo "$ID" | tr 'A-Z' 'a-z')"
+BAK="printer.cfg.pre-$(echo "$ID" | tr -d '-' | tr 'A-Z' 'a-z')"
 
 pi() { if [ $DRY = 1 ]; then echo "(dry-run) pi.sh: $1"; else "$PI" "$1"; fi; }
 

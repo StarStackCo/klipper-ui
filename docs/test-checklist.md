@@ -394,5 +394,5 @@ Run by the user on the touchscreen (Settings > Setup and tour) after the D-136 r
 | Part fan question | ✅ | |
 | "Next: homing", OK, page says use STOP during homing | ✅ | |
 | "Self-tests complete", heaters and fan off after | ✅ | |
-| Optional: Stop on a notice page, Run it again with a hot nozzle | ✅ | Covered by "it all works"; not reported one by one |
+| Optional: Stop on a notice page, Run it again with a hot nozzle | not reported | Optional steps; the user didn't say whether they were tried. The hot-nozzle wait was checked by screenshot in Run 19 |
 

@@ -382,3 +382,17 @@ Run by Claude with the bench dev tool (`~/.starstack_dev`, removed afterwards), 
 | Stop from the tap page | ✅ | Heaters 0, fan 0 afterwards |
 | STOP button color on the tap page | info | Red (active) while the page polls the probe. Not checked why: probably `idle_timeout` reads Printing while the endstop queries run (not recorded). Nothing heats or moves. If so, `busy()` in the fork's `ss_setup.py` would also read busy then; today only Start check uses it |
 
+## Run NEW selfcheck: reviewed first power-up setup, full self-check (D-137, D-136), 2026-11-10 (fork dev 99c6ee70, S1)
+
+Run by the user on the touchscreen (Settings > Setup and tour) after the D-136 review fixes, following the steps Claude gave. User: "it all works now". Claude did not watch the screen or log during it; the rows are the steps the user was asked to check.
+
+| Check | Result | Notes |
+|---|---|---|
+| Time zone tap, clock top right stays right | ✅ | |
+| Tap the nozzle, "The probe works", OK starts heating | ✅ | |
+| Nozzle to 150°C and bed warming on the running page | ✅ | |
+| Part fan question | ✅ | |
+| "Next: homing", OK, page says use STOP during homing | ✅ | |
+| "Self-tests complete", heaters and fan off after | ✅ | |
+| Optional: Stop on a notice page, Run it again with a hot nozzle | ✅ | Covered by "it all works"; not reported one by one |
+

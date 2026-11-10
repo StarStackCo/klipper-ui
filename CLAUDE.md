@@ -30,7 +30,8 @@ changing anything there, read `../KlipperScreen-starstack/CLAUDE.md` first; its 
 - A session that edits files runs in its own worktree on a branch from `dev`; only read-only sessions share
   this folder. Commit only your own changes: uncommitted files you didn't touch belong to another session.
   Make it with `git worktree add -b <name> .claude/worktrees/<name> dev`, or the worktree tool, which
-  `.claude/settings.json` points at this folder's `dev` (its default is `main`, the last release; D-NEW review rules).
+  `.claude/settings.json` sets to branch from the session's HEAD: `dev` when started here, since this folder
+  stays on `dev` (the tool's default is `main`, the last release; D-138).
 - Inside a branch, new log entries use `D-NEW`, `Q-NEW`, `B-NEW` and `Run NEW` with a short topic. The real
   number is given when the branch merges into `dev`, one branch at a time (`python tools/check_ids.py --next D`).
 - Before a branch merges into `dev` (D-136): a subagent with fresh context reviews

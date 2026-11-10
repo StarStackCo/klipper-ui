@@ -25,6 +25,14 @@ changing anything there, read `../KlipperScreen-starstack/CLAUDE.md` first; its 
   Claude never handles passwords, keys or tokens; the user types sudo and Wi-Fi passwords (D-007, D-008).
 - Skills: `printer-config` (any config, macro or tuning change), `release` (dev to stable), `print-job` (slice, check, upload, queue or start a print; `~/.claude/skills/print-job/` on this PC is a junction to this folder, so every chat loads this one file; D-119).
 
+## Parallel sessions (D-133)
+- A session that edits files runs in its own worktree on a branch from `dev`; only read-only sessions share
+  this folder. Commit only your own changes: uncommitted files you didn't touch belong to another session.
+- Inside a branch, new log entries use `D-NEW`, `Q-NEW`, `B-NEW` and `Run NEW` with a short topic. The real
+  number is given when the branch merges into `dev`, one branch at a time (`python tools/check_ids.py --next D`).
+- One session at a time talks to the Pi (`pi.sh`, deploys, restarts). Before using it, ask the user whether
+  another session is.
+
 ## Recording work
 - A decision is a `D-NNN` row at the top of the Decisions table in DECISIONS.md, same columns; questions are
   `Q-NNN` rows; later work is a `B-NN` row in BACKLOG.md.

@@ -402,7 +402,7 @@ Claude drove the touchscreen with the bench devtools and took screenshots (`ks-t
 
 | Check | Result | Notes |
 |---|---|---|
-| Before the fix, 4 jobs: scroll bar over the remove buttons | ✅ reproduced | User saw it; the screenshot showed the buttons 13 px past the screen |
+| Before the fix, 4 jobs: scroll bar over the remove buttons | ✅ reproduced | User saw it; measured from the screenshot pixels: the buttons ran from y 265 to 321 on a 320 px screen (13 px past where they belong) |
 | 3 jobs, printer busy | ✅ | Screenshot, no bar |
 | 4 jobs, no title, no arrows | ✅ | User: looked good |
 | 5 jobs: 3 rows and arrows "1 / 2", then 2 rows "2 / 2" | ✅ | Screenshots of both pages |

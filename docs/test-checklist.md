@@ -396,3 +396,15 @@ Run by the user on the touchscreen (Settings > Setup and tour) after the D-136 r
 | "Self-tests complete", heaters and fan off after | ✅ | |
 | Optional: Stop on a notice page, Run it again with a hot nozzle | not reported | Optional steps; the user didn't say whether they were tried. The hot-nozzle wait was checked by screenshot in Run 19 |
 
+## Run 21: Queue page layout and Pager overlay (D-139), 2026-11-14 (fork queue-scroll 7abda553, S1)
+
+Claude drove the touchscreen with the bench devtools and took screenshots (`ks-tap.sh`); the user added jobs to the queue and checked the 4 job and warning cases by eye.
+
+| Check | Result | Notes |
+|---|---|---|
+| Before the fix, 4 jobs: scroll bar over the remove buttons | ✅ reproduced | User saw it; measured from the screenshot pixels: the buttons ran from y 265 to 321 on a 320 px screen (13 px past where they belong) |
+| 3 jobs, printer busy | ✅ | Screenshot, no bar |
+| 4 jobs, no title, no arrows | ✅ | User: looked good |
+| 5 jobs: 3 rows and arrows "1 / 2", then 2 rows "2 / 2" | ✅ | Screenshots of both pages |
+| 5 jobs idle with the next job PLA (filament warning line shows) | ✅ | User: no issue; not photographed |
+| Settings, Network, About, Cancel object, Home, Fans, Power, Screen & language | ✅ | Screenshots, nothing clipped or scrolled. Updates, Controls, Move, Print not opened; no long Wi-Fi name or wrapped text row tried |

@@ -409,7 +409,7 @@ Claude drove the touchscreen with the bench devtools and took screenshots (`ks-t
 | 5 jobs idle with the next job PLA (filament warning line shows) | ✅ | User: no issue; not photographed |
 | Settings, Network, About, Cancel object, Home, Fans, Power, Screen & language | ✅ | Screenshots, nothing clipped or scrolled. Updates, Controls, Move, Print not opened; no long Wi-Fi name or wrapped text row tried |
 
-## Run NEW (probe after rewire): PZ probe after the mainboard case swap and new toolhead cable, 2026-11-18 (klipper-ui dev 06284d2 config, S1)
+## Run 22: PZ probe after the mainboard case swap and new toolhead cable, 2026-11-18 (klipper-ui dev 06284d2 config, S1)
 
 The user swapped the mainboard case (wire management) and replaced the toolhead cable (suspected thermistor noise from a bent wire), after which Z probing stopped being reliable. Claude ran the tests through `pi.sh`; the user watched and did the paper check. No config change.
 
@@ -417,7 +417,7 @@ The user swapped the mainboard case (wire management) and replaced the toolhead 
 |---|---|---|
 | klippy.log since 11-12 | ❌ | 11-12 and 11-13: "No trigger on stepper_z" 3 times each in `PRINT_START` homing, nozzle 185 / 225 °C (same as B-24). 11-15: mesh at X10 Y10 read 0.287, **2.015** (mid-air), 0.264, then "Probe triggered prior to movement" 5 times, mesh failed |
 | `PROBE_ACCURACY` 10 samples, lift 10, 5 mm/s, 150 °C, new cable as fitted | ❌ | X133 Y185, X10 Y10, X10 Y170: each "No trigger on probe after full movement" on the first sample (Z went to `position_min` -5 at 0.4 A three times). `G28` at 20 mm/s homed fine just before |
-| **After the user gave the new cable a bigger loop**: same test | ✅ | 30 of 30 triggered, no mid-air triggers. X133 Y185: mean 0.031, range 0.038. X10 Y10: mean **1.317**, range 0.034. X10 Y170: mean **1.122**, range 0.043 |
+| **After the user gave the new cable a bigger loop** (amount not measured): same test | ✅ | 30 of 30 triggered, no mid-air triggers. X133 Y185: mean 0.031, range 0.038. X10 Y10: mean **1.317**, range 0.034. X10 Y170: mean **1.122**, range 0.043 |
 | Paper check (user), nozzle parked at X10 Y10 Z 1.32, cooling from 150 °C | ✅ | Paper drags: the +1.3 mm is the real bed, not a false trigger |
-| `BED_MESH_CALIBRATE` (3 × 3), not saved | ✅ | 0 retries. Rows (Y10, Y90, Y170 × X10, X90, X170): 1.352 0.447 -0.598 / 1.159 0.434 -0.520 / 1.106 0.437 -0.285, range **1.95 mm** (over `mesh_warn` 1.5, under `mesh_stop` 3.0, so prints run with the "bed is uneven" warning). Run 17 had the left side 0.66 to 1.02 mm **lower** than the right; now it is 1.39 to 1.95 mm **higher**. The bed or gantry moved during the rework |
+| `BED_MESH_CALIBRATE` (3 × 3), not saved | ✅ | 0 retries. Rows (Y10, Y90, Y170 × X10, X90, X170): 1.352 0.447 -0.598 / 1.159 0.434 -0.520 / 1.106 0.437 -0.285, range **1.95 mm** (over `mesh_warn` 1.5, under `mesh_stop` 3.0, so prints run with the "bed is uneven" warning). Run 17 had the left side 0.66 to 1.02 mm **lower** than the right; now it is 1.39 to 1.95 mm **higher**. The bed or gantry likely moved during the rework (not checked) |
 | Not exercised | | A print; Z homing at 20 mm/s more than twice (B-24); why the bed tilt changed; tramming |

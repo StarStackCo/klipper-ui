@@ -421,3 +421,17 @@ The user swapped the mainboard case (wire management) and replaced the toolhead 
 | Paper check (user), nozzle parked at X10 Y10 Z 1.32, cooling from 150 °C | ✅ | Paper drags: the +1.3 mm is the real bed, not a false trigger |
 | `BED_MESH_CALIBRATE` (3 × 3), not saved | ✅ | 0 retries. Rows (Y10, Y90, Y170 × X10, X90, X170): 1.352 0.447 -0.598 / 1.159 0.434 -0.520 / 1.106 0.437 -0.285, range **1.95 mm** (over `mesh_warn` 1.5, under `mesh_stop` 3.0, so prints run with the "bed is uneven" warning). Run 17 had the left side 0.66 to 1.02 mm **lower** than the right; now it is 1.39 to 1.95 mm **higher**. The bed or gantry likely moved during the rework (not checked) |
 | Not exercised | | A print; Z homing at 20 mm/s more than twice (B-24); why the bed tilt changed; tramming |
+
+## Run 23: Z homing misses after the rewire, and homing at 5 mm/s (D-140, B-24), 2026-11-19 (klipper-ui z-homing-5, S1)
+
+The user reported probing inconsistent again, with the machine audibly shaking when it fails, worst when Z homes from high up. The user swaps between a PLA plate and a PETG plate, which may account for part of the tilt change in Run 22; the PLA plate was on for these tests. Claude ran everything through `pi.sh` with the user at the printer.
+
+| Check | Result | Notes |
+|---|---|---|
+| klippy.log 11-18 evening to 11-19 | ❌ | `PRINT_START` Z homing: "No trigger on stepper_z" 3 times per attempt on several starts (retries recovered some); one mesh failed after its first point (X10 Y10 -0.294) with 5 misses. X10 Y10 read +1.35 (Run 22), +0.37 (11-18 Benchy), -0.29 (11-19): Z0 moved between homes |
+| 5 × (`G28 Z` from Z 10, `PROBE` 5 mm/s at X133 Y185), cold bed, nozzle 150 °C | ✅ | 5 of 5; probe -0.05 to +0.13 |
+| Same with the bed at 60 °C | ❌ | First `G28 Z` missed |
+| Bed 60 °C, heater off vs on, `G28 Z` from Z 10 and Z 100 | ✅ | Off 5 of 5, on 3 of 3: no miss in 8, not enough to rule the heater out |
+| `PROBE` from Z 100 at X133 Y185, bed 60 °C, by speed | 5 mm/s ✅ | 20 mm/s: 4 of 8 clean (-0.06 to +0.01), 2 "samples exceed tolerance", 1 read -1.11, 1 "No trigger". 5 mm/s: 8 of 8, 0.017 to 0.032 |
+| **D-140 deployed** (`homing_speed` 5): 10 × `G28 Z` from Z 100, then `PROBE` 5 mm/s from Z 10, bed 60 °C | ⚠️ | 9 of 10 homed, 31 to 32 s each; probe after each 0.000 to 0.004 (one 0.025). Home 10: "No trigger on stepper_z" |
+| Not exercised | | A print start on D-140; the PETG plate; homing from Z 165; Z current while probing (0.4 A, B-23) |

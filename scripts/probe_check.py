@@ -16,7 +16,7 @@ LIMIT_MM = 0.1  # D-140: at 5 mm/s good homes read 0.017 to 0.032, bad ones 0.3 
 LIFT = "F300"  # D-109: Z moves up at 5 mm/s, faster hits the frame resonance
 
 FAIL_TEXT = [
-    "1. Shut down the printer from the screen, then switch it off and unplug it.",
+    "1. Turn the printer off and unplug it.",
     "2. Check the hotend: heatsink and nozzle screws tight, no plastic on the nozzle.",
     "3. Check the toolhead cable has slack with the head at the front left and Z down.",
     "4. Check nothing is stuck to the bed at the back right, under the homing point.",

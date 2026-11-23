@@ -438,10 +438,10 @@ The user reported probing inconsistent again, with the machine audibly shaking w
 
 ## Run NEW probe check: Z homing from rising heights after the heatsink fix (D-NEW probe check, B-24), 2026-11-23 (klipper-ui claude/z-homing-speed-optimizer-5f455a, S1)
 
-The user found the heatsink loose after more homing problems and tightened it. Prepared, not run: runs after the current print ends, with the user's OK, through `scripts/pi.sh 'python3 -' < scripts/probe_check.py`.
+The user found the heatsink loose after more homing problems and tightened it. Run with the user's OK after a print ended, through `PI_HOST=biqu@192.168.1.160 scripts/pi.sh 'python3 -' < scripts/probe_check.py` (the S1 moved from 192.168.0.102 to 192.168.1.160; starstack-s1.local didn't resolve from the PC at 10.0.0.18).
 
 | Check | Result | Notes |
 |---|---|---|
 | `python scripts/probe_check.py --selftest` (pass/fail logic, PC) | ✅ | Pass, mid-air (-0.4), late (+1.1) and miss verdicts |
-| On the S1: `G28 Z` from Z 5, 10, 20, 40, 80, 120, 160 at X133 Y185, `PROBE` 5 mm/s after each within 0.1 mm | ⏳ | Record bed temperature, each probe value and the time |
-| Failure prompt shows on the touchscreen and in Mainsail | ⏳ | Only seen if a step fails |
+| On the S1: `G28 Z` from Z 5, 10, 20, 40, 80, 120, 160 at X133 Y185, `PROBE` 5 mm/s after each within 0.1 mm | ❌ | Bed 45 °C cooling, target 0. Z 5 -0.026, Z 10 0.080, Z 20 0.018, Z 40 0.057, Z 80 0.331 (late), stopped, 178 s. **User: the raise to Z 80 (+3 homing lift, about 83 mm real) hit the top of the Z travel**, so the late reading likely comes from the crash (lost steps), not the probe. `position_max: 165` is wrong for this S1 now; Run 23 homed from Z 100 on 11-19, so the travel may have shrunk since |
+| Failure prompt shows on the touchscreen and in Mainsail | ⏳ | Sent without error (`RESPOND` accepted); the user hasn't said yet if it showed |

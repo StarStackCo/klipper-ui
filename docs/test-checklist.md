@@ -351,3 +351,15 @@ Run by Claude through Moonraker (same `G28` / `BED_MESH_CALIBRATE` the touchscre
 | Next print `Main Body(2)_PLA_7h11m` 22:45 | ❌ | `PRINT_START` Z homing: "No trigger on stepper_z after full movement" 3 times (nozzle hot, homing at `homing_speed` 20 mm/s), canceled by the D-105 retries after 2 min (B-24). Restarted 23:21: homed, mesh 0 retries, printing. Its mesh (Y10/Y90/Y170 rows): -0.222 0.191 0.419 / -0.416 0.190 0.518 / -0.506 0.236 0.587, same X10→X170 rise as the D-134 meshes (0.64 / 0.93 / 1.09 vs 0.66 / 0.93 / 1.02) |
 | Since the D-134 restart (21:26) | ✅ / ❌ | 0 mesh retries in every mesh; 3 "No trigger" lines, all from the 22:45 homing |
 | Not exercised | | `PROBE_CALIBRATE` |
+
+## Run NEW: Wi-Fi on the S1 shows "Searching for networks…" forever (B-6), 2026-11-23 (S1 on Ethernet at another site, read-only checks over `pi.sh`)
+
+| Check | Result | Notes |
+|---|---|---|
+| Wi-Fi page | ❌ | "Searching for networks…" never ends (user) |
+| Radio and NetworkManager | ✅ | `nmcli radio`: WIFI-HW and WIFI enabled; wlan0 and wlan1 managed, state disconnected |
+| Adapter | info | Onboard Realtek RTL8189FS over SDIO, 2.4 GHz only; wlan1 is the same chip (the driver makes a second interface). Regulatory domain `00` (world), channels 1 to 11 active scan |
+| `nmcli dev wifi list --rescan yes`, each interface | ❌ | 0 networks on both |
+| Chip's own list (`/proc/net/rtl8189fs/wlan0/survey_info`, `rx_signal`) | ❌ | Empty, rssi 0 |
+| Antenna | ❌ cause | **None fitted** (user): the one that came with the BTT Pi is at the user's apartment, to fit back there. Q-046's answer needs one mounted; the bench Pi's single 20 % network fits the same cause |
+| Not exercised | | Joining a network: needs the antenna first |

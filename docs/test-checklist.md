@@ -435,3 +435,13 @@ The user reported probing inconsistent again, with the machine audibly shaking w
 | `PROBE` from Z 100 at X133 Y185, bed 60 °C, by speed | 5 mm/s ✅ | 20 mm/s: 4 of 8 clean (-0.06 to +0.01), 2 "samples exceed tolerance", 1 read -1.11, 1 "No trigger". 5 mm/s: 8 of 8, 0.017 to 0.032 |
 | **D-140 deployed** (`homing_speed` 5): 10 × `G28 Z` from Z 100, then `PROBE` 5 mm/s from Z 10, bed 60 °C | ⚠️ | 9 of 10 homed, 31 to 32 s each; probe after each 0.000 to 0.004 (one 0.025). Home 10: "No trigger on stepper_z" |
 | Not exercised | | A print start on D-140; the PETG plate; homing from Z 165; Z current while probing (0.4 A, B-23) |
+
+## Run NEW probe check: Z homing from rising heights after the heatsink fix (D-NEW probe check, B-24), 2026-11-23 (klipper-ui claude/z-homing-speed-optimizer-5f455a, S1)
+
+The user found the heatsink loose after more homing problems and tightened it. Prepared, not run: runs after the current print ends, with the user's OK, through `scripts/pi.sh 'python3 -' < scripts/probe_check.py`.
+
+| Check | Result | Notes |
+|---|---|---|
+| `python scripts/probe_check.py --selftest` (pass/fail logic, PC) | ✅ | Pass, mid-air (-0.4), late (+1.1) and miss verdicts |
+| On the S1: `G28 Z` from Z 5, 10, 20, 40, 80, 120, 160 at X133 Y185, `PROBE` 5 mm/s after each within 0.1 mm | ⏳ | Record bed temperature, each probe value and the time |
+| Failure prompt shows on the touchscreen and in Mainsail | ⏳ | Only seen if a step fails |

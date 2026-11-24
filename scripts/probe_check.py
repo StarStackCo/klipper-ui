@@ -3,7 +3,7 @@
 Runs ON THE PI: scripts/pi.sh 'python3 -' < scripts/probe_check.py
 Self-test of the pass/fail logic (any PC): python scripts/probe_check.py --selftest
 Touchscreen (KlipperScreen fork, ss_probe_check): --json, no prompt, last line is
-{"ok": bool, "reason": str, "fix": [str]} and the screen shows its own page.
+{"ok": bool, "reason": str} and the screen shows its own page and fix steps (same wording).
 
 Nozzle at a steady clean_temp (_PROBE_HOT), then at the homing point X133 Y185 it homes Z from
 higher and higher starts (resonance and long descents caused misses and mid-air triggers, D-134,
@@ -17,15 +17,16 @@ import json, re, sys, time, urllib.error, urllib.parse, urllib.request
 
 API = "http://localhost:7125"
 HEIGHTS = [5, 10, 20, 40]  # mm above the last home; the homing override adds 3. Real Z travel unmeasured
-LIMIT_MM = 0.1  # D-140: at 5 mm/s good homes read 0.017 to 0.032, bad ones 0.3 to 1.1 or a miss
+LIMIT_MM = 0.1  # Run 23: good homes at 5 mm/s 0.000 to 0.025 apart; bad ones 0.3 to 1.1 or a miss
 LIFT = "F300"  # D-109: Z moves up at 5 mm/s, faster hits the frame resonance
 
+# same wording as the touchscreen's (fork ks_includes/ss_probe_check.py FIX); keep them matched
 FAIL_TEXT = [
     "1. Turn the printer off and unplug it.",
-    "2. Check the hotend: heatsink and nozzle screws tight, no plastic on the nozzle.",
+    "2. Check the heatsink and nozzle screws are tight and no plastic is on the nozzle.",
     "3. Check the toolhead cable has slack with the head at the front left and Z down.",
-    "4. Check nothing is stuck to the bed at the back right, under the homing point.",
-    "5. Plug in, switch on and run the self-check again (Settings, Setup and tour).",
+    "4. Check nothing is stuck to the bed at the back right.",
+    "5. Plug it in, turn it on and run the self-check again.",
 ]
 
 
@@ -39,7 +40,8 @@ def judge(results):
             kind = "in mid-air, %.2f mm early" % shift if shift > 0 else "%.2f mm late" % -shift
             return False, "From Z %d the nozzle homed %s" % (h, kind)
         if abs(z) > LIMIT_MM:
-            kind = "triggered %.2f mm above the bed" % -z if z < 0 else "triggered %.2f mm late" % z
+            # last_z_result is where it fired: a mid-air trigger reads high, a late one low (B-23)
+            kind = "triggered %.2f mm above the bed" % z if z > 0 else "triggered %.2f mm late" % -z
             return False, "From Z %d the probe %s" % (h, kind)
     return True, "Homed from %s mm, probe read %s" % (
         ", ".join(str(r[0]) for r in results), ", ".join("%.3f" % r[1] for r in results))
@@ -52,9 +54,9 @@ def shift_mm(before, after, spm, sign):
 
 def selftest():
     assert judge([(5, 0.02, 0.01, None), (10, -0.03, -0.02, None)])[0]
-    assert not judge([(5, 0.02, 0.0, None), (10, -0.4, 0.0, None)])[0]  # probe fired early
-    assert "above the bed" in judge([(10, -0.4, 0.0, None)])[1]
-    assert "late" in judge([(10, 1.1, 0.0, None)])[1]
+    assert not judge([(5, 0.02, 0.0, None), (10, 0.4, 0.0, None)])[0]  # probe fired early
+    assert "above the bed" in judge([(10, 0.4, 0.0, None)])[1]
+    assert "late" in judge([(10, -1.1, 0.0, None)])[1]  # Run 23: one read -1.11
     assert not judge([(40, 0.0, None, "No trigger on stepper_z after full movement")])[0]
     # Run NEW probe check: home and probe both fired in the air, so the probe alone read 0.018
     assert "mid-air" in judge([(20, 0.018, 21.5, None)])[1]
@@ -79,9 +81,14 @@ def gcode(script):
             r.read()
         return None
     except urllib.error.HTTPError as e:
-        msg = json.load(e).get("error", {}).get("message", "HTTP %s" % e.code)
-        print("!!! " + msg, flush=True)
-        return msg
+        try:
+            msg = json.load(e).get("error", {}).get("message", "HTTP %s" % e.code)
+        except ValueError:
+            msg = "HTTP %s" % e.code
+    except Exception as e:  # Moonraker down or a timeout: report it, never crash past cleanup
+        msg = "Moonraker: %s" % e
+    print("!!! " + msg, flush=True)
+    return msg
 
 
 def pos():
@@ -115,7 +122,7 @@ def main():
     if state in ("printing", "paused"):
         reason = "Printer is %s: run the probe check when it is idle." % state
         if "--json" in sys.argv:
-            print(json.dumps({"ok": False, "reason": reason, "fix": []}), flush=True)
+            print(json.dumps({"ok": False, "reason": reason}), flush=True)
         sys.exit(reason)
     bed = get("/printer/objects/query?heater_bed")["status"]["heater_bed"]
     print("Bed %.0f °C, target %.0f (a heating bed caused a miss in Run 23)" % (
@@ -126,6 +133,26 @@ def main():
     results, err = [], gcode("_PROBE_HOT\nG28\nG90\nG0 X133 Y185 F6000")
     if err:
         results.append((0, 0.0, 0.0, "first home: " + err))
+    try:
+        check_heights(results, spm, err)
+    except Exception as e:  # GET_POSITION or the store failed: a failed check, still cleaned up
+        results.append((0, 0.0, 0.0, "stopped: %s" % e))
+    ok, reason = judge(results)
+    if ok:
+        gcode("G0 Z10 %s" % LIFT)
+    gcode("M104 S0")
+    print("%s in %d s: %s" % ("PASS" if ok else "FAIL", time.time() - t0, reason), flush=True)
+    if "--json" in sys.argv:
+        print(json.dumps({"ok": ok, "reason": reason}), flush=True)
+    elif ok:
+        print("Only a pass if you saw the nozzle touch the bed on the first home.", flush=True)
+        gcode('RESPOND MSG="Probe check passed: %s"' % reason)
+    else:
+        prompt_fail(reason)
+    sys.exit(0 if ok else 1)
+
+
+def check_heights(results, spm, err):
     for h in HEIGHTS if not err else []:
         p0 = pos()
         err = gcode("G0 Z%d %s" % (h, LIFT))
@@ -140,19 +167,6 @@ def main():
         print("    Z %d: %s" % (h, err or "zero moved %+.3f mm, probe %.3f" % (shift, z)), flush=True)
         if not judge(results)[0]:
             break  # a miss leaves Z unhomed; a mid-air home would climb further each round
-    ok, reason = judge(results)
-    if ok:
-        gcode("G0 Z10 %s" % LIFT)
-    gcode("M104 S0")
-    print("%s in %d s: %s" % ("PASS" if ok else "FAIL", time.time() - t0, reason), flush=True)
-    if "--json" in sys.argv:
-        print(json.dumps({"ok": ok, "reason": reason, "fix": [] if ok else FAIL_TEXT}), flush=True)
-    elif ok:
-        print("Only a pass if you saw the nozzle touch the bed on the first home.", flush=True)
-        gcode('RESPOND MSG="Probe check passed: %s"' % reason)
-    else:
-        prompt_fail(reason)
-    sys.exit(0 if ok else 1)
 
 
 if __name__ == "__main__":

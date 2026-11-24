@@ -470,3 +470,22 @@ The user found the heatsink loose after more homing problems and tightened it. R
 | **Two-part check on the S1 screen** (Pi on `dev`: klipper-ui c3c31d2 checked out without the installer, touchscreen b8510caa; devtools on for the run, then removed and KlipperScreen restarted), Settings > Advanced | ✅ | Part 1: Z 10 +0.000 / 0.000, Z 40 +0.001 / -0.001, PASS 113 s; the question dialog (Stop, No, Yes, it touched) fits and Z stayed low while it waited. User saw the first touch reach the bed and tapped Yes. Part 2: Z 150 -0.002 / 0.000, PASS 95 s; "Probe check passed". Nozzle heater off afterwards. Pi `printer.cfg` still has the D-NEW comments (comments only) and Klipper hasn't reloaded the "back left" macro text yet |
 | **Print start after D-143** (`Part Studio 1(3)_PLA_10m15s.gcode`, Overture PLA profile, profile check OK; user: plate clear, PLA loaded), started 09:37 through the `print-job` skill | ✅ | `PRINT_START` stages once each, no retries: bed 55 °C (09:37), nozzle (09:39), home with Z at X45 (09:40:13), nozzle clean with the re-home and park at X133 (09:40:29), cool to 150 °C (09:40:39), mesh (09:41:22), final heat (09:42:35), printing 09:43:07. No probe errors in klippy.log from the print's start. Mesh: left edge +1.40 to +1.65, right edge -0.25 to -0.33 (the known left-high tilt) |
 | Not exercised | | The setup self-check with the two parts; the setup check's No → failure page → Try again path on the screen; a print start since the cable work; homing with the bed at print temperature; the new cable without the rigid casing at X133 (B-24) |
+
+## Run 25: release check for v0.6.1 → next (D-137..D-143), 2026-11-24 (klipper-ui dev 6f416b3, fork dev b8510caa, S1)
+
+Run by Claude from the S1's state, history and logs plus today's tests; what wasn't exercised is named.
+
+| Check | Result | Notes |
+|---|---|---|
+| What goes out has a passing Run on the S1 | ✅ | First power-up setup (D-137): Runs 18 to 20. Queue page (D-139): Run 21. Z homing 5 mm/s (D-140): Run 23. Probe check, homing lifts, homing at X45 (D-141 to D-143): Run 24, incl. a print start. `install.sh` time zone rule (B-26 note): root-installed, reaches printers only when the user runs `install.sh` with sudo |
+| S5 macro and config diff main..dev | ✅ | Macros: one error text (back right → back left). printer.cfg: homing lifts F300, homing X45, `NOZZLE_CLEAN` park X133, Z `homing_speed` 5, comments. No limit, heater or endstop changes |
+| S8 secrets in the main..dev diff | ✅ | Only rule text about never committing them |
+| F1 Klipper | ✅ | ready, v0.13.0-501 |
+| F2 Moonraker | ✅ | v0.10.0-2, no warnings, no failed components |
+| F3 Mainsail from the PC | ✅ | Loads with live temperatures and the finished job |
+| F5 KlipperScreen | ✅ | active, no tracebacks in the last 300 log lines (on fork dev) |
+| F7, F8, F10 home, print, mesh | ✅ | Run 24 print start: home, nozzle clean, mesh, 10 min print complete |
+| F12 under-voltage | ✅ | The only `dmesg` hit is the SD card driver's boot notice |
+| Prints since v0.6.1 (11-10) | ⚠️ | 46 jobs: 25 completed, 18 canceled, 3 shutdowns; 36.5 print hours. Shutdowns 11-15 (Dragon PETG) and 11-16 (Mainboard + Pi Case ×2): cause not recoverable, klippy logs only go back to 11-18. 11-20 and today: STOP (webhooks request) |
+| Update Manager | ✅ | All valid, clean, no warnings. It still lists the branches from before today's checkouts (KlipperScreen queue-scroll, klipper-ui main) until its next refresh |
+| Not exercised this cycle | | S1/S2/S3/S4/S6/S7 by hand (no UI safety code changed since v0.6.1 except the setup pages, whose STOP rail shows in Run 24's screenshots); F4 Mainsail mobile; F8 pause/resume; F9 live tuning; F11 rollback |

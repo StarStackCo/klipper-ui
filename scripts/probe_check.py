@@ -4,13 +4,17 @@ Runs ON THE PI: scripts/pi.sh 'python3 -' < scripts/probe_check.py
 Self-test of the pass/fail logic (any PC): python scripts/probe_check.py --selftest
 Touchscreen (KlipperScreen fork, ss_probe_check): --json, no prompt, last line is
 {"ok": bool, "reason": str} and the screen shows its own page and fix steps (same wording).
+Parts: --part1 is the full home and the homes from Z 10 and 40; --part2 is the home from near the
+top, run only after the user said the first touch reached the bed (D-141 review: if the first
+home fired in mid-air and the next ones fired at the same height, the top lift would hit the top).
+With neither, both run back to back: only with someone watching the first touch, hand near STOP.
 
 Nozzle at a steady clean_temp (_PROBE_HOT), a full home, then at the homing point X45 Y185 Z homes
 from Z 10, 40 and TOP_MARGIN below position_max (user: long descents caused misses and mid-air
 triggers, D-134, D-140). Each home must travel as far down as the motor steps say the head went up,
 so its zero lands within LIMIT_MM of the one before: a mid-air trigger stops short. The steps keep
-the lifts safe: each one starts from a home already checked (Run 24: lifts from false, mid-air
-zeros drove the head into the top, and a probe agrees with a home that fired at the same height).
+the lifts small until the first home is confirmed (Run 24: lifts from false, mid-air zeros drove
+the head into the top, and a probe agrees with a home that fired at the same height).
 After each home a PROBE at 5 mm/s must also read Z 0 within LIMIT_MM. Stops at the first failure
 and shows the user a prompt on the touchscreen and Mainsail. Uses the configured homing_speed; never runs
 while printing. The first home is the baseline: only a person can see that it touched the bed."""
@@ -74,7 +78,15 @@ def get(path):
 
 
 def gcode(script):
-    """Runs G-code and waits for it to finish. Returns None or Klipper's error message."""
+    """Runs G-code and waits for it to finish. Returns None or Klipper's error message.
+    Sends nothing once a print has started: its G-code would mix with ours (M104 S0 included)."""
+    try:
+        state = get("/printer/objects/query?print_stats=state")["status"]["print_stats"]["state"]
+    except Exception:
+        state = ""
+    if state in ("printing", "paused"):
+        print("!!! a print started: probe check stopped", flush=True)
+        return "A print started, so the probe check stopped."
     print(">>> " + script.replace("\n", " | "), flush=True)
     req = urllib.request.Request(
         API + "/printer/gcode/script?script=" + urllib.parse.quote(script), method="POST")
@@ -132,11 +144,15 @@ def main():
     cfg = status("configfile", "settings")["stepper_z"]
     spm = cfg["microsteps"] * cfg.get("full_steps_per_rotation", 200) / cfg["rotation_distance"]
     t0 = time.time()
-    results, err = [], gcode("_PROBE_HOT\nG28\nG90\nG0 X45 Y185 F6000")
-    if err:
-        results.append((0, 0.0, 0.0, "first home: " + err))
+    part = "1" if "--part1" in sys.argv else "2" if "--part2" in sys.argv else ""
+    top = [int(cfg["position_max"]) - TOP_MARGIN]
+    if part == "2" and "z" not in status("toolhead", "homed_axes"):
+        err = "Z isn't homed: run part 1 first"
+    else:  # part 2 keeps part 1's zero: no full home, only back to the homing spot
+        err = gcode("_PROBE_HOT\n" + ("" if part == "2" else "G28\n") + "G90\nG0 X45 Y185 F6000")
+    results = [(0, 0.0, 0.0, ("first home: " if part != "2" else "") + err)] if err else []
     try:
-        check_heights(results, spm, err, STEPS + [int(cfg["position_max"]) - TOP_MARGIN])
+        check_heights(results, spm, err, {"1": STEPS, "2": top}.get(part, STEPS + top))
     except Exception as e:  # GET_POSITION or the store failed: a failed check, still cleaned up
         results.append((0, 0.0, 0.0, "stopped: %s" % e))
     ok, reason = judge(results)

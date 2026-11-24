@@ -51,10 +51,10 @@ These live in the printer config, not in the StarStack macros, because they are 
 
 | Macro | Called by | What it can do | Risk | Mitigation |
 |---|---|---|---|---|
-| `[homing_override]` | G28 | Lift 3 mm, sensorless X/Y, move to X133 Y185, Z on the PZ probe | Medium | User's working macro, unchanged. Z motor current lowered while probing (probe `activate_gcode`). Z homing calls `_PROBE_HOT` first and `_PROBE_HOT_END` after (D-131) |
+| `[homing_override]` | G28 | Lift 3 mm, sensorless X/Y, move to X45 Y185 (was X133 Y185, D-143), Z on the PZ probe | Medium | User's macro; changed only as noted here. Z motor current lowered while probing (probe `activate_gcode`). Z homing calls `_PROBE_HOT` first and `_PROBE_HOT_END` after (D-131). Both 3 mm lifts at 5 mm/s (F300), like D-109's Z lifts (D-142) |
 | `_PROBE_HOT` / `_PROBE_HOT_END` | Z homing, `BED_MESH_CALIBRATE` | Idle: nozzle to `clean_temp` 150 °C (heats a cold nozzle, cools a preheat), wait for 148 to 152 °C, hold 15 s, then put the old target back | Low | Never while printing or paused. Highest target it sets is 150 °C. If homing fails, `_PROBE_HOT_END` doesn't run and the nozzle stays at 150 °C until `[idle_timeout]` (15 min). `verify_heater` still applies |
 | `BED_MESH_CALIBRATE` (wraps `BED_MESH_CALIBRATE_BASE`) | Touchscreen, Mainsail, `PRINT_START` | Same mesh, with `_PROBE_HOT` around it; `METHOD=manual` passes straight through | Low | Passes every parameter on (`rawparams`), so `ADAPTIVE=1` still works. Inside a print it adds nothing (D-131) |
-| `NOZZLE_CLEAN` | `PRINT_START` (`WAIT=0`), or by hand | Wipe on the brush at Z 1.2, re-home Z, park at Z 0, wait for 150 °C (not with `WAIT=0`) | Medium | User's working macro; only the `WAIT` option added (D-089). Homes first if needed. Brush position confirmed by the user |
+| `NOZZLE_CLEAN` | `PRINT_START` (`WAIT=0`), or by hand | Wipe on the brush at Z 1.2, re-home Z at X133 Y185 (was X45 Y185, D-143), park at Z 0, wait for 150 °C (not with `WAIT=0`) | Medium | User's working macro; only the `WAIT` option added (D-089). Homes first if needed. Brush position confirmed by the user |
 | `_CLIENT_VARIABLE` | Mainsail PAUSE/RESUME/CANCEL | Park X0 Y180, lift 10 mm | Low | Mainsail's own macros, inside the axis limits |
 | `_PRINTER_PAUSE_FAN` / `_PRINTER_RESUME_FAN` | PAUSE / RESUME | Part fan off / back on; resume first runs `_SS_RESUME_GUARD` | Low | Were `_S1_…`, which never ran (Klipper read them as `_S1`, D-089) |
 | `_PRINTER_CANCEL_LIFT` | CANCEL_PRINT | Lift up to 40 mm, never past Z max | Low | Only when Z is homed |

@@ -20,6 +20,7 @@ changing anything there, read `../KlipperScreen-starstack/CLAUDE.md` first; its 
   checklist passes (README). Debug builds go on branch `bench`, never `dev` (D-061).
 - Nothing is deployed to the printer or pushed without the user's OK for that step (D-003). Stop and ask
   when anything is unclear (PLAN section 7). Least invasive layer first: theme, then macros, then code (PLAN 3).
+- Reviews (yours, `/code-review`, a subagent's) follow `REVIEW.md`.
 - Macro changes: `python tools/check_macros.py` (CI runs it too) and an update to the macro safety review.
 - Reach the Pi only through `scripts/pi.sh` (logs to `logs/`) and show every command and reply in chat.
   Claude never handles passwords, keys or tokens; the user types sudo and Wi-Fi passwords (D-007, D-008).
@@ -28,8 +29,14 @@ changing anything there, read `../KlipperScreen-starstack/CLAUDE.md` first; its 
 ## Parallel sessions (D-133)
 - A session that edits files runs in its own worktree on a branch from `dev`; only read-only sessions share
   this folder. Commit only your own changes: uncommitted files you didn't touch belong to another session.
+  Make it with `git worktree add -b <name> .claude/worktrees/<name> dev`, or the worktree tool, which
+  `.claude/settings.json` sets to branch from the session's HEAD: `dev` when started here, since this folder
+  stays on `dev` (the tool's default is `main`, the last release; D-138).
 - Inside a branch, new log entries use `D-NEW`, `Q-NEW`, `B-NEW` and `Run NEW` with a short topic. The real
   number is given when the branch merges into `dev`, one branch at a time (`python tools/check_ids.py --next D`).
+- Before a branch merges into `dev` (D-136): a subagent with fresh context reviews
+  `git diff dev...<branch>` against `REVIEW.md`; a fork branch gets the same, against the fork's `REVIEW.md`.
+  Show the user the count. Fix every Important finding, or the user accepts it, before merging.
 - One session at a time talks to the Pi (`pi.sh`, deploys, restarts). Before using it, ask the user whether
   another session is.
 
@@ -44,7 +51,7 @@ changing anything there, read `../KlipperScreen-starstack/CLAUDE.md` first; its 
 - `config/s1/` is the old prototype, not the production S1 (D-102).
 - Moonraker `trusted_clients` must list every private range, never one subnet (D-102).
 - Mainsail isn't pinned (B-12) and anyone on the network can control the printer (B-13).
-- The S1 bed is about 1 mm out of level, left side low (mesh at probe speed 5 mm/s, paper-checked, Run 17); tram later. Meshes before D-134 had false triggers: don't tram from them.
+- The S1 bed is about 2 mm out of level, left side high since the 11-18 rewire (mesh at 5 mm/s, paper-checked, Run 22); tram it. The PZ misses the bed when the toolhead cable is tight: keep a big loop (same Run). Meshes before D-134 had false triggers: don't tram from them.
 - The PZ probe triggers from vibration while moving, so it can't detect collisions (D-099).
 - Power loss recovery and crash detection are design only (D-098, D-099, `docs/power-loss-recovery.md`).
 

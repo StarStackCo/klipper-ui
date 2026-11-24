@@ -351,3 +351,141 @@ Run by Claude through Moonraker (same `G28` / `BED_MESH_CALIBRATE` the touchscre
 | Next print `Main Body(2)_PLA_7h11m` 22:45 | ❌ | `PRINT_START` Z homing: "No trigger on stepper_z after full movement" 3 times (nozzle hot, homing at `homing_speed` 20 mm/s), canceled by the D-105 retries after 2 min (B-24). Restarted 23:21: homed, mesh 0 retries, printing. Its mesh (Y10/Y90/Y170 rows): -0.222 0.191 0.419 / -0.416 0.190 0.518 / -0.506 0.236 0.587, same X10→X170 rise as the D-134 meshes (0.64 / 0.93 / 1.09 vs 0.66 / 0.93 / 1.02) |
 | Since the D-134 restart (21:26) | ✅ / ❌ | 0 mesh retries in every mesh; 3 "No trigger" lines, all from the 22:45 homing |
 | Not exercised | | `PROBE_CALIBRATE` |
+
+## Run 18: first power-up setup on the S1 (D-137), 2026-11-10 (fork first-power-up 3f9ed6fe, S1)
+
+Run by the user on the touchscreen (Settings > Setup and tour), three passes; fixes between them were installed with `ks-update.sh --branch first-power-up`.
+
+| Check | Result | Notes |
+|---|---|---|
+| Welcome: Start only | ✅ | Skip setup removed (user) |
+| Time zone: tap sets the Pi's zone, chosen zone shows | ❌ → ✅ | Taps worked from the start (Pi went Denver, then New_York) but the outline never drew, then the page read a stale `/etc/timezone` (Europe/London). Now solid blue with a check, read from `/etc/localtime`. Other zone / 12-hour / 24-hour row removed (it made the page scroll), buttons 50 px |
+| Time zone without a password | ✅ | polkit rule (installed by hand, user typed sudo); `timedatectl --no-ask-password set-timezone` as biqu |
+| Wi-Fi: Done returns to the setup | ✅ | |
+| Rail during setup: STOP only, then icons shown but not tappable from the tour, tour highlights each | ❌ → ✅ | First version: nav icons vanished on every page (no_show_all hid the image); fixed |
+| Nozzle tap (cold PZ) registers | ❌ → ✅ | PZ LED lit but nothing registered: the endstop is `stepper_z`, code read `z`. One endstop query takes ~300 ms on the S1, polled back to back |
+| "The probe works" OK page, then heating; "Next: homing" OK page, then G28 | ✅ | Added at the user's request |
+| Heaters, part fan question, homing, "Self-tests complete" | ✅ | |
+| Tour, filament, first print | ✅ | First print is `3DBenchy Overture PLA.gcode` (re-sliced, PRINT_START). The first try used the old `3DBenchy_PLA_1h6m.gcode` (blocking `M190`): Cancel queued behind it and the backstop e-stopped (B-25); the setup now offers only PRINT_START files |
+| Cancel on the new first print | ✅ | Cancels cleanly, no restart (user: "everything works") |
+
+## Run 19: setup clock, hot nozzle and tap page layout (D-137), 2026-11-10 (fork first-power-up 68d8367a, S1)
+
+Run by Claude with the bench dev tool (`~/.starstack_dev`, removed afterwards), after the user reported: zone tap didn't change the clock, tap page text pushed off the side, a hot nozzle still asked for a tap.
+
+| Check | Result | Notes |
+|---|---|---|
+| Zone page fits, chosen zone marked | ✅ | Screenshot: Eastern solid blue with a check, 6 buttons and Back / Skip / Next on screen |
+| Clock follows a zone change at once | ✅ | Central picked: top-right clock 02:00 PM → 01:01 PM straight away (KlipperScreen only redrew on a new minute). Set back to Eastern (`timedatectl`: America/New_York) |
+| Hot nozzle: wait page | ✅ | Nozzle 51°C: "Wait for the nozzle to cool", live temperature, no tap request, No reaction grayed; Stop / Skip / No reaction all on screen |
+| Switches to the tap by itself | ✅ | At 44°C: "Tap the nozzle", "It's not hot: 44°C", "Waiting for your tap" |
+| Stop from the tap page | ✅ | Heaters 0, fan 0 afterwards |
+| STOP button color on the tap page | info | Red (active) while the page polls the probe. Not checked why: probably `idle_timeout` reads Printing while the endstop queries run (not recorded). Nothing heats or moves. If so, `busy()` in the fork's `ss_setup.py` would also read busy then; today only Start check uses it |
+
+## Run 20: reviewed first power-up setup, full self-check (D-137, D-136), 2026-11-10 (fork dev 99c6ee70, S1)
+
+Run by the user on the touchscreen (Settings > Setup and tour) after the D-136 review fixes, following the steps Claude gave. User: "it all works now". Claude did not watch the screen or log during it; the rows are the steps the user was asked to check.
+
+| Check | Result | Notes |
+|---|---|---|
+| Time zone tap, clock top right stays right | ✅ | |
+| Tap the nozzle, "The probe works", OK starts heating | ✅ | |
+| Nozzle to 150°C and bed warming on the running page | ✅ | |
+| Part fan question | ✅ | |
+| "Next: homing", OK, page says use STOP during homing | ✅ | |
+| "Self-tests complete", heaters and fan off after | ✅ | |
+| Optional: Stop on a notice page, Run it again with a hot nozzle | not reported | Optional steps; the user didn't say whether they were tried. The hot-nozzle wait was checked by screenshot in Run 19 |
+
+## Run 21: Queue page layout and Pager overlay (D-139), 2026-11-14 (fork queue-scroll 7abda553, S1)
+
+Claude drove the touchscreen with the bench devtools and took screenshots (`ks-tap.sh`); the user added jobs to the queue and checked the 4 job and warning cases by eye.
+
+| Check | Result | Notes |
+|---|---|---|
+| Before the fix, 4 jobs: scroll bar over the remove buttons | ✅ reproduced | User saw it; measured from the screenshot pixels: the buttons ran from y 265 to 321 on a 320 px screen (13 px past where they belong) |
+| 3 jobs, printer busy | ✅ | Screenshot, no bar |
+| 4 jobs, no title, no arrows | ✅ | User: looked good |
+| 5 jobs: 3 rows and arrows "1 / 2", then 2 rows "2 / 2" | ✅ | Screenshots of both pages |
+| 5 jobs idle with the next job PLA (filament warning line shows) | ✅ | User: no issue; not photographed |
+| Settings, Network, About, Cancel object, Home, Fans, Power, Screen & language | ✅ | Screenshots, nothing clipped or scrolled. Updates, Controls, Move, Print not opened; no long Wi-Fi name or wrapped text row tried |
+
+## Run 22: PZ probe after the mainboard case swap and new toolhead cable, 2026-11-18 (klipper-ui dev 06284d2 config, S1)
+
+The user swapped the mainboard case (wire management) and replaced the toolhead cable (suspected thermistor noise from a bent wire), after which Z probing stopped being reliable. Claude ran the tests through `pi.sh`; the user watched and did the paper check. No config change.
+
+| Check | Result | Notes |
+|---|---|---|
+| klippy.log since 11-12 | ❌ | 11-12 and 11-13: "No trigger on stepper_z" 3 times each in `PRINT_START` homing, nozzle 185 / 225 °C (same as B-24). 11-15: mesh at X10 Y10 read 0.287, **2.015** (mid-air), 0.264, then "Probe triggered prior to movement" 5 times, mesh failed |
+| `PROBE_ACCURACY` 10 samples, lift 10, 5 mm/s, 150 °C, new cable as fitted | ❌ | X133 Y185, X10 Y10, X10 Y170: each "No trigger on probe after full movement" on the first sample (Z went to `position_min` -5 at 0.4 A three times). `G28` at 20 mm/s homed fine just before |
+| **After the user gave the new cable a bigger loop** (amount not measured): same test | ✅ | 30 of 30 triggered, no mid-air triggers. X133 Y185: mean 0.031, range 0.038. X10 Y10: mean **1.317**, range 0.034. X10 Y170: mean **1.122**, range 0.043 |
+| Paper check (user), nozzle parked at X10 Y10 Z 1.32, cooling from 150 °C | ✅ | Paper drags: the +1.3 mm is the real bed, not a false trigger |
+| `BED_MESH_CALIBRATE` (3 × 3), not saved | ✅ | 0 retries. Rows (Y10, Y90, Y170 × X10, X90, X170): 1.352 0.447 -0.598 / 1.159 0.434 -0.520 / 1.106 0.437 -0.285, range **1.95 mm** (over `mesh_warn` 1.5, under `mesh_stop` 3.0, so prints run with the "bed is uneven" warning). Run 17 had the left side 0.66 to 1.02 mm **lower** than the right; now it is 1.39 to 1.95 mm **higher**. The bed or gantry likely moved during the rework (not checked) |
+| Not exercised | | A print; Z homing at 20 mm/s more than twice (B-24); why the bed tilt changed; tramming |
+
+## Run 23: Z homing misses after the rewire, and homing at 5 mm/s (D-140, B-24), 2026-11-19 (klipper-ui z-homing-5, S1)
+
+The user reported probing inconsistent again, with the machine audibly shaking when it fails, worst when Z homes from high up. The user swaps between a PLA plate and a PETG plate, which may account for part of the tilt change in Run 22; the PLA plate was on for these tests. Claude ran everything through `pi.sh` with the user at the printer.
+
+| Check | Result | Notes |
+|---|---|---|
+| klippy.log 11-18 evening to 11-19 | ❌ | `PRINT_START` Z homing: "No trigger on stepper_z" 3 times per attempt on several starts (retries recovered some); one mesh failed after its first point (X10 Y10 -0.294) with 5 misses. X10 Y10 read +1.35 (Run 22), +0.37 (11-18 Benchy), -0.29 (11-19): Z0 moved between homes |
+| 5 × (`G28 Z` from Z 10, `PROBE` 5 mm/s at X133 Y185), cold bed, nozzle 150 °C | ✅ | 5 of 5; probe -0.05 to +0.13 |
+| Same with the bed at 60 °C | ❌ | First `G28 Z` missed |
+| Bed 60 °C, heater off vs on, `G28 Z` from Z 10 and Z 100 | ✅ | Off 5 of 5, on 3 of 3: no miss in 8, not enough to rule the heater out |
+| `PROBE` from Z 100 at X133 Y185, bed 60 °C, by speed | 5 mm/s ✅ | 20 mm/s: 4 of 8 clean (-0.06 to +0.01), 2 "samples exceed tolerance", 1 read -1.11, 1 "No trigger". 5 mm/s: 8 of 8, 0.017 to 0.032 |
+| **D-140 deployed** (`homing_speed` 5): 10 × `G28 Z` from Z 100, then `PROBE` 5 mm/s from Z 10, bed 60 °C | ⚠️ | 9 of 10 homed, 31 to 32 s each; probe after each 0.000 to 0.004 (one 0.025). Home 10: "No trigger on stepper_z" |
+| Not exercised | | A print start on D-140; the PETG plate; homing from Z 165; Z current while probing (0.4 A, B-23) |
+
+## Run 24: Z homing from rising heights after the heatsink fix (D-141, B-24), 2026-11-23 (klipper-ui claude/z-homing-speed-optimizer-5f455a, S1)
+
+The user found the heatsink loose after more homing problems and tightened it. Run with the user's OK after a print ended, through `PI_HOST=biqu@192.168.1.160 scripts/pi.sh 'python3 -' < scripts/probe_check.py` (the S1 moved from 192.168.0.102 to 192.168.1.160; starstack-s1.local didn't resolve from the PC at 10.0.0.18).
+
+| Check | Result | Notes |
+|---|---|---|
+| `python scripts/probe_check.py --selftest` (pass/fail logic, PC) | ✅ | Pass, mid-air (-0.4), late (+1.1) and miss verdicts |
+| On the S1: `G28 Z` from Z 5, 10, 20, 40, 80, 120, 160 at X133 Y185, `PROBE` 5 mm/s after each within 0.1 mm | ❌ | Bed 45 °C cooling, target 0. Z 5 -0.026, Z 10 0.080, Z 20 0.018, Z 40 0.057, Z 80 0.331 (fired high, logged as "late" by a label bug fixed later), stopped, 178 s. **User: the raise to Z 80 (+3 homing lift, about 83 mm real) hit the top of the Z travel**, **User: the nozzle never got near the bed in any of it**: every home and every probe fired in mid-air, together, so the probe agreed with the home (readings near 0 meant nothing) and each home's 3 mm lift plus the next raise climbed the head into the top of Z. The PZ is firing in mid-air at the homing point after the heatsink was tightened. Test flaw fixed: each home is now checked against motor steps (`GET_POSITION`), heights capped at 40 |
+| Failure prompt shows on the touchscreen and in Mainsail | ✅ | `action:prompt_end` in the G-code store afterwards: it showed and OK was pressed |
+| Rerun with the step check, head lowered by hand first, bed 29 °C cooling | ❌ as expected | First `G28` (baseline), then from Z 5: `G28 Z` set its zero 1.998 mm above the baseline (steps), probe after it 0.000 (fired at the same false height). Stopped after one round, 66 s, no climbing; prompt sent. Not seen by the user whether the baseline home itself touched the bed |
+| Z raised 20 mm (5 mm/s), nozzle 59 °C cooling: `QUERY_PROBE` at rest | ✅ | Open 5 of 5: nothing presses on the PZ, wiring holds at rest |
+| `QUERY_PROBE` polled for 45 s while the user tapped the nozzle | ✅ (by the user) | 90 reads (one per 500 ms), 0 triggered. Inconclusive: a PZ trigger is likely a short pulse that 500 ms polling misses; user: tapped, and the probe works; tapping any part of the heatsink or the toolhead sets it off too. So the PZ works and is very sensitive: the mid-air homes come from shake during Z moves, not a dead or preloaded probe |
+| Test A (void, step bug): Z current while probing 0.4 → 0.6 A (Pi `printer.cfg` line 110 only, backup `printer.cfg.pre-probe-current`, `FIRMWARE_RESTART`, ready, no new klippy errors), probe check rerun, bed 28 °C | ❌ | From Z 5 the zero moved +1.904 mm (0.4 A: +1.998), probe 0.000, 69 s. No real change. Pi restored from the backup, restarted, ready |
+| Watched homes, original config: `_PROBE_HOT`, `G28` (home 1), 10 s, `G0 Z10` at 5 mm/s, `G28 Z` (home 2) | ❌ | User: **home 1 both touches perfect. Home 2: first touch stopped in the air instantly**, the later touches looked fine. Steps: home 2 zero +3.962 mm vs home 1. Home 1's Z descent came long after the override's 3 mm lift (X/Y homing in between); home 2 descended right after its lift (`G0 Z3 F1200`, 20 mm/s, faster than D-109's 5 mm/s) plus the 0.5 s `activate_gcode` pause. Points to the toolhead still ringing from the lift when the descent starts |
+| Test F: homing override lifts (lines 209, 230) F1200 → F300 (5 mm/s, as D-109), Pi only, backup `printer.cfg.pre-probe-lift`, restart ready; probe check | ❌ by steps | From Z 5 zero +2.000 mm, probe 0.000, 63 s. Same as without F (1.998, 1.904). Exactly 2 mm three times while the user saw home 1 perfect makes the step measurement itself suspect; not watched. F left on the Pi for a watched rerun |
+| Watched homes with F on, twice | ✅ by eye | User: home 1 perfect both times; home 2 perfect (second run; first run not watched). Steps said +4.07 and +3.997 mm: wrong, see next row |
+| **Step check bug** | ❌ → fixed | `GET_POSITION` read stepper_z 117 at Z 10, Z 5 and Z 3: Moonraker returns once a move is queued, so the step count lagged. Every step result before this row (the 2 mm and 4 mm shifts, test A, test F's first run) is void, and so is the earlier "instant stop" reading (same 4 mm, two lifts in a row look like a stop). Fix: `M400` before `GET_POSITION`. Recheck: plain move Z5→Z3 shift 0.0, across a `PROBE` 0.0 |
+| Probe check with the fixed step check, F on, bed 28 °C, home 1 watched | ✅ | Z 5 +0.037 / -0.000, Z 10 +0.039 / -0.050, Z 20 -0.003 / -0.047, Z 40 -0.034 / -0.014 (zero moved / probe), 141 s. Not yet known whether F or the tightened heatsink made the difference: a control run without F is next |
+| Control: original 20 mm/s homing lifts restored from `printer.cfg.pre-probe-lift` (test F saved as `printer.cfg.test-f`), restart ready, probe check, bed 23 °C | ✅ | Z 5 +0.073 / -0.023, Z 10 +0.003 / -0.001, Z 20 -0.003 / 0.003, Z 40 -0.001 / -0.010, 142 s. Passes without F, so the tightened heatsink fixed homing; F not shown to matter. Pi left on the original config (matches the repo). User: home 1 touched the bed |
+| **D-142 deployed** (repo config, both homing lifts F300), probe check, bed 23 °C | ✅ | Z 5 +0.001 / 0.002, Z 10 -0.032 / 0.020, Z 20 +0.032 / -0.002, Z 40 -0.033 / 0.007, 139 s. Home 1 not watched this time (watched twice before on the same setup) |
+| `--selftest` after the step check: mid-air home (shift +21.5 with probe 0.018) fails, 2 mm of steps for a 2 mm drop passes; `GET_POSITION` reply on the S1 parses (mcu stepper_z, toolhead Z) | ✅ | Read-only on the S1, no motion |
+| **Touchscreen: Settings > Advanced > Probe check** (fork `probe-check` 20d7e9b0, klipper-ui branch 8ee5663 on the Pi, installer not run) | ✅ (user: all good) | Two runs from the screen. Run 1: Z 5 / 10 / 20 / 40 zero moved -0.001, +0.041, -0.003, -0.039; probe 0.012, -0.041, -0.025, 0.026, 145 s. Run 2: zero moved -0.034, -0.001, +0.081, -0.004; probe 0.053, 0.054, -0.013, -0.010, 123 s. Both PASS and JSON parsed by the screen. +0.081 is close to the 0.1 limit: watch it |
+| Changed after the screen test (user): setup and Advanced both do one full home, then lift to Z 150 and home all the way down (`TOP_MARGIN` 15 below `position_max` 165). klipper-ui script and fork texts committed locally, **not pushed, not on the Pi, not run**. User stopped for the night: nothing more runs on the machine until they resume | ⏳ | |
+| 2026-11-24, single long home version on the S1 (klipper-ui cd3520f, fork afb3ff1b), Settings > Advanced, cold start | ❌ | Run 1: full home fine, then `G28 Z` from Z 150 **fired in mid-air 94.7 mm early** (about 58 mm above the bed), probe 0.000 at the same false height; check failed it correctly, 110 s. Run 2 started right after from that false zero: its lift to "Z 150" went about 95 mm higher for real; the user pressed STOP ("Shutdown due to webhooks request"), user: no damage. **Long descents still fire in mid-air with the heatsink tight** (all passing tests started at Z 43 or lower). A fixed height suggests the drag chain or cable flipping or snagging there: check whether it repeats at the same height |
+| Check changed (user): homes from Z 10, 40, then 150, each checked before the next lift | | klipper-ui 312d886, fork 262d4f79, on the Pi |
+| Stepped check on the S1 (run by Claude via `pi.sh` at the user's request; head lowered by hand, `FIRMWARE_RESTART`, ready, no errors), bed 20 °C | ❌ | Z 10 zero -0.040 / probe -0.010, Z 40 -0.038 / 0.017, **Z 150: "No trigger on stepper_z after full movement"** 157 s. **User: not a miss.** The first touch stopped in mid-air; the second touch (3 mm retract, a few mm of travel) ran out far above the bed, hence "No trigger". User: it stopped about 90 mm above the bed (the morning's mid-air stop was about 58 mm by steps): different heights, about 13 and 19 s into the descent, while 9 s descents (from Z 43) pass. Points to random vibration triggers on long travel, not one spot on the drag chain. So every failure is a mid-air trigger on a long descent, and B-24's "No trigger" print-start errors are likely the same: the double touch turns a mid-air first touch into an error. The steps worked: the check stopped safely. Short descents (Z 43 and below) pass |
+| Stepped check after a drag chain fix by the user (PZ still preset 1), Z lowered by hand, bed 21 °C | ❌ | Z 10 -0.003 / -0.043, Z 40 +0.039 / -0.042, **Z 150: mid-air, 102.2 mm early (about 51 mm above the bed)**, probe 0.000 at the false height, 156 s. Mid-air heights so far: about 58, 90 (by eye), 51 mm |
+| **D-143 deployed** (homing X45 Y185, `NOZZLE_CLEAN` park X133; backup `printer.cfg.pre-homing-spot`, klipper-ui 17cbead on the Pi, `FIRMWARE_RESTART` 08:47, ready, no errors, 14 SAVE_CONFIG lines kept), stepped check 3 times, bed 22 °C | ⚠️ 2 of 3 | Run 1 PASS: Z 10 +0.042 / -0.001, Z 40 +0.037 / -0.010, **Z 150 +0.000 / 0.001**, 197 s. Run 2 PASS: Z 10 -0.001 / -0.002, Z 40 +0.004 / -0.006, Z 150 -0.080 / -0.003, 157 s. Run 3 FAIL: Z 10 +0.000 / -0.005, Z 40 +0.002 / 0.038, **Z 150 "No trigger"** (mid-air first touch), 126 s. From Z 150 today: X133 0 of 3, X45 2 of 3 |
+| After a second small drag chain change by the user, X45, PZ preset 1, stepped check 3 times, bed 23 °C | ✅ 3 of 3 | Run 1: Z 10 +0.034 / 0.029, Z 40 **+0.100** (at the limit) / -0.051, Z 150 -0.014 / -0.021, 184 s. Run 2: +0.008 / -0.032, -0.042 / 0.033, -0.001 / 0.035, 150 s. Run 3: +0.001 / -0.016, -0.024 / 0.000, +0.001 / 0.015, 150 s. User: it worked all summer; the main change since is a rigid strain relief casing on the toolhead wire. Claude: most likely root cause (a rigid section pivots and stick-slips as the cable arc changes with Z, knocking the toolhead; fits random heights, long descents only, and every cable-path change helping). Proof test: casing off or loosened, homing back at X133, 3 runs |
+| **Touchscreen setup self-check** (fork `probe-check` cda5c79b with "back left" texts; devtools turned on for the run with the user's OK, then removed and KlipperScreen restarted) | ✅ | Tap: probe felt it. Nozzle reached 150 °C, bed warmed to 30 °C, part fan confirmed by the user. New homing notice text shown. Homing check: Z 10 +0.003 / -0.001, Z 40 -0.002 / 0.001, Z 150 -0.026 / 0.027, PASS 135 s. "Did the nozzle touch the bed the first time?" page shown; user saw it touch and tapped Yes; "Self-tests complete" with every row OK. Heaters and fan off afterwards |
+| Pre-merge review fixes (4 Important): the check runs in two parts with the first-touch question between them, so the lift near the top only follows a home the user saw reach the bed; the script sends nothing once a print has started; doc fixes and missing deploy rows. Offline: part flags pick 10/40, 150 and all three; part 2 refuses when Z isn't homed; no G-code is sent while printing; the fork runner passes the part flag | ✅ offline | Not run on the S1 yet |
+| **Two-part check on the S1 screen** (Pi on `dev`: klipper-ui c3c31d2 checked out without the installer, touchscreen b8510caa; devtools on for the run, then removed and KlipperScreen restarted), Settings > Advanced | ✅ | Part 1: Z 10 +0.000 / 0.000, Z 40 +0.001 / -0.001, PASS 113 s; the question dialog (Stop, No, Yes, it touched) fits and Z stayed low while it waited. User saw the first touch reach the bed and tapped Yes. Part 2: Z 150 -0.002 / 0.000, PASS 95 s; "Probe check passed". Nozzle heater off afterwards. Pi `printer.cfg` still has the D-NEW comments (comments only) and Klipper hasn't reloaded the "back left" macro text yet |
+| **Print start after D-143** (`Part Studio 1(3)_PLA_10m15s.gcode`, Overture PLA profile, profile check OK; user: plate clear, PLA loaded), started 09:37 through the `print-job` skill | ✅ | `PRINT_START` stages once each, no retries: bed 55 °C (09:37), nozzle (09:39), home with Z at X45 (09:40:13), nozzle clean with the re-home and park at X133 (09:40:29), cool to 150 °C (09:40:39), mesh (09:41:22), final heat (09:42:35), printing 09:43:07. No probe errors in klippy.log from the print's start. Mesh: left edge +1.40 to +1.65, right edge -0.25 to -0.33 (the known left-high tilt) |
+| Not exercised | | The setup self-check with the two parts; the setup check's No → failure page → Try again path on the screen; a print start since the cable work; homing with the bed at print temperature; the new cable without the rigid casing at X133 (B-24) |
+
+## Run 25: release check for v0.6.1 → next (D-137..D-143), 2026-11-24 (klipper-ui dev 6f416b3, fork dev b8510caa, S1)
+
+Run by Claude from the S1's state, history and logs plus today's tests; what wasn't exercised is named.
+
+| Check | Result | Notes |
+|---|---|---|
+| What goes out has a passing Run on the S1 | ✅ | First power-up setup (D-137): Runs 18 to 20. Queue page (D-139): Run 21. Z homing 5 mm/s (D-140): Run 23. Probe check, homing lifts, homing at X45 (D-141 to D-143): Run 24, incl. a print start. `install.sh` time zone rule (B-26 note): root-installed, reaches printers only when the user runs `install.sh` with sudo |
+| S5 macro and config diff main..dev | ✅ | Macros: one error text (back right → back left). printer.cfg: homing lifts F300, homing X45, `NOZZLE_CLEAN` park X133, Z `homing_speed` 5, comments. No limit, heater or endstop changes |
+| S8 secrets in the main..dev diff | ✅ | Only rule text about never committing them |
+| F1 Klipper | ✅ | ready, v0.13.0-501 |
+| F2 Moonraker | ✅ | v0.10.0-2, no warnings, no failed components |
+| F3 Mainsail from the PC | ✅ | Loads with live temperatures and the finished job |
+| F5 KlipperScreen | ✅ | active, no tracebacks in the last 300 log lines (on fork dev) |
+| F7, F8, F10 partly: home, start a print, mesh | ⚠️ | Run 24 print start: home, nozzle clean, mesh, then the 10 min print completed (Mainsail, F3). Not this cycle: F7 jog, preheat, cooldown, fan, load/unload; F8 upload, pause, resume, cancel by hand (18 prints were canceled since v0.6.1, per history) |
+| F12 under-voltage | ✅ | The only `dmesg` hit is the SD card driver's boot notice |
+| Prints since v0.6.1 (11-10) | ⚠️ | 46 jobs: 25 completed, 18 canceled, 3 shutdowns; 36.5 print hours. Shutdowns 11-15 (Dragon PETG) and 11-16 (Mainboard + Pi Case ×2): cause not recoverable, klippy logs only go back to 11-18. 11-20 and today: STOP (webhooks request) |
+| Update Manager | ✅ | All valid, clean, no warnings. It still lists the branches from before today's checkouts (KlipperScreen queue-scroll, klipper-ui main) until its next refresh |
+| Not exercised this cycle | | S1/S2/S3/S4/S6/S7 by hand (no UI safety code changed since v0.6.1 except the setup pages, whose STOP rail shows in Run 19); F4 Mainsail mobile; F9 live tuning; F11 rollback |

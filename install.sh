@@ -22,7 +22,8 @@
 #      update entries of add-ons the printer doesn't use (timelapse, print_area_bed_mesh, and the
 #      webcam streamer and Wi-Fi keepalive when they're switched off)
 #   4. Switches ~/KlipperScreen to the StarStack fork (re-clones if the git folder is damaged),
-#      installs the Public Sans font and selects the starstack theme
+#      installs the Public Sans font and selects the starstack theme; sudo: a polkit rule so the
+#      touchscreen's first power-up setup can set the time zone (nothing else)
 #   5. Applies Mainsail UI settings + macro groups + dashboard panel order (Moonraker database)
 #   6. USB stick import: plugging in a stick copies new G-code files into the print jobs folder
 #      (udev rule + service, asks for your password once via sudo; skip with --no-usb)
@@ -369,6 +370,63 @@ fastboot_remove() {
   do_ "sudo systemctl daemon-reload"
 }
 
+# ---- 4b. Time zone from the touchscreen (first power-up setup, D-137)
+TZ_DIR=/etc/polkit-1/rules.d
+TZ_RULE=$TZ_DIR/50-starstack-timezone.rules
+
+tz_install() {  # polkit: the printer user may set the time zone (only that), no password
+  local tmp have
+  if [ ! -d "$TZ_DIR" ]; then
+    echo "   no polkit rules folder: the touchscreen can't set the time zone"; return
+  fi
+  tmp=$(mktemp)
+  cat > "$tmp" <<RULE
+// StarStack klipper-ui install.sh: the touchscreen's setup sets the time zone without a password
+polkit.addRule(function(action, subject) {
+    if (action.id == "org.freedesktop.timedate1.set-timezone" && subject.user == "$(id -un)") {
+        return polkit.Result.YES;
+    }
+});
+RULE
+  have=$(tz_rule_state "$tmp")
+  if [ "$have" = same ]; then
+    echo "   ok: touchscreen can set the time zone"
+  elif [ "$have" = unknown ]; then
+    # the rules folder is root-only and sudo needs a password nobody can type here (pi.sh, --dry-run)
+    echo "   time zone rule not checked (needs sudo): run install.sh yourself to add it"
+  elif [ "$DRY" != 1 ] && [ ! -t 0 ] && ! sudo -n true 2>/dev/null; then
+    # no terminal to type the password (pi.sh): a plain sudo would fail and set -e stop the install
+    echo "   time zone rule not added (sudo needs a password): run install.sh yourself to add it"
+  else
+    echo "   adding the time zone rule (sudo may ask for your password)"
+    do_ "sudo install -o root -g root -m 644 '$tmp' '$TZ_RULE'"
+    echo "   touchscreen can set the time zone (polkit rule)"
+  fi
+  rm -f "$tmp"
+}
+
+# same | differs (missing or changed) | unknown. Never prompts: plain read when the folder is
+# readable, else sudo -n; --dry-run never uses sudo.
+tz_rule_state() {
+  if [ -r "$TZ_DIR" ] && [ -x "$TZ_DIR" ]; then
+    cmp -s "$1" "$TZ_RULE" && echo same || echo differs
+  elif [ "$DRY" != 1 ] && sudo -n true 2>/dev/null; then
+    sudo -n cmp -s "$1" "$TZ_RULE" && echo same || echo differs
+  else
+    echo unknown
+  fi
+}
+
+tz_remove() {  # same rule as tz_rule_state: never prompts for a password
+  if [ -r "$TZ_DIR" ] && [ -x "$TZ_DIR" ]; then
+    [ -e "$TZ_RULE" ] && do_ "sudo rm -f '$TZ_RULE'" && echo "   time zone rule removed" || true
+  elif [ "$DRY" != 1 ] && sudo -n true 2>/dev/null; then
+    sudo -n test -e "$TZ_RULE" && do_ "sudo rm -f '$TZ_RULE'" && echo "   time zone rule removed" || true
+  else
+    echo "   time zone rule not checked (needs sudo): remove $TZ_RULE yourself if it's there"
+  fi
+}
+
 # ---- 9. Update helper (D-087)
 UPD_LIB=/usr/local/lib/starstack/starstack-update.py
 UPD_UNIT=/etc/systemd/system/starstack-update.service
@@ -453,6 +511,7 @@ if [ "$MODE" = uninstall ]; then
   [ -L "$CFG/starstack-updates.conf" ] && do_ "rm '$CFG/starstack-updates.conf'"
   held_remove
   helper_remove
+  tz_remove
   if [ -d "$KS_DIR" ]; then
     do_ "git -C '$KS_DIR' remote set-url origin '$KS_UP' && git -C '$KS_DIR' fetch -q origin && git -C '$KS_DIR' checkout -q -f -B master origin/master"
   fi
@@ -475,6 +534,7 @@ say "3/10 Moonraker update manager"
 moonraker_sections
 say "4/10 KlipperScreen -> StarStack fork"
 klipperscreen_fork
+tz_install
 say "5/10 Mainsail settings + macro groups + panel order"
 if [ "$DRY" = 1 ]; then echo "   (dry-run) apply mainsail-theme/settings.json + macrogroups.json + dashboard.json"; else python3 "$REPO/tools/apply_mainsail.py" | sed 's/^/   /'; fi
 say "6/10 USB stick import"

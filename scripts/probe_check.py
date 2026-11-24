@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Z homing check for the S1 (D-NEW probe check, B-24).
+"""Z homing check for the S1 (D-141, B-24).
 Runs ON THE PI: scripts/pi.sh 'python3 -' < scripts/probe_check.py
 Self-test of the pass/fail logic (any PC): python scripts/probe_check.py --selftest
 Touchscreen (KlipperScreen fork, ss_probe_check): --json, no prompt, last line is
@@ -9,11 +9,10 @@ Nozzle at a steady clean_temp (_PROBE_HOT), a full home, then at the homing poin
 from Z 10, 40 and TOP_MARGIN below position_max (user: long descents caused misses and mid-air
 triggers, D-134, D-140). Each home must travel as far down as the motor steps say the head went up,
 so its zero lands within LIMIT_MM of the one before: a mid-air trigger stops short. The steps keep
-the lifts safe: each one starts from a home already checked (Run NEW probe check: a single lift
-to Z 150 after a false home drove the head into the top). (Run NEW
-probe check: every home and probe fired in the air, the probe agreed with the home, and the head
-climbed into the top.) After the home a PROBE at 5 mm/s must also read Z 0 within LIMIT_MM. Stops at the first failure and shows
-the user a prompt on the touchscreen and Mainsail. Uses the configured homing_speed; never runs
+the lifts safe: each one starts from a home already checked (Run 24: lifts from false, mid-air
+zeros drove the head into the top, and a probe agrees with a home that fired at the same height).
+After each home a PROBE at 5 mm/s must also read Z 0 within LIMIT_MM. Stops at the first failure
+and shows the user a prompt on the touchscreen and Mainsail. Uses the configured homing_speed; never runs
 while printing. The first home is the baseline: only a person can see that it touched the bed."""
 import json, re, sys, time, urllib.error, urllib.parse, urllib.request
 
@@ -61,7 +60,7 @@ def selftest():
     assert "above the bed" in judge([(10, 0.4, 0.0, None)])[1]
     assert "late" in judge([(10, -1.1, 0.0, None)])[1]  # Run 23: one read -1.11
     assert not judge([(40, 0.0, None, "No trigger on stepper_z after full movement")])[0]
-    # Run NEW probe check: home and probe both fired in the air, so the probe alone read 0.018
+    # Run 24: home and probe both fired in the air, so the probe alone read 0.018
     assert "mid-air" in judge([(20, 0.018, 21.5, None)])[1]
     # override lifts 3 then homes, ends at Z 3: from Z 5 that is 2 mm down
     assert shift_mm((5.0, 10000), (3.0, 10000 + 3200), 1600, -1) == 0.0  # 2 mm of steps: on the bed

@@ -5,18 +5,21 @@ Self-test of the pass/fail logic (any PC): python scripts/probe_check.py --selft
 Touchscreen (KlipperScreen fork, ss_probe_check): --json, no prompt, last line is
 {"ok": bool, "reason": str} and the screen shows its own page and fix steps (same wording).
 
-Nozzle at a steady clean_temp (_PROBE_HOT), then at the homing point X133 Y185 it homes Z from
-higher and higher starts (resonance and long descents caused misses and mid-air triggers, D-134,
-D-140). Each home must travel as far down as the motor steps say the head went up, so its zero lands
-within LIMIT_MM of the last one: a mid-air trigger stops short. (Run NEW probe check: every home and
-probe fired in the air, the probe agreed with the home, and the head climbed into the top.) After
-each home a PROBE at 5 mm/s must also read Z 0 within LIMIT_MM. Stops at the first failure and shows
+Nozzle at a steady clean_temp (_PROBE_HOT), a full home, then at the homing point X133 Y185 Z lifts
+to TOP_MARGIN below position_max and homes all the way down (user: long descents caused misses and
+mid-air triggers, D-134, D-140). That home must travel as far down as the motor steps say the head
+went up, so its zero lands within LIMIT_MM of the first one: a mid-air trigger stops short. (Run NEW
+probe check: every home and probe fired in the air, the probe agreed with the home, and the head
+climbed into the top.) After the home a PROBE at 5 mm/s must also read Z 0 within LIMIT_MM. Stops at the first failure and shows
 the user a prompt on the touchscreen and Mainsail. Uses the configured homing_speed; never runs
 while printing. The first home is the baseline: only a person can see that it touched the bed."""
 import json, re, sys, time, urllib.error, urllib.parse, urllib.request
 
 API = "http://localhost:7125"
-HEIGHTS = [5, 10, 20, 40]  # mm above the last home; the homing override adds 3. Real Z travel unmeasured
+# The lift happens before anything can check the first home: if that one fired in mid-air, the head
+# sits higher than Klipper thinks. 15 mm below position_max (165 → Z 150, + the override's 3 mm lift)
+# leaves 12 mm for that before the top.
+TOP_MARGIN = 15
 LIMIT_MM = 0.1  # Run 23: good homes at 5 mm/s 0.000 to 0.025 apart; bad ones 0.3 to 1.1 or a miss
 LIFT = "F300"  # D-109: Z moves up at 5 mm/s, faster hits the frame resonance
 
@@ -134,7 +137,7 @@ def main():
     if err:
         results.append((0, 0.0, 0.0, "first home: " + err))
     try:
-        check_heights(results, spm, err)
+        check_heights(results, spm, err, [int(cfg["position_max"]) - TOP_MARGIN])
     except Exception as e:  # GET_POSITION or the store failed: a failed check, still cleaned up
         results.append((0, 0.0, 0.0, "stopped: %s" % e))
     ok, reason = judge(results)
@@ -152,8 +155,8 @@ def main():
     sys.exit(0 if ok else 1)
 
 
-def check_heights(results, spm, err):
-    for h in HEIGHTS if not err else []:
+def check_heights(results, spm, err, heights):
+    for h in heights if not err else []:
         p0 = pos()
         err = gcode("G0 Z%d %s" % (h, LIFT))
         p1 = pos()

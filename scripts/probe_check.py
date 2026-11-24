@@ -5,7 +5,7 @@ Self-test of the pass/fail logic (any PC): python scripts/probe_check.py --selft
 Touchscreen (KlipperScreen fork, ss_probe_check): --json, no prompt, last line is
 {"ok": bool, "reason": str} and the screen shows its own page and fix steps (same wording).
 
-Nozzle at a steady clean_temp (_PROBE_HOT), a full home, then at the homing point X133 Y185 Z homes
+Nozzle at a steady clean_temp (_PROBE_HOT), a full home, then at the homing point X45 Y185 Z homes
 from Z 10, 40 and TOP_MARGIN below position_max (user: long descents caused misses and mid-air
 triggers, D-134, D-140). Each home must travel as far down as the motor steps say the head went up,
 so its zero lands within LIMIT_MM of the one before: a mid-air trigger stops short. The steps keep
@@ -28,7 +28,7 @@ FAIL_TEXT = [
     "1. Turn the printer off and unplug it.",
     "2. Check the heatsink and nozzle screws are tight and no plastic is on the nozzle.",
     "3. Check the toolhead cable has slack with the head at the front left and Z down.",
-    "4. Check nothing is stuck to the bed at the back right.",
+    "4. Check nothing is stuck to the bed at the back left.",
     "5. Plug it in, turn it on and run the self-check again.",
 ]
 
@@ -133,7 +133,7 @@ def main():
     cfg = status("configfile", "settings")["stepper_z"]
     spm = cfg["microsteps"] * cfg.get("full_steps_per_rotation", 200) / cfg["rotation_distance"]
     t0 = time.time()
-    results, err = [], gcode("_PROBE_HOT\nG28\nG90\nG0 X133 Y185 F6000")
+    results, err = [], gcode("_PROBE_HOT\nG28\nG90\nG0 X45 Y185 F6000")
     if err:
         results.append((0, 0.0, 0.0, "first home: " + err))
     try:

@@ -350,7 +350,7 @@ Run by Claude through Moonraker (same `G28` / `BED_MESH_CALIBRATE` the touchscre
 | Real print `Mesh test squares PLA` (Overture PLA, five 30 mm squares at the corners and middle, 2 layers), 2026-11-09 22:29 | ✅ | Every `PRINT_START` stage ran (bed, nozzle 185, home, clean, cool 150, mesh 74 s, final 205); completed in 14 min; 0 probe retries. **User: all five squares even** (corners and middle), so the 5 mm/s mesh gives an even first layer |
 | Next print `Main Body(2)_PLA_7h11m` 22:45 | ❌ | `PRINT_START` Z homing: "No trigger on stepper_z after full movement" 3 times (nozzle hot, homing at `homing_speed` 20 mm/s), canceled by the D-105 retries after 2 min (B-24). Restarted 23:21: homed, mesh 0 retries, printing. Its mesh (Y10/Y90/Y170 rows): -0.222 0.191 0.419 / -0.416 0.190 0.518 / -0.506 0.236 0.587, same X10→X170 rise as the D-134 meshes (0.64 / 0.93 / 1.09 vs 0.66 / 0.93 / 1.02) |
 | Since the D-134 restart (21:26) | ✅ / ❌ | 0 mesh retries in every mesh; 3 "No trigger" lines, all from the 22:45 homing |
-| Not exercised | | `PROBE_CALIBRATE` |
+| Not exercised (Run 23) | | `PROBE_CALIBRATE` |
 
 ## Run 18: first power-up setup on the S1 (D-137), 2026-11-10 (fork first-power-up 3f9ed6fe, S1)
 
@@ -455,4 +455,6 @@ The user found the heatsink loose after more homing problems and tightened it. R
 | **Step check bug** | ❌ → fixed | `GET_POSITION` read stepper_z 117 at Z 10, Z 5 and Z 3: Moonraker returns once a move is queued, so the step count lagged. Every step result before this row (the 2 mm and 4 mm shifts, test A, test F's first run) is void, and so is the earlier "instant stop" reading (same 4 mm, two lifts in a row look like a stop). Fix: `M400` before `GET_POSITION`. Recheck: plain move Z5→Z3 shift 0.0, across a `PROBE` 0.0 |
 | Probe check with the fixed step check, F on, bed 28 °C, home 1 watched | ✅ | Z 5 +0.037 / -0.000, Z 10 +0.039 / -0.050, Z 20 -0.003 / -0.047, Z 40 -0.034 / -0.014 (zero moved / probe), 141 s. Not yet known whether F or the tightened heatsink made the difference: a control run without F is next |
 | Control: original 20 mm/s homing lifts restored from `printer.cfg.pre-probe-lift` (test F saved as `printer.cfg.test-f`), restart ready, probe check, bed 23 °C | ✅ | Z 5 +0.073 / -0.023, Z 10 +0.003 / -0.001, Z 20 -0.003 / 0.003, Z 40 -0.001 / -0.010, 142 s. Passes without F, so the tightened heatsink fixed homing; F not shown to matter. Pi left on the original config (matches the repo). User: home 1 touched the bed |
+| **D-NEW homing lift deployed** (repo config, both homing lifts F300), probe check, bed 23 °C | ✅ | Z 5 +0.001 / 0.002, Z 10 -0.032 / 0.020, Z 20 +0.032 / -0.002, Z 40 -0.033 / 0.007, 139 s. Home 1 not watched this time (watched twice before on the same setup) |
 | `--selftest` after the step check: mid-air home (shift +21.5 with probe 0.018) fails, 2 mm of steps for a 2 mm drop passes; `GET_POSITION` reply on the S1 parses (mcu stepper_z, toolhead Z) | ✅ | Read-only on the S1, no motion |
+| Not exercised | | A print start since the heatsink fix; homing with the bed at print temperature; the touchscreen self-check (not wired yet) |

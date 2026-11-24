@@ -484,8 +484,8 @@ Run by Claude from the S1's state, history and logs plus today's tests; what was
 | F2 Moonraker | ✅ | v0.10.0-2, no warnings, no failed components |
 | F3 Mainsail from the PC | ✅ | Loads with live temperatures and the finished job |
 | F5 KlipperScreen | ✅ | active, no tracebacks in the last 300 log lines (on fork dev) |
-| F7, F8, F10 home, print, mesh | ✅ | Run 24 print start: home, nozzle clean, mesh, 10 min print complete |
+| F7, F8, F10 partly: home, start a print, mesh | ⚠️ | Run 24 print start: home, nozzle clean, mesh, then the 10 min print completed (Mainsail, F3). Not this cycle: F7 jog, preheat, cooldown, fan, load/unload; F8 upload, pause, resume, cancel by hand (18 prints were canceled since v0.6.1, per history) |
 | F12 under-voltage | ✅ | The only `dmesg` hit is the SD card driver's boot notice |
 | Prints since v0.6.1 (11-10) | ⚠️ | 46 jobs: 25 completed, 18 canceled, 3 shutdowns; 36.5 print hours. Shutdowns 11-15 (Dragon PETG) and 11-16 (Mainboard + Pi Case ×2): cause not recoverable, klippy logs only go back to 11-18. 11-20 and today: STOP (webhooks request) |
 | Update Manager | ✅ | All valid, clean, no warnings. It still lists the branches from before today's checkouts (KlipperScreen queue-scroll, klipper-ui main) until its next refresh |
-| Not exercised this cycle | | S1/S2/S3/S4/S6/S7 by hand (no UI safety code changed since v0.6.1 except the setup pages, whose STOP rail shows in Run 24's screenshots); F4 Mainsail mobile; F8 pause/resume; F9 live tuning; F11 rollback |
+| Not exercised this cycle | | S1/S2/S3/S4/S6/S7 by hand (no UI safety code changed since v0.6.1 except the setup pages, whose STOP rail shows in Run 19); F4 Mainsail mobile; F9 live tuning; F11 rollback |

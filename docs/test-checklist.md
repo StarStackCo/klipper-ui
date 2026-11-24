@@ -350,7 +350,7 @@ Run by Claude through Moonraker (same `G28` / `BED_MESH_CALIBRATE` the touchscre
 | Real print `Mesh test squares PLA` (Overture PLA, five 30 mm squares at the corners and middle, 2 layers), 2026-11-09 22:29 | ✅ | Every `PRINT_START` stage ran (bed, nozzle 185, home, clean, cool 150, mesh 74 s, final 205); completed in 14 min; 0 probe retries. **User: all five squares even** (corners and middle), so the 5 mm/s mesh gives an even first layer |
 | Next print `Main Body(2)_PLA_7h11m` 22:45 | ❌ | `PRINT_START` Z homing: "No trigger on stepper_z after full movement" 3 times (nozzle hot, homing at `homing_speed` 20 mm/s), canceled by the D-105 retries after 2 min (B-24). Restarted 23:21: homed, mesh 0 retries, printing. Its mesh (Y10/Y90/Y170 rows): -0.222 0.191 0.419 / -0.416 0.190 0.518 / -0.506 0.236 0.587, same X10→X170 rise as the D-134 meshes (0.64 / 0.93 / 1.09 vs 0.66 / 0.93 / 1.02) |
 | Since the D-134 restart (21:26) | ✅ / ❌ | 0 mesh retries in every mesh; 3 "No trigger" lines, all from the 22:45 homing |
-| Not exercised (Run 23) | | `PROBE_CALIBRATE` |
+| Not exercised | | `PROBE_CALIBRATE` |
 
 ## Run 18: first power-up setup on the S1 (D-137), 2026-11-10 (fork first-power-up 3f9ed6fe, S1)
 

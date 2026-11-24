@@ -85,7 +85,8 @@ def gcode(script):
 def pos():
     """(toolhead Z, stepper_z step count) from GET_POSITION's reply in Moonraker's G-code store."""
     t = time.time() - 0.5
-    if gcode("GET_POSITION"):
+    # M400 first: Moonraker returns once a move is queued, and the step count lags until it runs
+    if gcode("M400\nGET_POSITION"):
         raise RuntimeError("GET_POSITION failed")
     text = "\n".join(m["message"] for m in get("/server/gcode_store?count=30")["gcode_store"]
                      if m["time"] >= t)

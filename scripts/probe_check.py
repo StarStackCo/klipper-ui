@@ -2,6 +2,8 @@
 """Z homing check for the S1 (D-NEW probe check, B-24).
 Runs ON THE PI: scripts/pi.sh 'python3 -' < scripts/probe_check.py
 Self-test of the pass/fail logic (any PC): python scripts/probe_check.py --selftest
+Touchscreen (KlipperScreen fork, ss_probe_check): --json, no prompt, last line is
+{"ok": bool, "reason": str, "fix": [str]} and the screen shows its own page.
 
 Nozzle at a steady clean_temp (_PROBE_HOT), then at the homing point X133 Y185 it homes Z from
 higher and higher starts (resonance and long descents caused misses and mid-air triggers, D-134,
@@ -111,7 +113,10 @@ def prompt_fail(reason):
 def main():
     state = status("print_stats", "state")
     if state in ("printing", "paused"):
-        sys.exit("Printer is %s: run the probe check when it is idle." % state)
+        reason = "Printer is %s: run the probe check when it is idle." % state
+        if "--json" in sys.argv:
+            print(json.dumps({"ok": False, "reason": reason, "fix": []}), flush=True)
+        sys.exit(reason)
     bed = get("/printer/objects/query?heater_bed")["status"]["heater_bed"]
     print("Bed %.0f °C, target %.0f (a heating bed caused a miss in Run 23)" % (
         bed["temperature"], bed["target"]), flush=True)
@@ -140,12 +145,14 @@ def main():
         gcode("G0 Z10 %s" % LIFT)
     gcode("M104 S0")
     print("%s in %d s: %s" % ("PASS" if ok else "FAIL", time.time() - t0, reason), flush=True)
-    if ok:
+    if "--json" in sys.argv:
+        print(json.dumps({"ok": ok, "reason": reason, "fix": [] if ok else FAIL_TEXT}), flush=True)
+    elif ok:
         print("Only a pass if you saw the nozzle touch the bed on the first home.", flush=True)
         gcode('RESPOND MSG="Probe check passed: %s"' % reason)
     else:
         prompt_fail(reason)
-        sys.exit(1)
+    sys.exit(0 if ok else 1)
 
 
 if __name__ == "__main__":

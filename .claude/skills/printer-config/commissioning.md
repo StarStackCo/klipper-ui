@@ -6,6 +6,10 @@ unit, a replaced board, or rewiring. Each stage needs the user's OK before the n
 1. **Config review before power.** Pins, thermistor types, heater pins, steppers, probe and homing checked
    against the hardware and the board's docs. `min_temp` 0 on nozzle and bed, so an unplugged sensor stops
    the printer (D-081). Macro safety review updated.
+   **Wiring, power off:** the hat-to-toolhead cable sits the same way round as on a working unit (the new
+   S1's was backwards at the hat: no 5V at the PZ board, both sensors read open, fans on the wrong lines),
+   and every fan plug has red on the same pin as a working fan (the production fans come with red and black
+   swapped; swap the pins in the housing). Wrong polarity: the fan just stays still (Run NEW part 3).
 2. **Board firmware matches the host's Klipper.** On a unit installed with `install.sh --printer=s1` the
    update helper does it by itself once Klipper has seen the board, even when Klipper then shuts down on an
    unplugged sensor, or when the board waits in Katapult (D-NEW first boot). By hand: build with the
@@ -15,7 +19,9 @@ unit, a replaced board, or rewiring. Each stage needs the user's OK before the n
    `2e8a:0003`) needs Katapult put on once through its BOOT button: steps not written yet (B-NEW katapult setup).
 3. **Klipper connects, no errors.** Unplugged sensors must stop it with "ADC out of range".
 4. **Heaters at low targets.** Bed and hotend to about 40 to 60 °C; watch that they reach and hold the
-   target with no heater check errors. Fans spin.
+   target with no heater check errors. Heatsink fan runs while the nozzle has a target. Part fans: each
+   at 40%, 50%, 70% and 100%, steady and quiet (the production fans need the 25 kHz `[fan]` settings in
+   `config/s1/printer.cfg` and stop below 40%, D-NEW part fan rate).
 5. **Motors.** `STEPPER_BUZZ` for the right axis and direction (needs `[force_move]`, off again
    afterwards). Then sensorless homing of X and Y one axis at a time, ready to press STOP.
 6. **Probe and Z.** Probe reads open at rest and triggers on touch; Z homing; extrusion by hand.

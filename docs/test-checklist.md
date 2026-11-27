@@ -517,3 +517,15 @@ Second printer, the production standard (D-NEW new standard). Toolhead board not
 | Helper `--flash` with Klipper shut down | ✅ | Built, flashed through Katapult (162 pages verified), "Board firmware updated to v0.13.0-501", result "flashed"; Klipper back in shutdown (sensor still unplugged) |
 | Time from flash to done | ⚠️ → fixed | 2 min wait for ready that can't come; now stops at ready or shutdown (not yet on the S1) |
 
+### Run NEW new S1 bring-up, part 3: toolhead wiring, fans, nozzle heater (D-NEW part fan rate), 2026-11-27 (new S1)
+
+| Check | Result | Notes |
+|---|---|---|
+| Toolhead connected, Klipper starts | ❌ → ✅ | Shut down: nozzle -94 °C and bed -109 °C (both open), PZ 5V LED off, a part fan running on the hotend fan line (shutdown runs gpio16 at 100%). With the toolhead unplugged the bed read 23 °C. Cause: the hat-to-toolhead cable was backwards at the hat (user). Fixed: ready, nozzle 23.3 °C, bed 23.6 °C, PZ LED on, `QUERY_PROBE` open |
+| Part fans | ❌ → ✅ | Fan 1 screamed and stopped; scratched turned by hand (bearing). Fan 2 (new model) the same at 50%. Fan 3 pinched wire. Fan 4 still with reversed red/black: did not spin; rewired: spun 1 s at 50% and stalled with a whine, steady at 100% on both connectors. The new model needs 25 kHz (D-NEW part fan rate): 20 Hz and 500 Hz none steady at 30/50/70%; 25 kHz all run, 30% clicks, 35% clean; floor 40% |
+| Fan plug wire order | ⚠️ | Production part and heatsink fans come with red and black swapped against the working fan; user re-pinned them. Commissioning step added |
+| Heatsink fan (new model, re-pinned) | ✅ | 100% as soon as the nozzle has a target; user: only the heatsink fan ran |
+| Nozzle heater | ✅ | 24 → 55 °C in about 12 s, peak 57.4 °C, held about 56 °C (prototype PID; PID tune later) |
+| Fan config deployed | ✅ | Live: `cycle_time` 4e-05, `hardware_pwm` True, `off_below` 0.4; 50% runs, 35% request gives speed 0 |
+| Not done yet | | Fan 2 at 100% (probably fine), bed heater, `STEPPER_BUZZ` X and E, X homing on DIAG gpio13, measuring, PETG fan minimums, hostname |
+

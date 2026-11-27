@@ -506,3 +506,14 @@ Second printer, the production standard (D-NEW new standard). Toolhead board not
 | Unplugged nozzle sensor stops the printer | ✅ | Reads -14.3 °C, Klipper shuts down: `MCU 'mcu' shutdown: ADC out of range`. Bed sensor 22.6 °C |
 | `deploy-cfg.sh` reports the real state | ❌ → ✅ | It said "ready" before the range check fired a few seconds later; now looks again after 6 s and reported `shutdown` on a second deploy |
 | Not done yet | | Toolhead board, heaters, motors (`STEPPER_BUZZ` for X and E directions), X homing on DIAG gpio13, measuring the bed, brush, Z top; hostname |
+
+### Run NEW new S1 bring-up, part 2: port path and first-boot flash (D-NEW port path, D-NEW first boot), 2026-11-26 (klipper-ui 51ead41, new S1)
+
+| Check | Result | Notes |
+|---|---|---|
+| New helper installed by `install.sh` (user, sudo) | ✅ | Installed copy matches the repo; service active |
+| Board found by the USB port path | ✅ | `serial: /dev/serial/by-path/platform-5310400.usb-usb-0:1:1.0`; Klipper connects, then shuts down on ADC out of range (nozzle sensor unplugged) |
+| Helper `--check` with Klipper shut down | ✅ | "board firmware matches (v0.13.0-501-gc9d904aa9)" |
+| Helper `--flash` with Klipper shut down | ✅ | Built, flashed through Katapult (162 pages verified), "Board firmware updated to v0.13.0-501", result "flashed"; Klipper back in shutdown (sensor still unplugged) |
+| Time from flash to done | ⚠️ → fixed | 2 min wait for ready that can't come; now stops at ready or shutdown (not yet on the S1) |
+

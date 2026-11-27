@@ -322,3 +322,9 @@ def test_matching_board_with_klipper_shut_down_is_left_alone(h, board):
     board.update(state="shutdown", msg="ADC out of range", mcu="v0.13.0-501")
     assert h.board_check({}).startswith("board firmware matches")
     assert board["flashes"] == 0
+
+
+def test_wait_klipper_stops_at_shutdown_after_a_flash(h, monkeypatch):
+    seen = iter(["startup", "startup", "shutdown"])
+    monkeypatch.setattr(h, "api", lambda *a, **k: {"state": next(seen)})
+    assert h.wait_klipper(("ready", "shutdown"), 120)

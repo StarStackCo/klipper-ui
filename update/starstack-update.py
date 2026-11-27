@@ -289,10 +289,12 @@ def run(cmd, timeout):
 
 
 def wait_klipper(target, seconds=90):
+    """Wait until Klipper's state is target (one state, or a tuple of states)."""
+    targets = (target,) if isinstance(target, str) else target
     for _ in range(seconds // 3):
         time.sleep(3)
         info = api("/printer/info") or {}
-        if info.get("state") == target:
+        if info.get("state") in targets:
             return True
     return False
 
@@ -330,7 +332,7 @@ def flash(build_cfg, host):
             return NO_KATAPULT
         return "flashing didn't finish (the board's Katapult bootloader is still there: it can be retried)"
     # ready, or shut down by something else (an unplugged sensor) with the board answering
-    if not (wait_klipper("ready", 120) or (api("/printer/info") or {}).get("state") == "shutdown"):
+    if not wait_klipper(("ready", "shutdown"), 120):
         return NO_KATAPULT if in_rom_boot() else "Klipper didn't come back after flashing"
     return None
 

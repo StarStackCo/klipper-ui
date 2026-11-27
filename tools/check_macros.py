@@ -2,7 +2,7 @@
 """CI check for macros/*.cfg: parses like Klipper and compiles every gcode template with Klipper's
 Jinja settings ('{' '}' expressions, '{% %}' blocks), checks variable_* values are valid literals,
 and enforces the safety rules from docs/macro-safety-review.md (no limit/protection overrides).
-Macro names in macros/*.cfg and config/*/printer.cfg must be names Klipper can call: a name like
+Macro names in macros/*.cfg, config/*/printer.cfg and config/*.cfg (shared S1 settings) must be names Klipper can call: a name like
 _S1_PAUSE (letters, then a digit, not plain G-code like M600) is read as command "_S1" (D-089)."""
 import ast
 import configparser
@@ -34,7 +34,7 @@ def check_name(name, sec):
         errors.append(f"{name} [{sec}]: Klipper reads this name as command \"{cut}\": rename it")
 
 
-for path in sorted(glob.glob(os.path.join(ROOT, "config", "*", "printer.cfg"))):
+for path in sorted(glob.glob(os.path.join(ROOT, "config", "*", "printer.cfg")) + glob.glob(os.path.join(ROOT, "config", "*.cfg"))):
     name = os.path.relpath(path, ROOT)
     cp = configparser.RawConfigParser(strict=False, inline_comment_prefixes=(";", "#"))
     with open(path, encoding="utf-8") as f:

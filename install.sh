@@ -462,7 +462,7 @@ helper_install() {
   if [ -s "$UPD_PRINTER" ]; then
     echo "   board firmware: kept at the host's Klipper version ($(cat "$UPD_PRINTER"))"
   else
-    echo "   board firmware: not managed (add --printer=s1 on a StarStack S1)"
+    echo "   board firmware: not managed (add --printer=s1 on a StarStack S1, --printer=s1-proto on the prototype)"
   fi
   [ $changed = 1 ] && do_ "sudo systemctl restart starstack-update.service" || true
   held_install
@@ -503,6 +503,7 @@ helper_remove() {
 if [ "$MODE" = uninstall ]; then
   say "Uninstall StarStack UI"
   unlink_restore starstack_macros.cfg
+  unlink_restore starstack_s1_common.cfg
   unlink_restore .theme
   for f in moonraker.conf KlipperScreen.conf; do
     [ -e "$CFG/$f.pre-starstack" ] && do_ "cp '$CFG/$f.pre-starstack' '$CFG/$f'" && echo "   restored $f"
@@ -527,6 +528,7 @@ fi
 say "1/10 Link StarStack macros + Mainsail theme"
 link macros/starstack_macros.cfg starstack_macros.cfg
 link mainsail-theme/.theme .theme
+link config/s1_common.cfg starstack_s1_common.cfg  # shared S1 settings, included by S1 printer.cfg files (D-NEW shared config)
 link update/versions.conf starstack-updates.conf  # before step 3 includes it in moonraker.conf
 say "2/10 Check printer.cfg"
 printer_cfg_check

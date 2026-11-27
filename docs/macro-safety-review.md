@@ -43,9 +43,9 @@
 - ✅ `max_extrude_only_distance` 500 in the S1 config.
 - TPU load speed (120 mm/min): not tried with TPU yet.
 
-## S1 printer.cfg macros (`config/s1/printer.cfg`, D-081)
+## S1 printer macros (`config/s1_common.cfg`, D-081, D-NEW shared config)
 
-Since D-NEW new standard, `config/s1/` is the production standard and the prototype keeps the same macros in `config/s1-proto/printer.cfg`. Coordinates below are the prototype's; on the standard they are marked `NEW-S1` until measured, and `NOZZLE_CLEAN` must not run before its brush values are.
+Since D-NEW shared config these macros live once in `config/s1_common.cfg`, shared by every S1; each printer's `printer.cfg` (`config/s1/` standard, `config/s1-proto/` prototype) sets only its coordinates: `NOZZLE_CLEAN` brush and park, `_CLIENT_VARIABLE` park, and the new `_HOME_SPOT` (Z homing spot and the box inside which Z homes in place, read by `[homing_override]`; values only, no commands). Coordinates below are the prototype's; on the standard they are marked `NEW-S1` until measured, and `NOZZLE_CLEAN` must not run before its brush values are. The split was checked against v1.6: all 185 options equal except the homing rewrite, and `[homing_override]` renders the same G-code in 700 states.
 
 These live in the printer config, not in the StarStack macros, because they are specific to the S1's hardware.
 `NOZZLE_CLEAN` may wait for heat (`M109`) when run by hand; `PRINT_START` calls it with `WAIT=0` and waits without blocking.

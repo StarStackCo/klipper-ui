@@ -9,7 +9,7 @@ top, run only after the user said the first touch reached the bed (D-141 review:
 home fired in mid-air and the next ones fired at the same height, the top lift would hit the top).
 With neither, both run back to back: only with someone watching the first touch, hand near STOP.
 
-Nozzle at a steady clean_temp (_PROBE_HOT), a full home, then at the homing point X45 Y185 Z homes
+Nozzle at a steady clean_temp (_PROBE_HOT), a full home, then at the homing spot (_HOME_SPOT; X45 Y185 on the prototype) Z homes
 from Z 10, 40 and TOP_MARGIN below position_max (user: long descents caused misses and mid-air
 triggers, D-134, D-140). Each home must travel as far down as the motor steps say the head went up,
 so its zero lands within LIMIT_MM of the one before: a mid-air trigger stops short. The steps keep
@@ -149,7 +149,10 @@ def main():
     if part == "2" and "z" not in status("toolhead", "homed_axes"):
         err = "Z isn't homed: run part 1 first"
     else:  # part 2 keeps part 1's zero: no full home, only back to the homing spot
-        err = gcode("_PROBE_HOT\n" + ("" if part == "2" else "G28\n") + "G90\nG0 X45 Y185 F6000")
+        # this printer's homing spot (printer.cfg _HOME_SPOT, D-NEW shared config); X45 Y185 before the split
+        spot = get("/printer/objects/query?gcode_macro%20_HOME_SPOT")["status"].get("gcode_macro _HOME_SPOT") or {}
+        err = gcode("_PROBE_HOT\n" + ("" if part == "2" else "G28\n") + "G90\nG0 X%s Y%s F6000" % (
+            spot.get("x", 45), spot.get("y", 185)))
     results = [(0, 0.0, 0.0, ("first home: " if part != "2" else "") + err)] if err else []
     try:
         check_heights(results, spm, err, {"1": STEPS, "2": top}.get(part, STEPS + top))

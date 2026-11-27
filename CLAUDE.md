@@ -48,9 +48,10 @@ changing anything there, read `../KlipperScreen-starstack/CLAUDE.md` first; its 
 ## Hazards and open defects
 - Never restart Klipper or reload macros while printing: it ends the print. Check `print_stats.state` first.
 - Shut the Pi down before unplugging it; a hard power loss corrupted a repo on the Pi (Q-045, D-035).
-- `config/s1/` is the production standard (the new S1 and the units after it, D-NEW new standard); the old
-  prototype keeps `config/s1-proto/` and `deploy-cfg.sh` refuses the standard on it. Values marked `NEW-S1`
-  are not measured yet: no `NOZZLE_CLEAN` or print until none remain.
+- `config/s1/` is the production standard, `config/s1-proto/` the old prototypes (stress-test machines). Both
+  include `config/s1_common.cfg`: shared changes go there, per-printer values in their `printer.cfg`.
+  `deploy-cfg.sh` only deploys `config/<type>/` to a Pi of that printer type (D-NEW shared config, type guard).
+  Values marked `NEW-S1` are not measured yet: no `NOZZLE_CLEAN` or print until none remain.
 - Moonraker `trusted_clients` must list every private range, never one subnet (D-102).
 - Mainsail isn't pinned (B-12) and anyone on the network can control the printer (B-13).
 - The S1 bed is about 2 mm out of level, left side high since the 11-18 rewire (mesh at 5 mm/s, paper-checked, Run 22); tram it. The PZ misses the bed when the toolhead cable is tight: keep a big loop (same Run). Meshes before D-134 had false triggers: don't tram from them.

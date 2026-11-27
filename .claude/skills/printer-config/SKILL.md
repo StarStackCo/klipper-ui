@@ -32,6 +32,13 @@ Commissioning a printer from scratch, or after a board or wiring change: [commis
 - **`config/s1/` is the production standard**, the old prototype is `config/s1-proto/` (D-NEW new standard,
   replaces D-102 point 3). Values marked `NEW-S1` are safe starting values until measured on the new
   printer. Published dimensions and specs: check the claude.ai project, don't assume.
+- **Shared vs per-printer (D-NEW shared config).** A change every S1 should get goes in `config/s1_common.cfg`
+  (reaches the printers with the next klipper-ui update, so it needs a bench or S1 run before release, like
+  macros). Only per-printer values (serial, motor ports, travel, z_offset, SGTHRS, mesh area, park, brush,
+  homing spot) go in `config/<type>/printer.cfg`. Never put an option SAVE_CONFIG writes (PID, `z_offset`)
+  in the shared file: Klipper refuses SAVE_CONFIG when an included file sets it.
+- **Printer type guard.** `deploy-cfg.sh` reads `/var/lib/starstack/printer` and refuses any other folder's
+  file; the prototype's board serial is a second check. Set a type with `install.sh --printer=<type>`.
 - **TMC `run_current` is RMS, not peak** (user, D-102). Convert motor datasheet peak ratings before setting it.
 - **Macro names with letters then a digit** (`_S1_PAUSE_FAN`) run as command `_S1`, so they silently never
   ran. Use names without digits; `check_macros.py` rejects them (D-089). Same for `rename_existing` targets.

@@ -27,7 +27,8 @@ Still get the user's OK first, and still run the checklist and fill in the row's
   `install.sh`; add `--dry-run` first when the installer itself changed). `install.sh` steps that need
   sudo (USB import, boot screen, fast boot, update helper) only take effect when the user runs it.
 - `printer.cfg`: `scripts/deploy-cfg.sh D-NNN --cfg` copies `config/s1/printer.cfg` (the prototype:
-  `--cfg config/s1-proto/printer.cfg`) over `~/printer_data/config/printer.cfg` (never a link), keeping the
+  `--cfg config/s1-proto/printer.cfg`; it refuses a file whose folder isn't the Pi's printer type, and an S1
+  file when the Pi lacks `starstack_s1_common.cfg`, which `--install` links) over `~/printer_data/config/printer.cfg` (never a link), keeping the
   `#*# <---...--- SAVE_CONFIG ---...--->` block the Pi has; a new Pi with no block gets the repo's.
 - Touchscreen builds: `scripts/ks-update.sh --branch dev|bench` (fork repo, see its `fork-workflow` skill).
 

@@ -39,11 +39,22 @@ if [ "$STATE" = printing ] || [ "$STATE" = paused ]; then echo "A print is $STAT
 
 if [ -n "$CFG" ]; then
   echo "== 2. printer.cfg from ${CFG#"$ROOT"/} (backup ~/printer_data/config/$BAK)"
+  # Printer type guard (D-NEW type guard): config/<type>/printer.cfg only goes on a Pi installed with
+  # install.sh --printer=<type> (/var/lib/starstack/printer); config/bench only on a Pi with no type.
+  WANT=$(basename "$(dirname "$CFG")"); [ "$WANT" = bench ] && WANT=""
+  PIINFO=$("$PI" "cat /var/lib/starstack/printer 2>/dev/null; echo; [ -e ~/printer_data/config/starstack_s1_common.cfg ] && echo has-common; grep -q '$PROTO_SERIAL' ~/printer_data/config/printer.cfg 2>/dev/null && echo proto-board; true")
+  TYPE=$(echo "$PIINFO" | sed -n 1p | tr -d '[:space:]')
+  echo "   printer type on the Pi: ${TYPE:-none}, file is for: ${WANT:-bench}"
+  if [ "$TYPE" != "$WANT" ]; then
+    echo "Wrong printer: this Pi is type '${TYPE:-none}', the file is for '${WANT:-bench}'."
+    echo "Deploy config/${TYPE:-bench}/printer.cfg, or set the type with install.sh --printer=<type> (sudo)."; exit 1; fi
+  # Second guard: the prototype's own board, in case its type is still the old 's1'.
+  if ! grep -q "$PROTO_SERIAL" "$CFG" && echo "$PIINFO" | grep -q proto-board; then
+    echo "This Pi runs the prototype S1's board: deploy config/s1-proto/printer.cfg to it."; exit 1; fi
+  if grep -q '^\[include starstack_s1_common.cfg\]' "$CFG" && ! echo "$PIINFO" | grep -q has-common && [ $INSTALL = 0 ]; then
+    echo "The Pi has no starstack_s1_common.cfg yet: add --install (klipper-ui with the shared file) first."; exit 1; fi
   if [ $DRY = 1 ]; then echo "(dry-run) upload $(sha256sum "$CFG" | cut -c1-12), keep SAVE_CONFIG block"
   else
-    # The prototype (its board serial) only takes config/s1-proto: the standard's limits don't fit it.
-    if ! grep -q "$PROTO_SERIAL" "$CFG" && "$PI" "grep -q '$PROTO_SERIAL' ~/printer_data/config/printer.cfg 2>/dev/null"; then
-      echo "This Pi is the prototype S1: deploy config/s1-proto/printer.cfg to it."; exit 1; fi
     # Repo file with the Pi's own SAVE_CONFIG block (PID, probe, mesh); a new Pi with no block keeps the repo's
     # starting PID, without which Klipper won't start.
     # Klipper's marker is "#*# <----------------------- SAVE_CONFIG ----...>"; the old 4-dash pattern never matched.

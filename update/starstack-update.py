@@ -193,7 +193,7 @@ def versions():
         info.get("software_version", ""),
     )
     mcu = None
-    if state == "ready":
+    if state in ("ready", "shutdown"):  # shut down (e.g. a sensor unplugged) still knows the board (D-NEW first boot)
         mcu = query(["mcu=mcu_version"]).get("mcu", {}).get("mcu_version")
     return state, msg, host, mcu
 
@@ -201,8 +201,10 @@ def versions():
 def mismatch(state, msg, host, mcu):
     if not host:
         return False
+    if state in ("ready", "shutdown") and mcu:
+        return mcu != host
     if state == "ready":
-        return bool(mcu) and mcu != host
+        return False
     # Klipper refuses to run with firmware that doesn't speak its protocol
     low = msg.lower()
     return state in ("error", "shutdown") and ("protocol" in low or "firmware" in low)
@@ -240,6 +242,27 @@ def apply_pins(st):
 
 
 # ---------------------------------------------------------------- 2. board firmware
+
+
+def in_katapult():
+    """The board is waiting in its Katapult bootloader (new board, or a flash that didn't finish)."""
+    return bool(glob.glob("/dev/serial/by-id/usb-katapult_*"))
+
+
+def in_rom_boot():
+    """The RP2040's own USB boot mode: what a board without Katapult falls into when asked to flash."""
+    for d in glob.glob("/sys/bus/usb/devices/*"):
+        try:
+            with open(d + "/idVendor") as v, open(d + "/idProduct") as p:
+                if v.read().strip() == "2e8a" and p.read().strip() == "0003":
+                    return True
+        except OSError:
+            pass
+    return False
+
+
+NO_KATAPULT = ("the board has no Katapult bootloader, so it can't be updated over USB. Switch the printer "
+               "off and on, then it needs a one-time setup (see the S1 commissioning guide)")
 
 
 def board_device():
@@ -303,9 +326,12 @@ def flash(build_cfg, host):
     ok = run([KLIPPY_PY, FLASHTOOL, "-d", dev, "-f", binary], 300)
     api("/machine/services/start?service=klipper", "POST")
     if not ok:
+        if in_rom_boot():
+            return NO_KATAPULT
         return "flashing didn't finish (the board's Katapult bootloader is still there: it can be retried)"
-    if not wait_klipper("ready", 120):
-        return "Klipper didn't come back as ready after flashing"
+    # ready, or shut down by something else (an unplugged sensor) with the board answering
+    if not (wait_klipper("ready", 120) or (api("/printer/info") or {}).get("state") == "shutdown"):
+        return NO_KATAPULT if in_rom_boot() else "Klipper didn't come back after flashing"
     return None
 
 
@@ -315,12 +341,16 @@ def board_check(st, check_only=False, force=False):
         set_status("n/a", "This printer isn't set up for board updates")
         return "not set up for board updates"
     state, msg, host, mcu = versions()
-    if not force and not mismatch(state, msg, host, mcu):
-        if state == "ready":
-            set_status("ok", "", host, mcu or "")
+    if in_rom_boot():  # nothing to flash through; never retry into it
+        set_status("failed", "Board firmware: " + NO_KATAPULT, host, mcu or "")
+        return "board in RP2040 boot mode: " + NO_KATAPULT
+    waiting = in_katapult() and state != "ready"
+    if not force and not waiting and not mismatch(state, msg, host, mcu):
+        if state in ("ready", "shutdown") and mcu:
+            set_status("ok", "", host, mcu)
         return (
             f"board firmware matches ({mcu})"
-            if state == "ready"
+            if state in ("ready", "shutdown") and mcu
             else f"Klipper is {state}"
         )
     if busy_printing():
@@ -353,7 +383,7 @@ def board_check(st, check_only=False, force=False):
         set_status("ok", "", host, mcu or "")
         return "printing started during the build: board update waits"
     state, msg, host2, mcu2 = versions()
-    if err is None and not mismatch(state, msg, host2, mcu2):
+    if err is None and mcu2 and mcu2 == host2:  # proven: the board reports the host version
         st["fw"] = {"host": host2, "count": 0}
         save_state(st)
         set_status("ok", "", host2, mcu2 or "")

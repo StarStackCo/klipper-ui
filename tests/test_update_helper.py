@@ -265,6 +265,60 @@ def test_manual_undo_leaves_config_alone(real_undo):
     ("error", "MCU Protocol error", "v0.13.0-501", None, True),
     ("error", "Unable to open serial port", "v0.13.0-501", None, False),
     ("ready", "", "", "v0.12.0", False),
+    # D-NEW first boot: shut down by something else (unplugged sensor) but the board answered
+    ("shutdown", "MCU 'mcu' shutdown: ADC out of range", "v0.13.0-501", "v0.12.0-100", True),
+    ("shutdown", "MCU 'mcu' shutdown: ADC out of range", "v0.13.0-501", "v0.13.0-501", False),
+    ("shutdown", "MCU 'mcu' shutdown: ADC out of range", "v0.13.0-501", None, False),
 ])
 def test_mismatch(h, state, msg, host, mcu, want):
     assert h.mismatch(state, msg, host, mcu) is want
+
+
+@pytest.fixture
+def board(h, monkeypatch):
+    """board_check with a fake board: h.board holds Klipper's view, flashes are recorded."""
+    h.board = {"state": "ready", "msg": "", "host": "v0.13.0-501", "mcu": "v0.12.0-100",
+               "katapult": False, "rom": False, "flashes": 0, "after": "v0.13.0-501"}
+    b = h.board
+    monkeypatch.setattr(h, "firmware_profile", lambda: "/fake/micro4.config")
+    monkeypatch.setattr(h, "versions", lambda: (b["state"], b["msg"], b["host"], b["mcu"]))
+    monkeypatch.setattr(h, "in_katapult", lambda: b["katapult"])
+    monkeypatch.setattr(h, "in_rom_boot", lambda: b["rom"])
+    monkeypatch.setattr(h, "set_status", lambda *a, **k: None)
+    monkeypatch.setattr(h, "say", lambda *a, **k: None)
+    monkeypatch.setattr(h, "update_status", lambda: {"busy": False})
+
+    def flash(cfg, host):
+        b["flashes"] += 1
+        b["mcu"] = b["after"]
+        return None
+    monkeypatch.setattr(h, "flash", flash)
+    return b
+
+
+def test_first_boot_flashes_with_klipper_shut_down_by_a_sensor(h, board):
+    board.update(state="shutdown", msg="MCU 'mcu' shutdown: ADC out of range")
+    assert h.board_check({}) == "flashed"
+    assert board["flashes"] == 1
+
+
+def test_board_waiting_in_katapult_is_flashed(h, board):
+    board.update(state="error", msg="mcu 'mcu': Unable to connect", mcu=None, katapult=True)
+    assert h.board_check({}) == "flashed"
+
+
+def test_board_without_katapult_is_reported_never_flashed(h, board):
+    board.update(state="error", msg="mcu 'mcu': Unable to connect", mcu=None, rom=True)
+    assert "no Katapult" in h.board_check({})
+    assert board["flashes"] == 0
+
+
+def test_flash_counts_only_when_the_board_reports_the_host_version(h, board):
+    board.update(after=None)  # flashed, but Klipper never told us the board's version
+    assert h.board_check({}).startswith("failed")
+
+
+def test_matching_board_with_klipper_shut_down_is_left_alone(h, board):
+    board.update(state="shutdown", msg="ADC out of range", mcu="v0.13.0-501")
+    assert h.board_check({}).startswith("board firmware matches")
+    assert board["flashes"] == 0

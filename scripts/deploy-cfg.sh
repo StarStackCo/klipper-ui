@@ -85,6 +85,8 @@ fi
 
 echo "== 4. Klipper ready?"
 pi "for i in \$(seq 30); do s=\$(curl -s -m 3 $MOON/printer/info | python3 -c 'import sys,json;print(json.load(sys.stdin)[\"result\"][\"state\"])' 2>/dev/null); [ \"\$s\" = ready ] && break; sleep 2; done
+# the board's sensor range check fires a few seconds after ready (unplugged sensor, ADC out of range): look again
+[ \"\$s\" = ready ] && sleep 6 && s=\$(curl -s -m 3 $MOON/printer/info | python3 -c 'import sys,json;print(json.load(sys.stdin)[\"result\"][\"state\"])' 2>/dev/null)
 echo \"   state: \${s:-no reply}\"; curl -s $MOON/printer/info | python3 -c 'import sys,json;m=json.load(sys.stdin)[\"result\"][\"state_message\"];print(\"   \"+m.splitlines()[0])' 2>/dev/null
 e=\$(tac ~/printer_data/logs/klippy.log | sed '/^Start printer at/q' | tac | sed '/^===== Config file/,/^=======================$/d' | grep -iE 'error|!!|warning' | tail -10)
 echo '   klippy.log errors since the restart:'; echo \"\${e:-none}\" | sed 's/^/   /'"

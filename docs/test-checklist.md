@@ -489,3 +489,20 @@ Run by Claude from the S1's state, history and logs plus today's tests; what was
 | Prints since v0.6.1 (11-10) | ⚠️ | 46 jobs: 25 completed, 18 canceled, 3 shutdowns; 36.5 print hours. Shutdowns 11-15 (Dragon PETG) and 11-16 (Mainboard + Pi Case ×2): cause not recoverable, klippy logs only go back to 11-18. 11-20 and today: STOP (webhooks request) |
 | Update Manager | ✅ | All valid, clean, no warnings. It still lists the branches from before today's checkouts (KlipperScreen queue-scroll, klipper-ui main) until its next refresh |
 | Not exercised this cycle | | S1/S2/S3/S4/S6/S7 by hand (no UI safety code changed since v0.6.1 except the setup pages, whose STOP rail shows in Run 19); F4 Mainsail mobile; F9 live tuning; F11 rollback |
+
+## Run NEW new S1 bring-up: blank card to flashed board, 2026-11-26 (klipper-ui claude/printer-flash-test-346061, new S1 at 192.168.1.161)
+
+Second printer, the production standard (D-NEW new standard). Toolhead board not connected. Each step with the user's OK.
+
+| Check | Result | Notes |
+|---|---|---|
+| SD card written and verified | ✅ | CB1 V3.0.0 Debian 12 Klipper image; SHA256 matched BTT's; read back block by block, 0 differences. First tries failed because Windows grabbed the card once it saw the Linux partitions (format pop-up): partition table now written last |
+| First boot on Ethernet, TFT35 shows the touchscreen app | ✅ | User: not white anymore. Hostname still `bigtreetech-cb1` |
+| SSH with the project key | ✅ | User ran the key command |
+| `install.sh --printer=s1` | ✅ | Type `s1`, `starstack_s1_common.cfg` linked, Katapult cloned, services active, touchscreen on the fork v0.4.7-359 |
+| Klipper and Moonraker to the pinned versions | ✅ | Klipper v0.13.0-501, Moonraker v0.10.0-2 |
+| Micro4 firmware through Katapult | ✅ | Katapult present; flashed and verified; board reports v0.13.0-501, serial E6647C7403262937 |
+| Starting config deployed (type guard passes) | ✅ | Repo PID kept on the new Pi (no SAVE_CONFIG block there) |
+| Unplugged nozzle sensor stops the printer | ✅ | Reads -14.3 °C, Klipper shuts down: `MCU 'mcu' shutdown: ADC out of range`. Bed sensor 22.6 °C |
+| `deploy-cfg.sh` reports the real state | ❌ → ✅ | It said "ready" before the range check fired a few seconds later; now looks again after 6 s and reported `shutdown` on a second deploy |
+| Not done yet | | Toolhead board, heaters, motors (`STEPPER_BUZZ` for X and E directions), X homing on DIAG gpio13, measuring the bed, brush, Z top; hostname |

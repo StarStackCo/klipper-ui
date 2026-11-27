@@ -24,6 +24,8 @@ FORBIDDEN = re.compile(r"^\s*(SET_HEATER_TEMPERATURE\s+.*TARGET=\s*[3-9]\d\d|"
 TRADITIONAL = re.compile(r"^[A-Z]\d+(\.\d+)?$")    # G28, M600, T0: Klipper's classic G-code
 MISREAD = re.compile(r"^[A-Z_]+\d")                 # letters then a digit: Klipper splits it there
 errors = []
+SAFETY_LIMITS = {"max_temp", "min_temp", "min_extrude_temp", "max_extrude_only_distance", "max_power",
+                 "max_velocity", "max_accel", "max_z_velocity", "max_z_accel"}
 
 
 def check_name(name, sec):
@@ -47,6 +49,23 @@ for path in sorted(glob.glob(os.path.join(ROOT, "config", "*", "printer.cfg")) +
     macros = [sec for sec in cp.sections() if sec.startswith("gcode_macro ")]
     for sec in macros:
         check_name(name, sec)
+    for sec in cp.sections():  # templates must compile (M109/TEMPERATURE_WAIT allowed here: PRINT_START flow)
+        for key, value in cp.items(sec):
+            if key == "gcode" or key.endswith("_gcode"):
+                try:
+                    ENV.from_string(value)
+                except jinja2.TemplateSyntaxError as e:
+                    errors.append(f"{name} [{sec}] {key} line {e.lineno}: {e.message}")
+            elif key.startswith("variable_"):
+                try:
+                    ast.literal_eval(value)
+                except (ValueError, SyntaxError) as e:
+                    errors.append(f"{name} [{sec}] {key}: not a valid literal ({e})")
+    # D-NEW shared config: a printer.cfg on the shared file must not override its safety limits
+    if "[include starstack_s1_common.cfg]" in text:
+        for sec in cp.sections():
+            for key in SAFETY_LIMITS & set(cp.options(sec)):
+                errors.append(f"{name} [{sec}] {key}: safety limit set per printer; change it in config/s1_common.cfg")
     print(f"{name}: {len(macros)} macro names checked")
 
 for path in sorted(glob.glob(os.path.join(ROOT, "macros", "*.cfg"))):

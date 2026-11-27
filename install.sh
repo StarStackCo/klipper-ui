@@ -455,6 +455,10 @@ helper_install() {
   if [ -n "$PRINTER" ]; then
     if [ -f "$REPO/config/$PRINTER/firmware.conf" ]; then
       [ "$(cat "$UPD_PRINTER" 2>/dev/null)" = "$PRINTER" ] || do_ "echo '$PRINTER' > '$UPD_PRINTER'"
+      # the helper flashes through Katapult's flashtool (D-083); a fresh CB1 image doesn't have it
+      if grep -q '^method: *katapult' "$REPO/config/$PRINTER/firmware.conf" && [ ! -d "$HOME/katapult" ]; then
+        do_ "git clone -q https://github.com/Arksine/katapult '$HOME/katapult'"; echo "   katapult flashtool cloned to ~/katapult"
+      fi
     else
       echo "   no config/$PRINTER/firmware.conf in klipper-ui: board firmware updates stay off"
     fi

@@ -29,8 +29,9 @@ Commissioning a printer from scratch, or after a board or wiring change: [commis
 - **Moonraker `trusted_clients` lists every private range**: `10.0.0.0/8`, `172.16.0.0/12`,
   `192.168.0.0/16`, `169.254.0.0/16`, `127.0.0.0/8`, `FE80::/10` (plus `::1/128`). Never one subnet: that
   locked the user out three times. Supersedes D-014's single `192.168.0.0/24` (D-102).
-- **`config/s1/` is the old prototype**, not the production S1 (user, D-102). Its travel and speed limits
-  are that machine's (Q-050). Production dimensions and specs: check the claude.ai project, don't assume.
+- **`config/s1/` is the production standard**, the old prototype is `config/s1-proto/` (D-NEW new standard,
+  replaces D-102 point 3). Values marked `NEW-S1` are safe starting values until measured on the new
+  printer. Published dimensions and specs: check the claude.ai project, don't assume.
 - **TMC `run_current` is RMS, not peak** (user, D-102). Convert motor datasheet peak ratings before setting it.
 - **Macro names with letters then a digit** (`_S1_PAUSE_FAN`) run as command `_S1`, so they silently never
   ran. Use names without digits; `check_macros.py` rejects them (D-089). Same for `rename_existing` targets.

@@ -2,7 +2,8 @@
 # Deploy printer.cfg and/or the installer (macros, theme) to the Pi the way
 # .claude/skills/printer-config/deploy-to-pi.md says, then check Klipper and print a deploy log row.
 #   scripts/deploy-cfg.sh D-NNN [--cfg [file]] [--install [--branch dev]] [--dry-run]
-#   --cfg      copy config/s1/printer.cfg (or the given file) over the Pi's printer.cfg, keeping the Pi's
+#   --cfg      copy config/s1/printer.cfg, the production standard (or the given file; the prototype takes
+#              config/s1-proto/printer.cfg) over the Pi's printer.cfg, keeping the Pi's
 #              SAVE_CONFIG block; the old file is kept as printer.cfg.pre-dnnn
 #   --install  scripts/pi-install.sh --branch <branch> (macros, theme; install.sh restarts everything)
 #   --dry-run  show the Pi commands without running them
@@ -11,6 +12,7 @@ set -eo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 PI="$ROOT/scripts/pi.sh"
 MOON=http://localhost:7125
+PROTO_SERIAL=E6647C7403679636   # the prototype S1's Micro4
 ID="" CFG="" INSTALL=0 BRANCH=dev DRY=0
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -39,12 +41,21 @@ if [ -n "$CFG" ]; then
   echo "== 2. printer.cfg from ${CFG#"$ROOT"/} (backup ~/printer_data/config/$BAK)"
   if [ $DRY = 1 ]; then echo "(dry-run) upload $(sha256sum "$CFG" | cut -c1-12), keep SAVE_CONFIG block"
   else
-    # Repo file without any SAVE_CONFIG block, then the Pi's own block (probe offsets, mesh) appended.
-    sed '/^#\*# <---- SAVE_CONFIG ---->/,$d' "$CFG" | "$PI" "cat > /tmp/printer.cfg.new && cd ~/printer_data/config &&
-      { [ -e $BAK ] && echo '   backup $BAK already exists, kept' || cp -p printer.cfg $BAK; } &&
-      sed -n '/^#\*# <---- SAVE_CONFIG ---->/,\$p' printer.cfg >> /tmp/printer.cfg.new &&
+    # The prototype (its board serial) only takes config/s1-proto: the standard's limits don't fit it.
+    if ! grep -q "$PROTO_SERIAL" "$CFG" && "$PI" "grep -q '$PROTO_SERIAL' ~/printer_data/config/printer.cfg 2>/dev/null"; then
+      echo "This Pi is the prototype S1: deploy config/s1-proto/printer.cfg to it."; exit 1; fi
+    # Repo file with the Pi's own SAVE_CONFIG block (PID, probe, mesh); a new Pi with no block keeps the repo's
+    # starting PID, without which Klipper won't start.
+    # Klipper's marker is "#*# <----------------------- SAVE_CONFIG ----...>"; the old 4-dash pattern never matched.
+    M='^#\*# <-* SAVE_CONFIG -*>'
+    "$PI" "cat > /tmp/printer.cfg.new && cd ~/printer_data/config &&
+      { [ -e $BAK ] && echo '   backup $BAK already exists, kept' || { [ ! -e printer.cfg ] || cp -p printer.cfg $BAK; }; } &&
+      if grep -q '$M' printer.cfg 2>/dev/null; then
+        sed -i '/$M/,\$d' /tmp/printer.cfg.new &&
+        sed -n '/$M/,\$p' printer.cfg >> /tmp/printer.cfg.new
+      else echo '   no SAVE_CONFIG block on the Pi: keeping the repo starting values'; fi &&
       cp /tmp/printer.cfg.new printer.cfg && rm /tmp/printer.cfg.new &&
-      echo \"   installed, \$(grep -c '^#\*#' printer.cfg) SAVE_CONFIG lines kept\""
+      echo \"   installed, \$(grep -c '^#\*#' printer.cfg) SAVE_CONFIG lines kept\"" < "$CFG"
   fi
 fi
 

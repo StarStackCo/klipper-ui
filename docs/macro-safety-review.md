@@ -45,6 +45,8 @@
 
 ## S1 printer.cfg macros (`config/s1/printer.cfg`, D-081)
 
+Since D-NEW new standard, `config/s1/` is the production standard and the prototype keeps the same macros in `config/s1-proto/printer.cfg`. Coordinates below are the prototype's; on the standard they are marked `NEW-S1` until measured, and `NOZZLE_CLEAN` must not run before its brush values are.
+
 These live in the printer config, not in the StarStack macros, because they are specific to the S1's hardware.
 `NOZZLE_CLEAN` may wait for heat (`M109`) when run by hand; `PRINT_START` calls it with `WAIT=0` and waits without blocking.
 `_PROBE_HOT` may wait for heat only when no print is running or paused (B-19, D-131).
